@@ -9,4 +9,4 @@ endif
 
 include $(AM_HOME)/Makefile
 include ../Makefile.lab
-image: git
+image:
