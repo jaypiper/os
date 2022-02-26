@@ -263,6 +263,8 @@ static void pmm_init() {
       slab[i][j].total_num = slab[i][j].page->free_num;
     }
   }
+  void pmm_workload_init();
+  pmm_workload_init();
 }
 
 MODULE_DEF(pmm) = {
@@ -314,10 +316,14 @@ void disp_util(){
   }
 }
 
-void pmm_workload_init(pmm_workload* wl){
+void pmm_workload_init(){
   for(int i = 0; i < 12; i++){
-    wl->sum += wl->pr[i];
-    if(i != 0) wl->accumulate[i] += wl->accumulate[i-1];
+    wl_typical.sum +=wl_typical.pr[i];
+    if(i != 0) wl_typical.accumulate[i] += wl_typical.accumulate[i-1];
+    wl_stress.sum +=wl_stress.pr[i];
+    if(i != 0) wl_stress.accumulate[i] += wl_stress.accumulate[i-1];
+    wl_page.sum +=wl_page.pr[i];
+    if(i != 0) wl_page.accumulate[i] += wl_page.accumulate[i-1];
   }
   memset(alloc_log, 0, sizeof(alloc_log));
   memset(size_log, 0, sizeof(size_log));
@@ -374,8 +380,7 @@ void pmm_debug_free(pmm_workload* wl){
 }
 
 void pmm_test(){
-  pmm_workload* workload = &wl_typical;
-  pmm_workload_init(workload);
+  pmm_workload* workload = &wl_stress;
 
   while(1){
     int is_alloc = rand() % 3;
