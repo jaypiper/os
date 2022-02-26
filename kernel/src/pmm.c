@@ -135,7 +135,7 @@ static inline void set_bitmap(uint64_t* bitmap, int idx){
 }
 
 static inline void clear_bitmap(uint64_t* bitmap, int idx){
-  bitmap[idx / BITMAP_BITS] &= ~(uint64_t)(1 << (idx % BITMAP_BITS));
+  bitmap[idx / BITMAP_BITS] &= ~((uint64_t)1 << (idx % BITMAP_BITS));
 }
 
 static void *kalloc(size_t size) {
