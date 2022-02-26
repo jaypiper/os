@@ -13,6 +13,6 @@ void spin_lock(lock_t *lk){
 }
 
 void spin_unlock(lock_t *lk){
-  int ret = atomic_xchg(&(lk->locked), 0);
-  Assert(ret, "lock %s is already released\n", lk->name);
+  Assert(lk->locked, "lock %s is already released\n", lk->name);
+  atomic_xchg(&(lk->locked), 0);
 }

@@ -131,10 +131,12 @@ static smeta_t* slab_newpage(int bit){
 }
 
 static inline void set_bitmap(uint64_t* bitmap, int idx){
+  Assert((bitmap[idx / BITMAP_BITS] & ((uint64_t)1 << (idx % BITMAP_BITS))) == 0, "bitmap is already set, idx %d bitmap %lx\n", idx, bitmap[idx / BITMAP_BITS]);
   bitmap[idx / BITMAP_BITS] |= (uint64_t)1 << (idx % BITMAP_BITS);
 }
 
 static inline void clear_bitmap(uint64_t* bitmap, int idx){
+  Assert(bitmap[idx / BITMAP_BITS] & ((uint64_t)1 << (idx % BITMAP_BITS)), "bitmap is already cleared, idx %d bitmap %lx\n", idx, bitmap[idx / BITMAP_BITS]);
   bitmap[idx / BITMAP_BITS] &= ~((uint64_t)1 << (idx % BITMAP_BITS));
 }
 
