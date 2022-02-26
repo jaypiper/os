@@ -300,9 +300,16 @@ int alloc_idx = 0;
 int free_idx = 0;
 
 lock_t log_lock;
+lock_t util_lock;
+static long long util_time;
 
 void disp_util(){
-  printf("perc %d total %d MB used %d MB\n", (total_size*100) / pmsize, pmsize >> 20, total_size >> 20);
+  if(_sys_time() - util_time >= 10000000){
+    spin_lock(&util_lock);
+    printf("perc %d total %d MB used %d MB\n", (total_size*100) / pmsize, pmsize >> 20, total_size >> 20);
+    util_time = _sys_time();
+    spin_unlock(&util_lock);
+  }
 }
 
 void pmm_workload_init(pmm_workload* wl){
@@ -315,8 +322,11 @@ void pmm_workload_init(pmm_workload* wl){
   total_size = 0;
   alloc_idx = 0;
   free_idx = 0;
+  strcpy(util_lock.name, "util lock");
+  util_lock.locked = 0;
   strcpy(log_lock.name, "log lock");
   log_lock.locked = 0;
+  util_time = 0;
 }
 
 void pmm_debug_alloc(pmm_workload* wl){
@@ -342,6 +352,7 @@ void pmm_debug_alloc(pmm_workload* wl){
     size_log[alloc_idx] = size;
     total_size += size;
     alloc_idx = (alloc_idx + 1) & (MAX_LOG_SIZE - 1);
+    disp_util();
   }
   spin_unlock(&log_lock);
   if(ptr) memset(ptr, ALLOC_MAGIC, size);
