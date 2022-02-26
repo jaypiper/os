@@ -3,6 +3,7 @@
 #include <klib-macros.h>
 #include <lock.h>
 #include <debug.h>
+#include <util.h>
 
 #define PMM_DEBUG
 #define PGSIZE    4096

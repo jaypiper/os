@@ -1,10 +1,5 @@
 #include <common.h>
 
-static long long _sys_time(){
-  AM_TIMER_UPTIME_T _timer = io_read(AM_TIMER_UPTIME);
-  return _timer.us;
-}
-
 void spin_lock(lock_t *lk){
   uint64_t us = _sys_time();
   while(atomic_xchg(&(lk->locked), 1)){
