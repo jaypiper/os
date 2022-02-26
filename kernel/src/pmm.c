@@ -47,7 +47,6 @@ static inline void update_buddy_free(int select){ // children of select are corr
 }
 
 static void* global_newpage(){  // DFS & first fit
-  Assert(global_lock.locked == 0, "new page start %x", global_lock.locked);
   spin_lock(&global_lock);
 
   int select=0;
@@ -67,8 +66,6 @@ static void* global_newpage(){  // DFS & first fit
   int pgidx = select - leaf_base;
   void* ret = bstart + pgidx * PGSIZE;
   Assert(ret >= pheap_start && ret < pheap_end, "newpage 0x%lx not in [0x%lx, 0x%lx) bstart=0x%lx pgidx 0x%x\n", (uintptr_t)ret, (uintptr_t)pheap_start, (uintptr_t)pheap_end, bstart, pgidx);
-  // Log("newpage %lx", (uintptr_t)ret);
-  Assert(global_lock.locked == 0, "new page end");
   return ret;
 }
 
@@ -158,7 +155,6 @@ static void *kalloc(size_t size) {
       spin_unlock(&cpu_lock[cpu_id]);
       return NULL;
     }
-    // Log("size 0x%lx slab_idx %d bits %d newpage %lx selectpage: %lx selectnext %lx", size, slab_idx, bits, newpage, select_page, select_page->next);
     newpage->next = select_page;
     select_slab->page = newpage;
     select_slab->total_num = newpage->free_num;
