@@ -298,8 +298,8 @@ size_t size_log[MAX_LOG_SIZE];
 size_t total_size;
 int alloc_idx = 0;
 int free_idx = 0;
-lock_t alloc_idx_lock;
-lock_t free_idx_lock;
+
+lock_t log_lock;
 
 void disp_util(){
   printf("perc %d total %d MB used %d MB\n", (total_size*100) / pmsize, pmsize >> 20, total_size >> 20);
@@ -315,12 +315,8 @@ void pmm_workload_init(pmm_workload* wl){
   total_size = 0;
   alloc_idx = 0;
   free_idx = 0;
-  strcpy(alloc_idx_lock.name, "alloc");
-  printf("alloc 0x%lx name %s\n", (uintptr_t)&alloc_idx_lock, alloc_idx_lock.name);
-  alloc_idx_lock.locked = 0;
-  strcpy(free_idx_lock.name, "free");
-  printf("free 0x%lx name %s\n", (uintptr_t)&free_idx_lock, free_idx_lock.name);
-  free_idx_lock.locked = 0;
+  strcpy(log_lock.name, "log lock");
+  log_lock.locked = 0;
 }
 
 void pmm_debug_alloc(pmm_workload* wl){
@@ -340,31 +336,28 @@ void pmm_debug_alloc(pmm_workload* wl){
   void* ptr = pmm->alloc(size);
   check_alloc(ptr, size);
   // printf("at 0x%lx alloc_idx %d \n", (uintptr_t)ptr, alloc_idx);
-  spin_lock(&alloc_idx_lock);
+  spin_lock(&log_lock);
   if(ptr){
     alloc_log[alloc_idx] = ptr;
     size_log[alloc_idx] = size;
     total_size += size;
     alloc_idx = (alloc_idx + 1) & (MAX_LOG_SIZE - 1);
   }
-  spin_unlock(&alloc_idx_lock);
-  disp_util();
-  memset(ptr, ALLOC_MAGIC, size);
-
-  Assert(ROUNDDOWN((uintptr_t)ptr, PGSIZE) == ROUNDDOWN((uintptr_t)ptr + size - 1, PGSIZE), "alloc cross page, ret 0x%lx size 0x%lx\n", (uintptr_t)ptr, size);
+  spin_unlock(&log_lock);
+  if(ptr) memset(ptr, ALLOC_MAGIC, size);
 }
 
 void pmm_debug_free(pmm_workload* wl){
-  spin_lock(&free_idx_lock);
+  spin_lock(&log_lock);
   void* ptr = alloc_log[free_idx];
   if(ptr) {
     // printf("free %lx free_idx %d \n", (uintptr_t)ptr, free_idx);
     alloc_log[free_idx] = 0;
     total_size -= size_log[free_idx];
     free_idx = (free_idx + 1) & (MAX_LOG_SIZE - 1);
-    pmm->free(ptr);
   }
-  spin_unlock(&free_idx_lock);
+  spin_unlock(&log_lock);
+  pmm->free(ptr);
 }
 
 void pmm_test(){
