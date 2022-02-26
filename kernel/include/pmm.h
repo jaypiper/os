@@ -26,7 +26,7 @@ typedef struct slab_metadata{
   uint16_t bit_num;
   uint16_t magic;
   uint16_t free_num;
-  // uint16_t cpu_id;
+  uint16_t cpu_id;
   void* next;
   uint64_t bitmap[BITMAP_NUM];
 }smeta_t;

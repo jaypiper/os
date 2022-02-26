@@ -106,7 +106,7 @@ static void global_free(void* ptr){
   spin_unlock(&global_lock);
 }
 
-static smeta_t* slab_newpage(int bit){
+static smeta_t* slab_newpage(int bit, int cpu_id){
   Assert(bit >= 2 && bit <= 10, "bit_num %d is out of bound [2,10]\n", bit);
   smeta_t* ret = global_newpage();
   if(!ret) return NULL;
@@ -114,6 +114,7 @@ static smeta_t* slab_newpage(int bit){
   ret->magic = SLAB_MAGIC;
   ret->free_num = (PGSIZE - sizeof(smeta_t)) >> bit;
   ret->next = NULL;
+  ret->cpu_id = cpu_id;
   memset(ret->bitmap, 0xff, sizeof(ret->bitmap));
   int bitmap_left = ret->free_num;
   int map_idx = 0;
@@ -150,7 +151,7 @@ static void *kalloc(size_t size) {
   Assert(select_page->bit_num == bits, "alloc select bit_num %d expected %d size 0x%lx slab_idx %d page 0x%lx", select_page->bit_num, bits, size, slab_idx, (uintptr_t)select_page);
 
   if(select_slab->total_num == 0){
-    smeta_t* newpage = slab_newpage(bits);
+    smeta_t* newpage = slab_newpage(bits, cpu_id);
     if(!newpage){
       spin_unlock(&cpu_lock[cpu_id]);
       return NULL;
@@ -192,9 +193,10 @@ static void *kalloc(size_t size) {
 }
 
 static void kfree(void *ptr) {
+  if(!ptr) return;
   if(((uintptr_t)ptr & PGMASK) == 0) return global_free(ptr);
-  int cpu_id = cpu_current();
   smeta_t* select_page = (smeta_t*)ROUNDDOWN(ptr, PGSIZE);
+  int cpu_id = select_page->cpu_id;
   spin_lock(&cpu_lock[cpu_id]);
   select_page->free_num ++;
   slab[cpu_id][select_page->bit_num-2].total_num ++;
@@ -257,7 +259,7 @@ static void pmm_init() {
   // init slab
   for(int i = 0; i < MAX_CPU; i++){
     for(int j = 0; j < SLAB_NUM; j++){
-      slab[i][j].page = slab_newpage(j + 2);
+      slab[i][j].page = slab_newpage(j + 2, i);
       slab[i][j].total_num = slab[i][j].page->free_num;
     }
   }
