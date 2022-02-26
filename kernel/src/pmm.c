@@ -169,13 +169,13 @@ static void *kalloc(size_t size) {
   }
   Assert(select_page->free_num > 0, "no free num, size 0x%lx page 0x%lx free_num %d", size, (uintptr_t)select_page, select_page->free_num);
   int map_idx = -1;
-  for(int i = 0; i < (select_page->free_num -1)/ BITMAP_BITS + 1; i++){
+  for(int i = 0; i < (((PGSIZE - sizeof(smeta_t)) >> select_page->bit_num) + BITMAP_BITS - 1)/ BITMAP_BITS; i++){
     if(!BITMAP_FULL(select_page->bitmap[i])){
-      map_idx = __builtin_ctz(~select_page->bitmap[i]) + i * BITMAP_BITS;
+      map_idx = __builtin_ctzl(~select_page->bitmap[i]) + i * BITMAP_BITS;
       break;
     }
   }
-  Assert(map_idx != -1, "invalid map_idx, size 0x%lx bits %d page 0x%lx free_num %d bitmap[0] 0x%lx\n", size, select_page->bit_num, (uintptr_t)select_page, select_page->free_num, select_page->bitmap[0]);
+  Assert(map_idx != -1, "invalid map_idx, size 0x%lx bits %d page 0x%lx free_num %d\n", size, select_page->bit_num, (uintptr_t)select_page, select_page->free_num);
 
   void* ret = (void*)select_page + PGSIZE - (map_idx + 1) * (1 <<select_page->bit_num);
   set_bitmap(select_page->bitmap, map_idx);
