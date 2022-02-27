@@ -208,7 +208,9 @@ static void kfree(void *ptr) {
 static void pmm_init() {
   pmsize = ((uintptr_t)heap.end - (uintptr_t)heap.start);
   printf("Got %d MiB heap: [%p, %p)\n", pmsize >> 20, heap.start, heap.end);
-
+#ifdef PMM_DEBUG
+  memset((void*)heap.start, 0, pmsize);
+#endif
   pheap_start = (void*)ROUNDUP((uintptr_t)heap.start, PGSIZE);
   pheap_end = (void*)ROUNDDOWN((uintptr_t)heap.end, PGSIZE);
   memset(&global_lock, 0, sizeof(global_lock));
@@ -278,9 +280,7 @@ MODULE_DEF(pmm) = {
 void check_alloc(void* ptr, size_t size){
   uint8_t* p = (uint8_t*)ptr;
   for(int i = 0; i < size; i++){
-    if(p[i] == ALLOC_MAGIC){
-      Assert("double allocated at 0x%lx with size 0x%lx\n", ptr, size);
-    }
+    Assert(p[i] != ALLOC_MAGIC, "double allocated at 0x%lx with size 0x%lx\n", ptr, size);
   }
 }
 
@@ -373,6 +373,7 @@ void pmm_debug_free(pmm_workload* wl){
     // printf("free %lx free_idx %d \n", (uintptr_t)ptr, free_idx);
     alloc_log[free_idx] = 0;
     total_size -= size_log[free_idx];
+    memset(ptr, FREE_MAGIC, size_log[free_idx]);
     free_idx = (free_idx + 1) & (MAX_LOG_SIZE - 1);
   }
   spin_unlock(&log_lock);
