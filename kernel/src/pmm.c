@@ -14,7 +14,7 @@ lock_t cpu_lock[MAX_CPU];
 bentry_t* buddy = NULL;
 
 static inline size_t next_pow2(size_t size){
-  int bits = sizeof(unsigned long)*8 - __builtin_clzl(size-1);
+  int bits = sizeof(unsigned long long)*8 - __builtin_clzll(size-1);
   return size == 1 ? 1 : 1 << bits; 
 }
 
@@ -70,7 +70,7 @@ static void* global_newpage(){  // DFS & first fit
 }
 
 static void* global_alloc(size_t size){
-  int depth = sizeof(unsigned long)*8 - __builtin_clzl(size-1) - PG_BITS;
+  int depth = sizeof(unsigned long long)*8 - __builtin_clzll(size-1) - PG_BITS;
   if(depth < 0) depth = 0;
   int alloc_pgnum = 1 << depth;
   spin_lock(&global_lock);
@@ -141,7 +141,7 @@ static inline void clear_bitmap(uint64_t* bitmap, int idx){
 static void *kalloc(size_t size) {
   if(size > 1024) return global_alloc(size);
   int cpu_id = cpu_current();
-  int bits = MAX(2, sizeof(unsigned long)*8 - __builtin_clzl(size-1));
+  int bits = MAX(2, sizeof(unsigned long long)*8 - __builtin_clzll(size-1));
   size = 1 << bits;
   int slab_idx = bits - 2;
   spin_lock(&(cpu_lock[cpu_id]));
@@ -172,7 +172,7 @@ static void *kalloc(size_t size) {
   int map_idx = -1;
   for(int i = 0; i < (((PGSIZE - sizeof(smeta_t)) >> select_page->bit_num) + BITMAP_BITS - 1)/ BITMAP_BITS; i++){
     if(!BITMAP_FULL(select_page->bitmap[i])){
-      map_idx = __builtin_ctzl(~select_page->bitmap[i]) + i * BITMAP_BITS;
+      map_idx = __builtin_ctzll(~select_page->bitmap[i]) + i * BITMAP_BITS;
       break;
     }
   }
@@ -219,7 +219,7 @@ static void pmm_init() {
   }
   /* init buddy */
   uintptr_t bsize = (uintptr_t)(pheap_end - pheap_start);
-  int bheight = sizeof(unsigned long)*8 - __builtin_clzl(bsize-1) - PG_BITS;
+  int bheight = sizeof(unsigned long long)*8 - __builtin_clzll(bsize-1) - PG_BITS;
   bsize = 1 << (bheight + PG_BITS);  // pmsize is not 1
   bstart = (void*)((uintptr_t)pheap_end - bsize);
   /* build buddy tree */
