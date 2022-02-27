@@ -310,7 +310,7 @@ static long long util_time;
 void disp_util(){
   if(_sys_time() - util_time >= 10000000){
     spin_lock(&util_lock);
-    printf("perc %d total %d MB used %d MB\n", (total_size*100) / pmsize, pmsize >> 20, total_size >> 20);
+    printf("perc %d total %d MB used %d MB\n", ((uint64_t)total_size*100) / pmsize, pmsize >> 20, total_size >> 20);
     util_time = _sys_time();
     spin_unlock(&util_lock);
   }
