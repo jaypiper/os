@@ -7,10 +7,10 @@ static void* pheap_end;
 static void* bstart;
 static bentry_t* buddy_tree;
 static int leaf_base;
-lock_t global_lock;
+spinlock_t global_lock;
 
 slab_t slab[MAX_CPU][SLAB_NUM];       // 4B - 1KB (PGSIZE)
-lock_t cpu_lock[MAX_CPU];
+spinlock_t cpu_lock[MAX_CPU];
 bentry_t* buddy = NULL;
 
 static inline size_t next_pow2(size_t size){
@@ -303,8 +303,8 @@ size_t total_size;
 int alloc_idx = 0;
 int free_idx = 0;
 
-lock_t log_lock;
-lock_t util_lock;
+spinlock_t log_lock;
+spinlock_t util_lock;
 static long long util_time;
 
 void disp_util(){
