@@ -275,6 +275,21 @@ MODULE_DEF(pmm) = {
   .free  = kfree,
 };
 
+void *kalloc_safe(size_t size) {
+  bool i = ienabled();
+  iset(false);
+  void *ret = kalloc(size);
+  if (i) iset(true);
+  return ret;
+}
+
+void kfree_safe(void *ptr) {
+  int i = ienabled();
+  iset(false);
+  kfree(ptr);
+  if (i) iset(true);
+}
+
 #ifdef PMM_DEBUG
 
 void check_alloc(void* ptr, size_t size){
