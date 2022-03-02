@@ -213,11 +213,11 @@ static void pmm_init() {
 #endif
   pheap_start = (void*)ROUNDUP((uintptr_t)heap.start, PGSIZE);
   pheap_end = (void*)ROUNDDOWN((uintptr_t)heap.end, PGSIZE);
-  memset(&global_lock, 0, sizeof(global_lock));
-  strcpy(global_lock.name, "global");
-  memset(&cpu_lock, 0, sizeof(cpu_lock));
+  spin_init(&global_lock, "global lock");
+  char name_buf[32];
   for(int i = 0; i < MAX_CPU; i++){
-    sprintf(cpu_lock[i].name, "local%d", i);
+    sprintf(name_buf, "local%d", i);
+    spin_init(&cpu_lock[i], name_buf);
   }
   /* init buddy */
   uintptr_t bsize = (uintptr_t)(pheap_end - pheap_start);
@@ -330,10 +330,8 @@ void pmm_workload_init(){
   total_size = 0;
   alloc_idx = 0;
   free_idx = 0;
-  strcpy(util_lock.name, "util lock");
-  util_lock.locked = 0;
-  strcpy(log_lock.name, "log lock");
-  log_lock.locked = 0;
+  spin_init(&util_lock, "util lock");
+  spin_init(&log_lock, "log lock");
   util_time = 0;
 }
 
