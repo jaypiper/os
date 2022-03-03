@@ -9,7 +9,6 @@ enum{BLOCK_INVALID=1, BLOCK_HEAD, BLOCK_ALLOCATED, BLOCK_FREE, BLOCK_INTERNAL};
 #define IS_ROOT(p) ((p) == 0)
 #define TREE_LAYER_BEGIN(height) ((1 << (height)) - 1)
 #define TREE_LAYER_END(height) ((1 << (height+1)) - 2)
-#define MAX_CPU 8
 #define SLAB_NUM 9
 #define SLAB_MAGIC 0xbeef
 #define PG_BITS 12
