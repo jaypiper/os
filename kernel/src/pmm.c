@@ -265,8 +265,10 @@ static void pmm_init() {
       slab[i][j].total_num = slab[i][j].page->free_num;
     }
   }
+#ifdef PMM_DEBUG
   void pmm_workload_init();
   pmm_workload_init();
+#endif
 }
 
 MODULE_DEF(pmm) = {
