@@ -271,8 +271,8 @@ static void pmm_init() {
 
 MODULE_DEF(pmm) = {
   .init  = pmm_init,
-  .alloc = kalloc,
-  .free  = kfree,
+  .alloc = kalloc_safe,
+  .free  = kfree_safe,
 };
 
 void *kalloc_safe(size_t size) {
