@@ -1,5 +1,7 @@
+#ifndef OS_KERNEL_H
+#define OS_KERNEL_H
+
 #include <am.h>
-#include <lock.h>
 
 #define MODULE(mod) \
   typedef struct mod_##mod##_t mod_##mod##_t; \
@@ -26,7 +28,9 @@ MODULE(pmm) {
 };
 
 typedef struct task task_t;
+typedef struct spinlock spinlock_t;
 typedef struct semaphore sem_t;
+
 MODULE(kmt) {
   void (*init)();
   int  (*create)(task_t *task, const char *name, void (*entry)(void *arg), void *arg);

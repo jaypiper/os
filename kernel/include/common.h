@@ -4,6 +4,10 @@
 #include <lock.h>
 #include <debug.h>
 #include <util.h>
+#include <sem.h>
+#include <limits.h>
+#include <kmt.h>
+#include <devices.h>
 
 #define PMM_DEBUG
 #define PGSIZE    4096

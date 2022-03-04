@@ -1,4 +1,4 @@
-#include <kernel.h>
+#include <common.h>
 #include <klib.h>
 
 int main() {
