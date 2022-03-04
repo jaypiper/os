@@ -9,7 +9,7 @@
 #include <kmt.h>
 #include <devices.h>
 
-#define PMM_DEBUG
+// #define PMM_DEBUG
 #define PGSIZE    4096
 #define MAX_CPU 8
 
