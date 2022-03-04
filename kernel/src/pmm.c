@@ -271,12 +271,6 @@ static void pmm_init() {
 #endif
 }
 
-MODULE_DEF(pmm) = {
-  .init  = pmm_init,
-  .alloc = kalloc_safe,
-  .free  = kfree_safe,
-};
-
 void *kalloc_safe(size_t size) {
   bool i = ienabled();
   iset(false);
@@ -291,6 +285,12 @@ void kfree_safe(void *ptr) {
   kfree(ptr);
   if (i) iset(true);
 }
+
+MODULE_DEF(pmm) = {
+  .init  = pmm_init,
+  .alloc = kalloc_safe,
+  .free  = kfree_safe,
+};
 
 #ifdef PMM_DEBUG
 
