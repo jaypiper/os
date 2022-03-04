@@ -8,6 +8,7 @@
 #define Assert(cond, ...) \
   do { \
     if (!(cond)) { \
+      iset(false); \
       printf("\33[1;31m"); \
       printf(__VA_ARGS__); \
       printf("\33[0m\n"); \
