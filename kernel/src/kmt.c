@@ -6,16 +6,18 @@ static task_t* head = NULL;
 static task_t* running_task[MAX_CPU];
 static long long running_time[MAX_CPU];
 static spinlock_t head_lock;
+static int total_task;
 
 static Context* kmt_context_save(Event ev, Context * ctx){
+  Assert(ctx, "saved NULL context in event %d", ev.event);
   int cpu_id = cpu_current();
   long long cur_time = _sys_time();
   Assert(running_time[cpu_id] <= cur_time, "time is out of bound, running time %ld cur_time %ld", running_time[cpu_id], cur_time);
-  spin_lock(&head_lock);
+  Assert(running_task[cpu_id]->state == TASK_RUNNING || running_task[cpu_id]->state == TASK_BLOCKED, "task %s state %d invalid", running_task[cpu_id]->name, running_task[cpu_id]->state);
 
+  spin_lock(&head_lock);
   running_task[cpu_id]->context = ctx;
   running_task[cpu_id]->time += cur_time - running_time[cpu_id];
-  Assert(running_task[cpu_id]->state == TASK_RUNNING || running_task[cpu_id]->state == TASK_BLOCKED, "task %s state %d invalid", running_task[cpu_id]->name, running_task[cpu_id]->state);
   if(running_task[cpu_id]->state == TASK_RUNNING) running_task[cpu_id]->state = TASK_RUNNABLE;
   spin_unlock(&head_lock);
   return NULL;
@@ -26,14 +28,17 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   long long min_time = LLONG_MAX;
   task_t* select = NULL;
   spin_lock(&head_lock);
+  int cur_task = 0;
   for(task_t* h = head; h; h = h->next){
     Assert(*CANARY(h) == CANARY_MAGIC, "task %s stack overflow", h->name);
     if(h->time < min_time && h->state == TASK_RUNNABLE){
       select = h;
       min_time = h->time;
     }
+    cur_task ++;
     Assert(h->state >= TASK_UNUSED && h->state <= TASK_BLOCKED, "task state is invalid, name %s state %d\n", h->name, h->state);
   }
+  Assert(cur_task == total_task, "expect %d tasks, find %d", total_task, cur_task);
   Assert(select, "no available task");
   select->state = TASK_RUNNING;
   running_task[cpu_id] = select;
@@ -49,6 +54,7 @@ void kmt_init(){
   head = NULL;
   os->on_irq(INT_MIN, EVENT_NULL, kmt_context_save);
   os->on_irq(INT_MAX, EVENT_NULL, kmt_schedule);
+  total_task = 0;
 }
 
 
@@ -64,6 +70,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   spin_lock(&head_lock);
   task->next = head;
   head = task;
+  total_task ++;
   spin_unlock(&head_lock);
   return 0;
 }
@@ -79,6 +86,7 @@ void kmt_teardown(task_t *task){
     Assert(h, "task %s not find", task->name);
     h->next = task->next;
   }
+  total_task --;
   spin_unlock(&head_lock);
   pmm->free((void*)task->stack.start);
 }
@@ -98,6 +106,7 @@ void set_idle_thread(){
   spin_lock(&head_lock);
   idle_task->next = head;
   head = idle_task;
+  total_task ++;
   spin_unlock(&head_lock);
 }
 
