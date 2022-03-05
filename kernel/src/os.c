@@ -5,9 +5,6 @@ static handler_list_t* handlers_sorted;
 
 static spinlock_t handler_lock;
 
-static void* task_alloc(){
-  return pmm->alloc(sizeof(task_t));
-}
 
 static void tty_reader(void *arg) {
   device_t *tty = dev->lookup(arg);

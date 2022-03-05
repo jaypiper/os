@@ -149,3 +149,7 @@ void wakeup_task(sem_t* sem){
   select->wait_next = NULL;
   spin_unlock(&task_lock);
 }
+
+void* task_alloc(){
+  return pmm->alloc(sizeof(task_t));
+}
