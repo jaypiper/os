@@ -15,7 +15,7 @@ static Context* kmt_context_save(Event ev, Context * ctx){
   Assert(running_time[cpu_id] <= cur_time, "time is out of bound, running time %ld cur_time %ld", running_time[cpu_id], cur_time);
 
   spin_lock(&task_lock);
-  Assert(running_task[cpu_id]->state == TASK_RUNNING || running_task[cpu_id]->state == TASK_BLOCKED, "in context save, task %s state %d invalid", running_task[cpu_id]->name, running_task[cpu_id]->state);
+  Assert(TASK_STATE_VALID(running_task[cpu_id]->state), "in context save, task %s state %d invalid", running_task[cpu_id]->name, running_task[cpu_id]->state);
   running_task[cpu_id]->context = ctx;
   running_task[cpu_id]->time += cur_time - running_time[cpu_id];
   if(running_task[cpu_id]->state == TASK_RUNNING) running_task[cpu_id]->state = TASK_RUNNABLE;
@@ -36,7 +36,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
       min_time = h->time;
     }
     cur_task ++;
-    Assert(h->state >= TASK_UNUSED && h->state <= TASK_BLOCKED, "task state is invalid, name %s state %d\n", h->name, h->state);
+    Assert(TASK_STATE_VALID(h->state), "task state is invalid, name %s state %d\n", h->name, h->state);
   }
   Assert(cur_task == total_task, "expect %d tasks, find %d", total_task, cur_task);
   Assert(select, "no available task");
@@ -102,8 +102,8 @@ void set_idle_thread(){
   idle_task->wait_next = NULL;
   idle_task->time = 0;
   *CANARY(idle_task) = CANARY_MAGIC;
-  running_task[cpu_id] = idle_task;
   spin_lock(&task_lock);
+  running_task[cpu_id] = idle_task;
   idle_task->next = head;
   head = idle_task;
   total_task ++;

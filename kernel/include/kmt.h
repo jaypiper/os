@@ -23,4 +23,6 @@ void set_idle_thread();
 void mark_not_runable(sem_t* sem, int cpu_id);
 void wakeup_task(sem_t* sem);
 
+#define TASK_STATE_VALID(state) ((state >= TASK_UNUSED) && (state <= TASK_BLOCKED))
+
 #endif
