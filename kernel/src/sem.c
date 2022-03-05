@@ -12,8 +12,8 @@ void sem_wait(sem_t *sem){
   spin_lock(&sem->lock);
   Assert(sem->count >= 0, "count of sem (%s) is negative (%d)", sem->name, sem->count);
   while(sem->count == 0){
-    spin_unlock(&sem->lock);
     mark_not_runable(sem, cpu_current());
+    spin_unlock(&sem->lock);
     yield();
     spin_lock(&sem->lock);
   }
