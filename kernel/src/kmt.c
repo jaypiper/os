@@ -13,9 +13,9 @@ static Context* kmt_context_save(Event ev, Context * ctx){
   int cpu_id = cpu_current();
   long long cur_time = _sys_time();
   Assert(running_time[cpu_id] <= cur_time, "time is out of bound, running time %ld cur_time %ld", running_time[cpu_id], cur_time);
-  Assert(running_task[cpu_id]->state == TASK_RUNNING || running_task[cpu_id]->state == TASK_BLOCKED, "task %s state %d invalid", running_task[cpu_id]->name, running_task[cpu_id]->state);
 
   spin_lock(&head_lock);
+  Assert(running_task[cpu_id]->state == TASK_RUNNING || running_task[cpu_id]->state == TASK_BLOCKED, "in context save, task %s state %d invalid", running_task[cpu_id]->name, running_task[cpu_id]->state);
   running_task[cpu_id]->context = ctx;
   running_task[cpu_id]->time += cur_time - running_time[cpu_id];
   if(running_task[cpu_id]->state == TASK_RUNNING) running_task[cpu_id]->state = TASK_RUNNABLE;
