@@ -6,9 +6,11 @@ void sem_init(sem_t *sem, const char *name, int value){
   sem->count = value;
   sem->wait_list = NULL;
   spin_init(&sem->lock, name);
+  SET_SEM(sem);
 }
 
 void sem_wait(sem_t *sem){
+  Assert(CHECK_SEM(sem), "sem fence");
   spin_lock(&sem->lock);
   Assert(sem->count >= 0, "count of sem (%s) is negative (%d)", sem->name, sem->count);
   while(sem->count == 0){
@@ -19,12 +21,16 @@ void sem_wait(sem_t *sem){
   }
   sem->count --;
   spin_unlock(&sem->lock);
+  Assert(CHECK_SEM(sem), "sem fence");
 }
 
 void sem_signal(sem_t *sem){
+  Assert(CHECK_SEM(sem), "sem fence");
   spin_lock(&sem->lock);
   Assert(sem->count >= 0, "count of sem (%s) is negative (%d)", sem->name, sem->count);
   if(sem->wait_list) wakeup_task(sem);
   sem->count ++;
   spin_unlock(&sem->lock);
+  Assert(CHECK_SEM(sem), "sem fence");
 }
+

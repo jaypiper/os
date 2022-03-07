@@ -56,4 +56,7 @@ void spin_init(spinlock_t *lk, const char* name){
   lk->locked = 0;
   lk->cpu_id = -1;
   strcpy(lk->name, name);
+  SET_LOCK(lk);
+}
+
 }
