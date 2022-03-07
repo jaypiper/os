@@ -49,4 +49,11 @@ MODULE(dev) {
   device_t *(*lookup)(const char *name);
 };
 
+typedef struct cpu_state{
+  int ncli;   // number of cli
+  int intena; // interrupt enabled before cli
+}cpu_t;
+
+cpu_t* get_cpu();
+
 #endif

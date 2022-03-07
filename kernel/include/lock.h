@@ -4,7 +4,7 @@
 typedef struct spinlock{
   int locked;
   char name[32];
-  bool ienabled;
+  int cpu_id;
 }spinlock_t;
 
 void spin_lock(spinlock_t *lk);
