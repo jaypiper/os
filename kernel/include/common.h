@@ -9,6 +9,7 @@
 #include <devices.h>
 
 // #define PMM_DEBUG
+#define KMT_DEBUG
 #define PGSIZE    4096
 #define MAX_CPU 8
 #define STACK_SIZE (32 * PGSIZE)

@@ -153,3 +153,41 @@ void wakeup_task(sem_t* sem){
 void* task_alloc(){
   return pmm->alloc(sizeof(task_t));
 }
+
+#ifdef KMT_DEBUG
+
+#define PRODUCER_NUM 4
+#define CONSUMER_NUM 3
+#define P kmt->sem_wait
+#define V kmt->sem_signal
+
+sem_t empty;
+sem_t fill;
+
+static void producer(void *arg) {
+  while(1){
+    P(&empty); printf("("); V(&fill);
+    volatile int i = 20000;
+    while(i--) ;
+  }
+}
+static void consumer(void *arg) {
+  while(1){
+    P(&fill); printf(")"); V(&empty);
+    volatile int i = 10000;
+    while(i--) ;
+  }
+}
+
+void init_kmt_debug(){
+  kmt->sem_init(&empty, "empty", 6);
+  kmt->sem_init(&fill, "fill", 0);
+  for(int i = 0; i < PRODUCER_NUM; i++){
+    kmt->create(task_alloc(), "producer", producer, "producer");
+  }
+  for(int i = 0; i < CONSUMER_NUM; i++){
+    kmt->create(task_alloc(), "consumer", consumer, "comsumer");
+  }
+}
+
+#endif

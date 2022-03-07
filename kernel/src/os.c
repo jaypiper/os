@@ -6,6 +6,9 @@ static handler_list_t* handlers_sorted;
 static spinlock_t handler_lock;
 
 
+#ifdef KMT_DEBUG
+
+#else
 static void tty_reader(void *arg) {
   device_t *tty = dev->lookup(arg);
   char cmd[128], resp[128], ps[16];
@@ -18,15 +21,20 @@ static void tty_reader(void *arg) {
     tty->ops->write(tty, 0, resp, strlen(resp));
   }
 }
-
+#endif
 static void os_init() {
   handlers_sorted = NULL;
   spin_init(&handler_lock, "handler lock");
   pmm->init();
   kmt->init();
+#ifdef KMT_DEBUG
+  void init_kmt_debug();
+  init_kmt_debug();
+#else
   dev->init();
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");
+#endif
 }
 
 static void os_run() {
