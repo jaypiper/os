@@ -5,6 +5,11 @@ static handler_list_t* handlers_sorted;
 
 static spinlock_t handler_lock;
 
+static cpu_t cpus[MAX_CPU];
+
+cpu_t* get_cpu(){
+  return &cpus[cpu_current()];
+}
 
 #ifdef KMT_DEBUG
 
@@ -23,6 +28,10 @@ static void tty_reader(void *arg) {
 }
 #endif
 static void os_init() {
+  for(int i = 0; i < MAX_CPU; i++){
+    cpus[i].intena = 1;
+    cpus[i].ncli = 0;
+  }
   handlers_sorted = NULL;
   spin_init(&handler_lock, "handler lock");
   pmm->init();
