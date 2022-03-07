@@ -1,6 +1,7 @@
 #ifndef OS_KMT_H
 #define OS_KMT_H
 #include <sem.h>
+#include <common.h>
 
 enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED};
 

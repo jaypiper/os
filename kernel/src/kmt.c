@@ -1,5 +1,6 @@
 #include <common.h>
 #include <pmm.h>
+#include <kmt.h>
 
 static task_t* head = NULL;
 
