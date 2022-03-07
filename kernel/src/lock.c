@@ -59,4 +59,15 @@ void spin_init(spinlock_t *lk, const char* name){
   SET_LOCK(lk);
 }
 
+void mutex_lock(spinlock_t *lk){
+  uint64_t us = _sys_time();
+  while(atomic_xchg(&(lk->locked), 1)){
+    Assert(_sys_time() - us <= 1000000, "spin lock %s wait too long ", lk->name);
+  };
+}
+
+void mutex_unlock(spinlock_t *lk){
+  atomic_xchg(&(lk->locked), 0);
+}
+
 }

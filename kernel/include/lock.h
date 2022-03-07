@@ -12,6 +12,7 @@ typedef struct spinlock{
 void spin_lock(spinlock_t *lk);
 void spin_unlock(spinlock_t *lk);
 void spin_init(spinlock_t *lk, const char* name);
+bool holding(spinlock_t* lk);
 void mutex_lock(spinlock_t *lk);
 void mutex_unlock(spinlock_t *lk);
 

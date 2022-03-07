@@ -37,9 +37,6 @@ static void os_run() {
   extern void* pmm_test();
   pmm_test();
 #endif
-  iset(false);
-/* store current thread */
-  set_idle_thread();
   iset(true);
   while (1) ;
 }
@@ -48,6 +45,7 @@ Context* os_trap(Event ev, Context *context){
   Assert(ev.event != EVENT_ERROR, "recieve error event");
   Assert(ev.event != EVENT_PAGEFAULT, "recieve error event");
   Context* ret = NULL;
+  mutex_lock(&handler_lock);
   for(handler_list_t* h = handlers_sorted; h; h = h->next){
     if(h->event == EVENT_NULL || h->event == ev.event){
       Context* r = h->handler(ev, context);
@@ -55,6 +53,7 @@ Context* os_trap(Event ev, Context *context){
       if(r) ret = r;
     }
   }
+  mutex_unlock(&handler_lock);
   Assert(ret, "returning NULL context for event %d", ev.event);
   // TODO: check whether s is sane
   return ret;
@@ -66,7 +65,7 @@ void os_on_irq(int seq, int event, handler_t handler){
   new_handler->event = event;
   new_handler->handler = handler;
 
-  spin_lock(&handler_lock);
+  mutex_lock(&handler_lock);
   if(!handlers_sorted || seq <= handlers_sorted->seq){
     new_handler->next = handlers_sorted;
     handlers_sorted = new_handler;
@@ -79,7 +78,7 @@ void os_on_irq(int seq, int event, handler_t handler){
       }
     }
   }
-  spin_unlock(&handler_lock);
+  mutex_unlock(&handler_lock);
 }
 
 MODULE_DEF(os) = {

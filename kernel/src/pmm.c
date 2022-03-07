@@ -47,11 +47,11 @@ static inline void update_buddy_free(int select){ // children of select are corr
 }
 
 static void* global_newpage(){  // DFS & first fit
-  spin_lock(&global_lock);
+  mutex_lock(&global_lock);
 
   int select=0;
   if(buddy_tree[select].pgnum == 0) {
-    spin_unlock(&global_lock);
+    mutex_unlock(&global_lock);
     return NULL;
   }
   for(int i = 0; i < buddy_tree[0].height; i++){
@@ -62,7 +62,7 @@ static void* global_newpage(){  // DFS & first fit
     Assert(buddy_tree[select].pgnum != 0, "select %d type %d height %d\n", select, buddy_tree[select].type, buddy_tree[select].height);
   }
   update_buddy_alloc(select);
-  spin_unlock(&global_lock);
+  mutex_unlock(&global_lock);
   int pgidx = select - leaf_base;
   void* ret = bstart + pgidx * PGSIZE;
   Assert(ret >= pheap_start && ret < pheap_end, "newpage 0x%lx not in [0x%lx, 0x%lx) bstart=0x%lx pgidx 0x%x\n", (uintptr_t)ret, (uintptr_t)pheap_start, (uintptr_t)pheap_end, bstart, pgidx);
@@ -73,10 +73,10 @@ static void* global_alloc(size_t size){
   int depth = sizeof(unsigned long long)*8 - __builtin_clzll(size-1) - PG_BITS;
   if(depth < 0) depth = 0;
   int alloc_pgnum = 1 << depth;
-  spin_lock(&global_lock);
+  mutex_lock(&global_lock);
   int select = 0;
   if(buddy_tree[select].max_pgnum < alloc_pgnum) {
-    spin_unlock(&global_lock);
+    mutex_unlock(&global_lock);
     return NULL;
   }
   for(int i = 0; i < (buddy_tree[0].height - depth); i++){
@@ -89,7 +89,7 @@ static void* global_alloc(size_t size){
   update_buddy_alloc(select);
   int pgidx = select;
   while(buddy_tree[pgidx].height != 0) pgidx = LCHILD(pgidx);  // down to leaf
-  spin_unlock(&global_lock);
+  mutex_unlock(&global_lock);
   pgidx = pgidx - leaf_base;
   void* ret = bstart + pgidx * PGSIZE;
   Assert(ret >= pheap_start && ret < pheap_end, "newpage 0x%lx not in [0x%lx, 0x%lx) bstart=0x%lx pgidx %d\n", (uintptr_t)ret, (uintptr_t)pheap_start, (uintptr_t)pheap_end, bstart, pgidx);
@@ -99,11 +99,11 @@ static void* global_alloc(size_t size){
 static void global_free(void* ptr){
   Assert(((uintptr_t)ptr & PGMASK) == 0, "free addr 0x%lx\n", (uintptr_t)ptr);
   int pgidx = (uintptr_t)(ptr - bstart) / PGSIZE + leaf_base;
-  spin_lock(&global_lock);
+  mutex_lock(&global_lock);
   while(pgidx != 0 && buddy_tree[pgidx].type != BLOCK_ALLOCATED) pgidx = PARENT(pgidx);
   Assert(buddy_tree[pgidx].type == BLOCK_ALLOCATED, "invalid free addr 0x%lx\n", (uintptr_t)ptr);
   update_buddy_free(pgidx);
-  spin_unlock(&global_lock);
+  mutex_unlock(&global_lock);
 }
 
 static smeta_t* slab_newpage(int bit, int cpu_id){
@@ -144,7 +144,7 @@ static void *kalloc(size_t size) {
   int bits = MAX(2, sizeof(unsigned long long)*8 - __builtin_clzll(size-1));
   size = 1 << bits;
   int slab_idx = bits - 2;
-  spin_lock(&(cpu_lock[cpu_id]));
+  mutex_lock(&(cpu_lock[cpu_id]));
   slab_t* select_slab = &slab[cpu_id][slab_idx];
   smeta_t* select_page = select_slab->page;
   Assert((size & ((1 << select_page->bit_num)-1)) == 0, "alloc size 0x%lx bit_num %d slab_idx %d", size, select_page->bit_num, slab_idx);
@@ -153,7 +153,7 @@ static void *kalloc(size_t size) {
   if(select_slab->total_num == 0){
     smeta_t* newpage = slab_newpage(bits, cpu_id);
     if(!newpage){
-      spin_unlock(&cpu_lock[cpu_id]);
+      mutex_unlock(&cpu_lock[cpu_id]);
       return NULL;
     }
     newpage->next = select_page;
@@ -183,7 +183,7 @@ static void *kalloc(size_t size) {
   select_slab->total_num --;
   select_page->free_num --;
 
-  spin_unlock(&cpu_lock[cpu_id]);
+  mutex_unlock(&cpu_lock[cpu_id]);
 
   Assert(((uintptr_t)ret &(size-1)) == 0, "alloc size 0x%lx at 0x%lx page 0x%lx", size, (uintptr_t)ret, select_page);
   Assert(ROUNDDOWN((uintptr_t)ret, PGSIZE) == ROUNDDOWN((uintptr_t)ret + size - 1, PGSIZE), "alloc cross page, ret 0x%lx size 0x%lx\n", (uintptr_t)ret, size);
@@ -197,12 +197,12 @@ static void kfree(void *ptr) {
   if(((uintptr_t)ptr & PGMASK) == 0) return global_free(ptr);
   smeta_t* select_page = (smeta_t*)ROUNDDOWN(ptr, PGSIZE);
   int cpu_id = select_page->cpu_id;
-  spin_lock(&cpu_lock[cpu_id]);
+  mutex_lock(&cpu_lock[cpu_id]);
   select_page->free_num ++;
   slab[cpu_id][select_page->bit_num-2].total_num ++;
   int bit_idx = (ROUNDUP(ptr, PGSIZE) - (uintptr_t)ptr) / (1 << select_page->bit_num) - 1;
   clear_bitmap(select_page->bitmap, bit_idx);
-  spin_unlock(&cpu_lock[cpu_id]);
+  mutex_unlock(&cpu_lock[cpu_id]);
 }
 
 static void pmm_init() {
@@ -326,10 +326,10 @@ static long long util_time;
 
 void disp_util(){
   if(_sys_time() - util_time >= 10000000){
-    spin_lock(&util_lock);
+    mutex_lock(&util_lock);
     printf("perc %d total %d MB used %d MB\n", ((uint64_t)total_size*100) / pmsize, pmsize >> 20, total_size >> 20);
     util_time = _sys_time();
-    spin_unlock(&util_lock);
+    mutex_unlock(&util_lock);
   }
 }
 
@@ -369,7 +369,7 @@ void pmm_debug_alloc(pmm_workload* wl){
   void* ptr = pmm->alloc(size);
   check_alloc(ptr, size);
   // printf("at 0x%lx alloc_idx %d \n", (uintptr_t)ptr, alloc_idx);
-  spin_lock(&log_lock);
+  mutex_lock(&log_lock);
   if(ptr){
     alloc_log[alloc_idx] = ptr;
     size_log[alloc_idx] = size;
@@ -377,12 +377,12 @@ void pmm_debug_alloc(pmm_workload* wl){
     alloc_idx = (alloc_idx + 1) & (MAX_LOG_SIZE - 1);
     disp_util();
   }
-  spin_unlock(&log_lock);
+  mutex_unlock(&log_lock);
   if(ptr) memset(ptr, ALLOC_MAGIC, size);
 }
 
 void pmm_debug_free(pmm_workload* wl){
-  spin_lock(&log_lock);
+  mutex_lock(&log_lock);
   void* ptr = alloc_log[free_idx];
   if(ptr) {
     // printf("free %lx free_idx %d \n", (uintptr_t)ptr, free_idx);
@@ -391,7 +391,7 @@ void pmm_debug_free(pmm_workload* wl){
     memset(ptr, FREE_MAGIC, size_log[free_idx]);
     free_idx = (free_idx + 1) & (MAX_LOG_SIZE - 1);
   }
-  spin_unlock(&log_lock);
+  mutex_unlock(&log_lock);
   pmm->free(ptr);
 }
 
