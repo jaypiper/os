@@ -37,6 +37,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
     }
     cur_task ++;
     Assert(TASK_STATE_VALID(h->state), "task state is invalid, name %s state %d\n", h->name, h->state);
+    Assert(CHECK_TASK(h), "task %s canary check fail", h->name);
   }
   Assert(cur_task == total_task, "expect %d tasks, find %d", total_task, cur_task);
   Assert(select, "no available task");
@@ -54,20 +55,28 @@ void kmt_init(){
   head = NULL;
   os->on_irq(INT_MIN, EVENT_NULL, kmt_context_save);
   os->on_irq(INT_MAX, EVENT_NULL, kmt_schedule);
+  for(int i = 0; i < cpu_count(); i++){
+    idle_task[i] = pmm->alloc(sizeof(task_t));
+    idle_task[i]->name = "idle";
+    idle_task[i]->state = TASK_RUNNING;
+    idle_task[i]->context = kcontext((Area){.start = (void*)idle_task[i]->stack, .end = (void*)idle_task[i]->stack + STACK_SIZE}, idle_entry, NULL);
+    idle_task[i]->wait_next = NULL;
+    idle_task[i]->time = 0;
+    SET_TASK(idle_task[i]);
+  }
+  memset(running_task, 0, sizeof(running_task));
   total_task = 0;
 }
 
 
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *arg){
-  task->stack.start = pmm->alloc(STACK_SIZE);
-  task->stack.end = task->stack.start + STACK_SIZE;
   task->name = name;
   task->state = TASK_RUNNABLE;
-  task->context = kcontext(task->stack, entry, arg);
+  task->context = kcontext((Area){.start = (void*)task->stack, .end = (void*)task->stack + STACK_SIZE}, entry, arg);
   task->wait_next = NULL;
   task->time = 0;
-  *CANARY(task) = CANARY_MAGIC;
-  spin_lock(&task_lock);
+  SET_TASK(task);
+  mutex_lock(&task_lock);
   task->next = head;
   head = task;
   total_task ++;
