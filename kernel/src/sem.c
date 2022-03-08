@@ -2,8 +2,7 @@
 #include <kmt.h>
 
 void sem_init(sem_t *sem, const char *name, int value){
-  Assert(strlen(name) < sizeof(sem->name), "sem name %s is too long", name);
-  strcpy(sem->name, name);
+  sem->name = name;
   sem->count = value;
   sem->wait_list = NULL;
   spin_init(&sem->lock, name);

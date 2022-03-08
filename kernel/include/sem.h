@@ -6,7 +6,7 @@
 typedef struct semaphore{
   uint32_t fence1;
   int count;
-  char name[32];
+  const char* name;
   spinlock_t lock;
   task_t* wait_list;
   uint32_t fence2;

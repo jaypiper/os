@@ -4,7 +4,7 @@
 typedef struct spinlock{
   uint32_t fence1;
   int locked;
-  char name[32];
+  const char* name;
   int cpu_id;
   uint32_t fence2;
 }spinlock_t;

@@ -214,10 +214,8 @@ static void pmm_init() {
   pheap_start = (void*)ROUNDUP((uintptr_t)heap.start, PGSIZE);
   pheap_end = (void*)ROUNDDOWN((uintptr_t)heap.end, PGSIZE);
   spin_init(&global_lock, "global lock");
-  char name_buf[32];
   for(int i = 0; i < MAX_CPU; i++){
-    sprintf(name_buf, "local%d", i);
-    spin_init(&cpu_lock[i], name_buf);
+    spin_init(&cpu_lock[i], "local");
   }
   /* init buddy */
   uintptr_t bsize = (uintptr_t)(pheap_end - pheap_start);

@@ -52,10 +52,9 @@ void spin_unlock(spinlock_t *lk){
 }
 
 void spin_init(spinlock_t *lk, const char* name){
-  Assert(strlen(name) < sizeof(lk->name), "spinlock name %s is too long", name);
   lk->locked = 0;
   lk->cpu_id = -1;
-  strcpy(lk->name, name);
+  lk->name = name;
   SET_LOCK(lk);
 }
 
