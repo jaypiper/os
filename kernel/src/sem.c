@@ -1,7 +1,7 @@
 #include <common.h>
 #include <kmt.h>
 
-void sem_init(sem_t *sem, const char *name, int value){
+void ksem_init(sem_t *sem, const char *name, int value){
   sem->name = name;
   sem->count = value;
   sem->wait_list = NULL;
@@ -9,7 +9,7 @@ void sem_init(sem_t *sem, const char *name, int value){
   SET_SEM(sem);
 }
 
-void sem_wait(sem_t *sem){
+void ksem_wait(sem_t *sem){
   Assert(CHECK_SEM(sem), "sem fence");
   spin_lock(&sem->lock);
   sem->count --;
@@ -26,7 +26,7 @@ void sem_wait(sem_t *sem){
   Assert(CHECK_SEM(sem), "sem fence");
 }
 
-void sem_signal(sem_t *sem){
+void ksem_signal(sem_t *sem){
   Assert(CHECK_SEM(sem), "sem fence");
   spin_lock(&sem->lock);
   Assert(sem->count >= 0 || sem->wait_list, "sem %s with count %d has empty wait_list", sem->name, sem->count);

@@ -12,9 +12,9 @@ typedef struct semaphore{
   uint32_t fence2;
 } sem_t;
 
-void sem_init(sem_t *sem, const char *name, int value);
-void sem_wait(sem_t *sem);
-void sem_signal(sem_t *sem);
+void ksem_init(sem_t *sem, const char *name, int value);
+void ksem_wait(sem_t *sem);
+void ksem_signal(sem_t *sem);
 
 #define SEM_FENCE1_MAGIC 0x12345
 #define SEM_FENCE2_MAGIC 0x6789a
