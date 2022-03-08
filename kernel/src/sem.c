@@ -13,7 +13,7 @@ void ksem_wait(sem_t *sem){
   Assert(CHECK_SEM(sem), "sem fence");
   spin_lock(&sem->lock);
   sem->count --;
-  int is_blocked;
+  int is_blocked = 0;
   if(sem->count < 0){
     mark_not_runable(sem, cpu_current());
     is_blocked = 1;
