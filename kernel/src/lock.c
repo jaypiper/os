@@ -69,4 +69,6 @@ void mutex_unlock(spinlock_t *lk){
   atomic_xchg(&(lk->locked), 0);
 }
 
+int mutex_trylock(spinlock_t* lk){
+  return atomic_xchg(&(lk->locked), 1);
 }
