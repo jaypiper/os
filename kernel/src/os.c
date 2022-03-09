@@ -58,7 +58,7 @@ static void os_run() {
   pmm_test();
 #endif
   iset(true);
-  while (1) ;
+  while (1) yield();
 }
 
 Context* os_trap(Event ev, Context *context){
