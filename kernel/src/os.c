@@ -53,10 +53,6 @@ static void os_run() {
   // for (const char *s = "Hello World from CPU #*\n"; *s; s++) {
   //   putch(*s == '*' ? '0' + cpu_current() : *s);
   // }
-#ifdef PMM_DEBUG
-  extern void* pmm_test();
-  pmm_test();
-#endif
   iset(true);
   while (1) yield();
 }

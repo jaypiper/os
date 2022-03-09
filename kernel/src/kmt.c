@@ -184,6 +184,14 @@ static void consumer(void *arg) {
   }
 }
 
+#ifdef PMM_DEBUG
+#define PMM_NUM 2
+static void thread_pmm(void* arg){
+  extern void pmm_test();
+  pmm_test();
+}
+#endif
+
 void init_kmt_debug(){
   kmt->sem_init(&empty, "empty", PARENTHESIS_DEPTH);
   kmt->sem_init(&fill, "fill", 0);
@@ -193,6 +201,11 @@ void init_kmt_debug(){
   for(int i = 0; i < CONSUMER_NUM; i++){
     kmt->create(task_alloc(), "consumer", consumer, "comsumer");
   }
+#ifdef PMM_DEBUG
+  for(int i = 0; i < PMM_NUM; i++){
+    kmt->create(task_alloc(), "pmm", thread_pmm, "pmm");
+  }
+#endif
 }
 
 #endif
