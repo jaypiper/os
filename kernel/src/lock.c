@@ -14,24 +14,26 @@ void popcli(){
   Assert(!ienabled(), "ienabled before popcli in cpu %d", cpu_current());
   Assert(_cpu->ncli > 0, "ncli <= 0 in before popcli in cpu %d", cpu_current());
   _cpu->ncli --;
-  if(_cpu->ncli == 0) iset(_cpu->intena);
+  if(_cpu->ncli == 0 && _cpu->intena == 1) iset(true);
 }
 
 bool holding(spinlock_t* lk){
+  pushcli();
+  int ret = lk->locked && (lk->cpu_id == cpu_current());
+  popcli();
   Assert(lk->locked == 0 || lk->locked == 1, "invalid locked %d %s\n", lk->locked, lk->name);
-  return lk->locked && (lk->cpu_id == cpu_current());
+  return ret;
 }
 
 void spin_lock(spinlock_t *lk){
   Assert(CHECK_LOCK(lk), "lk fence");
   pushcli();
-  int cpu_id = cpu_current();
-  Assert(!holding(lk), "lock %s(%d) is already held in cpu %d", lk->name, lk->locked, cpu_id);
+  Assert(!holding(lk), "lock %s(%d) is already held in cpu %d", lk->name, lk->locked, cpu_current());
   uint64_t us = _sys_time();
   while(atomic_xchg(&(lk->locked), 1)){
     Assert(_sys_time() - us <= 1000000, "spin lock %s wait too long ", lk->name);
   };
-  lk->cpu_id = cpu_id;
+  lk->cpu_id = cpu_current();
 
   Assert(CHECK_LOCK(lk), "lk fence");
   Assert(lk->cpu_id < MAX_CPU && lk->locked <= 1, "lk %s cpu %d locked %d\n", lk->name, lk->cpu_id, lk->locked);

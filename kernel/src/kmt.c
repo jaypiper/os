@@ -6,9 +6,14 @@ static task_t* head = NULL;
 
 static task_t* running_task[MAX_CPU];
 static task_t* idle_task[MAX_CPU];
-static long long running_time[MAX_CPU];
+static task_t* last_task[MAX_CPU];
+static task_t* all_task[MAX_TASK];
 static spinlock_t task_lock;
 static int total_task;
+
+#define CURRENT_TASK running_task[cpu_current()]
+#define CURRENT_IDLE idle_task[cpu_current()]
+#define LAST_TASK last_task[cpu_current()]
 
 static void idle_entry(void* args){
   while(1) ;
@@ -16,50 +21,49 @@ static void idle_entry(void* args){
 
 static Context* kmt_context_save(Event ev, Context * ctx){
   Assert(ctx, "saved NULL context in event %d", ev.event);
-  int cpu_id = cpu_current();
-  long long cur_time = _sys_time();
-  if(!running_task[cpu_id]) running_task[cpu_id] = idle_task[cpu_id];
+  if(!CURRENT_TASK) CURRENT_TASK = CURRENT_IDLE;
   else{
-    Assert(running_time[cpu_id] <= cur_time, "time is out of bound, running time %ld cur_time %ld", running_time[cpu_id], cur_time);
-
-    mutex_lock(&task_lock);
-    Assert(TASK_STATE_VALID(running_task[cpu_id]->state), "in context save, task %s state %d invalid", running_task[cpu_id]->name, running_task[cpu_id]->state);
-    running_task[cpu_id]->context = ctx;
-    running_task[cpu_id]->time += cur_time - running_time[cpu_id];
-    if(running_task[cpu_id]->state == TASK_RUNNING) running_task[cpu_id]->state = TASK_RUNNABLE;
-    mutex_unlock(&task_lock);
+    Assert(TASK_STATE_VALID(CURRENT_TASK->state), "in context save, task %s state %d invalid", CURRENT_TASK->name, CURRENT_TASK->state);
+    CURRENT_TASK->context = ctx;
+    if(CURRENT_TASK->state == TASK_RUNNING) CURRENT_TASK->state = TASK_TO_BE_RUNNABLE;
   }
+  if(LAST_TASK && LAST_TASK != CURRENT_TASK){
+    if(LAST_TASK && LAST_TASK->state == TASK_TO_BE_RUNNABLE) LAST_TASK->state = TASK_RUNNABLE;
+    mutex_unlock(&LAST_TASK->lock);
+  }
+  LAST_TASK = CURRENT_TASK;
+
   return NULL;
 }
 
 static Context* kmt_schedule(Event ev, Context * ctx){
-  int cpu_id = cpu_current();
-  long long min_time = LLONG_MAX;
-  task_t* select = idle_task[cpu_id];
-  mutex_lock(&task_lock);
-  int cur_task = 0;
-  for(task_t* h = head; h; h = h->next){
-    if(h->time < min_time && h->state == TASK_RUNNABLE){
-      select = h;
-      min_time = h->time;
+  task_t* select = !CURRENT_TASK->blocked && CURRENT_TASK->state == TASK_TO_BE_RUNNABLE ? CURRENT_TASK : CURRENT_IDLE;
+
+  // for(int i = 0; i < 8 * total_task; i++){
+  //   int task_idx = rand() % total_task;
+  for(int task_idx = 0; task_idx < total_task; task_idx ++){
+    int locked = !mutex_trylock(&all_task[task_idx]->lock);
+    if(locked){
+      Assert(all_task[task_idx]->state != TASK_RUNNING, "task %s running", all_task[task_idx]->name);
+      if(all_task[task_idx]->state == TASK_RUNNABLE && !all_task[task_idx]->blocked){
+        select = all_task[task_idx];
+        break;
+      }
+      mutex_unlock(&all_task[task_idx]->lock);
     }
-    cur_task ++;
-    Assert(TASK_STATE_VALID(h->state), "task state is invalid, name %s state %d\n", h->name, h->state);
-    Assert(CHECK_TASK(h), "task %s canary check fail", h->name);
   }
-  Assert(cur_task == total_task, "expect %d tasks, find %d", total_task, cur_task);
   select->state = TASK_RUNNING;
-  running_task[cpu_id] = select;
-  running_time[cpu_id] = _sys_time();
-  mutex_unlock(&task_lock);
-  Assert(select->context, "schedule %s return NULL context", select->name);
+  CURRENT_TASK = select;
+  Assert(TASK_STATE_VALID(select->state), "task state is invalid, name %s state %d\n", select->name, select->state);
+  Assert(CHECK_TASK(select), "task %s canary check fail", select->name);
+
   return select->context;
 }
 
 void kmt_init(){
   spin_init(&task_lock, "task lock");
   memset(running_task, 0, sizeof(running_task));
-  memset(running_time, 0, sizeof(running_time));
+  memset(last_task, 0, sizeof(last_task));
   head = NULL;
   os->on_irq(INT_MIN, EVENT_NULL, kmt_context_save);
   os->on_irq(INT_MAX, EVENT_NULL, kmt_schedule);
@@ -67,9 +71,11 @@ void kmt_init(){
     idle_task[i] = pmm->alloc(sizeof(task_t));
     idle_task[i]->name = "idle";
     idle_task[i]->state = TASK_RUNNING;
+    idle_task[i]->stack = pmm->alloc(STACK_SIZE);
     idle_task[i]->context = kcontext((Area){.start = (void*)idle_task[i]->stack, .end = (void*)idle_task[i]->stack + STACK_SIZE}, idle_entry, NULL);
     idle_task[i]->wait_next = NULL;
-    idle_task[i]->time = 0;
+    idle_task[i]->blocked = 0;
+    spin_init(&idle_task[i]->lock, "idle");
     SET_TASK(idle_task[i]);
   }
   memset(running_task, 0, sizeof(running_task));
@@ -80,32 +86,35 @@ void kmt_init(){
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *arg){
   task->name = name;
   task->state = TASK_RUNNABLE;
+  task->stack = pmm->alloc(STACK_SIZE);
   task->context = kcontext((Area){.start = (void*)task->stack, .end = (void*)task->stack + STACK_SIZE}, entry, arg);
   task->wait_next = NULL;
-  task->time = 0;
+  task->blocked = 0;
+  spin_init(&task->lock, name);
   SET_TASK(task);
   mutex_lock(&task_lock);
-  task->next = head;
-  head = task;
-  total_task ++;
+  Assert(total_task < MAX_TASK, "task full");
+  all_task[total_task ++] = task;
   mutex_unlock(&task_lock);
   return 0;
 }
 
 void kmt_teardown(task_t *task){
-  Assert(head, "no task");
   mutex_lock(&task_lock);
-  if(head == task){
-    head = head->next;
-  }else{
-    task_t* h = head;
-    while(h->next && (h->next != task)) h = h->next;
-    Assert(h, "task %s not find", task->name);
-    h->next = task->next;
+  int idx = -1;
+  for(int i = 0; i < total_task; i++){
+    if(running_task[i] == task){
+      idx = i;
+      break;
+    }
   }
+  Assert(idx != -1, "task %s not find", task->name);
   total_task --;
+  for(int i = idx; i < total_task; i++){
+    running_task[i] = running_task[i + 1];
+  }
   mutex_unlock(&task_lock);
-  pmm->free((void*)task->stack);
+  pmm->free((void*)task);
 }
 
 
@@ -116,38 +125,37 @@ MODULE_DEF(kmt) = {
   .spin_init  = spin_init,
   .spin_lock  = spin_lock,
   .spin_unlock  = spin_unlock,
-  .sem_init = sem_init,
-  .sem_wait = sem_wait,
-  .sem_signal = sem_signal
+  .sem_init = ksem_init,
+  .sem_wait = ksem_wait,
+  .sem_signal = ksem_signal
 };
 
 /* sem must be locked */
 void mark_not_runable(sem_t* sem, int cpu_id){
   Assert(holding(&sem->lock), "lock in %s is not held", sem->name);
-  mutex_lock(&task_lock);
-  running_task[cpu_id]->state = TASK_BLOCKED;
+  Assert(cpu_id == cpu_current(), "in mark %s cpu_id=%d cpu current=%d", sem->name, cpu_id, cpu_current());
+  Assert(running_task[cpu_id]->lock.locked, "in mark, task %s is not locked", running_task[cpu_id]->name);
+  Assert(running_task[cpu_id]->state == TASK_RUNNING, "in sem mark %s, task %s is not running", sem->name, running_task[cpu_id]->name);
+  CURRENT_TASK->blocked = 1;
   if(!sem->wait_list){
     sem->wait_list = running_task[cpu_id];
   } else{
     task_t* last = NULL;
     for(last = sem->wait_list; last->wait_next; last = last->wait_next){
-      Assert(last->state == TASK_BLOCKED, "cpu %d: task %s in sem %s is not blocked", cpu_id, last->name, sem->name);
+      Assert(last->blocked, "cpu %d: task %s in sem %s is not blocked", cpu_id, last->name, sem->name);
     }
     last->wait_next = running_task[cpu_id];
   }
   running_task[cpu_id]->wait_next = NULL;
-  mutex_unlock(&task_lock);
 }
 
 void wakeup_task(sem_t* sem){
   if(!sem->wait_list) return;
-  mutex_lock(&task_lock);
   task_t* select = sem->wait_list;
-  Assert(select->state == TASK_BLOCKED, "task %s in sem %s is not blocked", select->name, sem->name);
+  Assert(select->blocked, "task %s in sem %s is not blocked", select->name, sem->name);
   sem->wait_list = select->wait_next;
-  select->state = TASK_RUNNABLE;
+  select->blocked = 0;
   select->wait_next = NULL;
-  mutex_unlock(&task_lock);
 }
 
 void* task_alloc(){
@@ -157,7 +165,8 @@ void* task_alloc(){
 #ifdef KMT_DEBUG
 
 #define PRODUCER_NUM 4
-#define CONSUMER_NUM 3
+#define CONSUMER_NUM 5
+#define PARENTHESIS_DEPTH 6
 #define P kmt->sem_wait
 #define V kmt->sem_signal
 
@@ -166,21 +175,21 @@ sem_t fill;
 
 static void producer(void *arg) {
   while(1){
-    P(&empty); printf("("); V(&fill);
-    volatile int i = 20000;
+    P(&empty); putch('('); V(&fill);
+    volatile int i = 10000;
     while(i--) ;
   }
 }
 static void consumer(void *arg) {
   while(1){
-    P(&fill); printf(")"); V(&empty);
-    volatile int i = 10000;
+    P(&fill); putch(')'); V(&empty);
+    volatile int i = 5000;
     while(i--) ;
   }
 }
 
 void init_kmt_debug(){
-  kmt->sem_init(&empty, "empty", 6);
+  kmt->sem_init(&empty, "empty", PARENTHESIS_DEPTH);
   kmt->sem_init(&fill, "fill", 0);
   for(int i = 0; i < PRODUCER_NUM; i++){
     kmt->create(task_alloc(), "producer", producer, "producer");

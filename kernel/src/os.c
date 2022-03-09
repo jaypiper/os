@@ -6,9 +6,11 @@ static handler_list_t* handlers_sorted;
 static spinlock_t handler_lock;
 
 static cpu_t cpus[MAX_CPU];
+static spinlock_t cpu_state_lock;
 
 cpu_t* get_cpu(){
-  return &cpus[cpu_current()];
+  cpu_t* ret = &cpus[cpu_current()];
+  return ret;
 }
 
 #ifdef KMT_DEBUG
@@ -28,6 +30,7 @@ static void tty_reader(void *arg) {
 }
 #endif
 static void os_init() {
+  spin_init(&cpu_state_lock, "cpu_lock");
   for(int i = 0; i < MAX_CPU; i++){
     cpus[i].intena = 1;
     cpus[i].ncli = 0;
@@ -47,9 +50,9 @@ static void os_init() {
 }
 
 static void os_run() {
-  for (const char *s = "Hello World from CPU #*\n"; *s; s++) {
-    putch(*s == '*' ? '0' + cpu_current() : *s);
-  }
+  // for (const char *s = "Hello World from CPU #*\n"; *s; s++) {
+  //   putch(*s == '*' ? '0' + cpu_current() : *s);
+  // }
 #ifdef PMM_DEBUG
   extern void* pmm_test();
   pmm_test();
@@ -60,9 +63,9 @@ static void os_run() {
 
 Context* os_trap(Event ev, Context *context){
   Assert(ev.event != EVENT_ERROR, "recieve error event");
-  Assert(ev.event != EVENT_PAGEFAULT, "recieve error event");
+  Assert(ev.event != EVENT_PAGEFAULT, "recieve pagefault event");
+  Assert(ev.event != EVENT_SYSCALL, "recieve pagefault event");
   Context* ret = NULL;
-  mutex_lock(&handler_lock);
   for(handler_list_t* h = handlers_sorted; h; h = h->next){
     if(h->event == EVENT_NULL || h->event == ev.event){
       Context* r = h->handler(ev, context);
@@ -70,9 +73,8 @@ Context* os_trap(Event ev, Context *context){
       if(r) ret = r;
     }
   }
-  mutex_unlock(&handler_lock);
   Assert(ret, "returning NULL context for event %d", ev.event);
-  // TODO: check whether s is sane
+  // TODO: check whether ret is sane
   return ret;
 }
 
@@ -82,7 +84,6 @@ void os_on_irq(int seq, int event, handler_t handler){
   new_handler->event = event;
   new_handler->handler = handler;
 
-  mutex_lock(&handler_lock);
   if(!handlers_sorted || seq <= handlers_sorted->seq){
     new_handler->next = handlers_sorted;
     handlers_sorted = new_handler;
@@ -95,7 +96,6 @@ void os_on_irq(int seq, int event, handler_t handler){
       }
     }
   }
-  mutex_unlock(&handler_lock);
 }
 
 MODULE_DEF(os) = {

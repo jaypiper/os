@@ -22,5 +22,4 @@ int mutex_trylock(spinlock_t* lk);
 #define CHECK_LOCK(lock) ((lock->fence1 == LOCK_FENCE1_MAGIC) && (lock->fence2 == LOCK_FENCE2_MAGIC))
 #define SET_LOCK(lock) do{lock->fence1 = LOCK_FENCE1_MAGIC; lock->fence2 = LOCK_FENCE2_MAGIC;} while(0)
 
-
 #endif

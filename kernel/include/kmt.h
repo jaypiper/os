@@ -3,18 +3,18 @@
 #include <sem.h>
 #include <common.h>
 
-enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED};
+enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUNNABLE};
 
 typedef struct task{
   uint32_t fence1;
   int state;
   const char* name;
   Context* context;
-  struct task* next;
   struct task* wait_next;
-  long long time;
+  spinlock_t lock;
+  int blocked;
   uint32_t fence2;
-  uint8_t stack[STACK_SIZE];
+  void* stack;
   uint32_t fence3;
 }task_t;
 
