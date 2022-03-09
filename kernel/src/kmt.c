@@ -15,18 +15,14 @@ static int total_task;
 #define CURRENT_IDLE idle_task[cpu_current()]
 #define LAST_TASK last_task[cpu_current()]
 
-static void idle_entry(void* args){
-  while(1) ;
-}
-
 static Context* kmt_context_save(Event ev, Context * ctx){
   Assert(ctx, "saved NULL context in event %d", ev.event);
   if(!CURRENT_TASK) CURRENT_TASK = CURRENT_IDLE;
-  else{
-    Assert(TASK_STATE_VALID(CURRENT_TASK->state), "in context save, task %s state %d invalid", CURRENT_TASK->name, CURRENT_TASK->state);
-    CURRENT_TASK->context = ctx;
-    if(CURRENT_TASK->state == TASK_RUNNING) CURRENT_TASK->state = TASK_TO_BE_RUNNABLE;
-  }
+
+  Assert(TASK_STATE_VALID(CURRENT_TASK->state), "in context save, task %s state %d invalid", CURRENT_TASK->name, CURRENT_TASK->state);
+  CURRENT_TASK->context = ctx;
+  if(CURRENT_TASK->state == TASK_RUNNING) CURRENT_TASK->state = TASK_TO_BE_RUNNABLE;
+
   if(LAST_TASK && LAST_TASK != CURRENT_TASK){
     if(LAST_TASK && LAST_TASK->state == TASK_TO_BE_RUNNABLE) LAST_TASK->state = TASK_RUNNABLE;
     mutex_unlock(&LAST_TASK->lock);
@@ -71,8 +67,8 @@ void kmt_init(){
     idle_task[i] = pmm->alloc(sizeof(task_t));
     idle_task[i]->name = "idle";
     idle_task[i]->state = TASK_RUNNING;
-    idle_task[i]->stack = pmm->alloc(STACK_SIZE);
-    idle_task[i]->context = kcontext((Area){.start = (void*)idle_task[i]->stack, .end = (void*)idle_task[i]->stack + STACK_SIZE}, idle_entry, NULL);
+    idle_task[i]->stack = NULL;
+    idle_task[i]->context = NULL;
     idle_task[i]->wait_next = NULL;
     idle_task[i]->blocked = 0;
     spin_init(&idle_task[i]->lock, "idle");
