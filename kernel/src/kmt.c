@@ -83,7 +83,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->name = name;
   task->state = TASK_RUNNABLE;
   task->stack = pmm->alloc(STACK_SIZE);
-  task->context = kcontext((Area){.start = (void*)task->stack, .end = (void*)task->stack + STACK_SIZE}, entry, arg);
+  task->context = kcontext((Area){.start = (void*)STACK_START(task), .end = (void*)STACK_END(task)}, entry, arg);
   task->wait_next = NULL;
   task->blocked = 0;
   spin_init(&task->lock, name);
