@@ -13,9 +13,6 @@ cpu_t* get_cpu(){
   return ret;
 }
 
-#ifdef KMT_DEBUG
-
-#else
 static void tty_reader(void *arg) {
   device_t *tty = dev->lookup(arg);
   char cmd[128], resp[128], ps[16];
@@ -28,7 +25,7 @@ static void tty_reader(void *arg) {
     tty->ops->write(tty, 0, resp, strlen(resp));
   }
 }
-#endif
+
 static void os_init() {
   spin_init(&cpu_state_lock, "cpu_lock");
   for(int i = 0; i < MAX_CPU; i++){
@@ -42,11 +39,10 @@ static void os_init() {
 #ifdef KMT_DEBUG
   void init_kmt_debug();
   init_kmt_debug();
-#else
+#endif
   dev->init();
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");
-#endif
 }
 
 static void os_run() {
