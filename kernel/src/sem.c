@@ -6,11 +6,9 @@ void ksem_init(sem_t *sem, const char *name, int value){
   sem->count = value;
   sem->wait_list = NULL;
   spin_init(&sem->lock, name);
-  SET_SEM(sem);
 }
 
 void ksem_wait(sem_t *sem){
-  Assert(CHECK_SEM(sem), "sem fence");
   spin_lock(&sem->lock);
   sem->count --;
   int is_blocked = 0;
@@ -23,16 +21,13 @@ void ksem_wait(sem_t *sem){
     Assert(ienabled(), "interrupt is disabled in sem wait %s", sem->name);
     yield();
   }
-  Assert(CHECK_SEM(sem), "sem fence");
 }
 
 void ksem_signal(sem_t *sem){
-  Assert(CHECK_SEM(sem), "sem fence");
   spin_lock(&sem->lock);
   Assert(sem->count >= 0 || sem->wait_list, "sem %s with count %d has empty wait_list", sem->name, sem->count);
   sem->count ++;
   if(sem->wait_list) wakeup_task(sem);
   spin_unlock(&sem->lock);
-  Assert(CHECK_SEM(sem), "sem fence");
 }
 
