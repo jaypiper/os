@@ -312,6 +312,8 @@ pmm_workload          /*2, 4   8   16  32  64  128 256 512 1024 2048 4096 inf*/
   wl_stress  = {.pr = {1,  0,  0,  400,200,100,1,  1,  1,  1,   1,   1,   1}, .sum = 0 },
   wl_page    = {.pr = {10, 0,  0,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1}, .sum = 0 };
 
+pmm_workload* wl = &wl_stress;
+
 void* alloc_log[MAX_LOG_SIZE];
 size_t size_log[MAX_LOG_SIZE];
 size_t total_size;
@@ -350,7 +352,7 @@ void pmm_workload_init(){
   util_time = 0;
 }
 
-void pmm_debug_alloc(pmm_workload* wl){
+void pmm_debug_alloc(){
   int num = rand() % wl->sum;
   int idx = 0;
   for(idx = 0; idx < 12; idx ++){
@@ -379,7 +381,7 @@ void pmm_debug_alloc(pmm_workload* wl){
   if(ptr) memset(ptr, ALLOC_MAGIC, size);
 }
 
-void pmm_debug_free(pmm_workload* wl){
+void pmm_debug_free(){
   mutex_lock(&log_lock);
   void* ptr = alloc_log[free_idx];
   if(ptr) {
@@ -394,12 +396,10 @@ void pmm_debug_free(pmm_workload* wl){
 }
 
 void pmm_test(){
-  pmm_workload* workload = &wl_stress;
-
   while(1){
     int is_alloc = rand() % 3;
-    if(is_alloc) pmm_debug_alloc(workload);
-    else pmm_debug_free(workload);
+    if(is_alloc) pmm_debug_alloc();
+    else pmm_debug_free();
   }
 }
 
