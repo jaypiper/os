@@ -13,6 +13,3 @@
 #define PGSIZE    4096
 #define MAX_CPU 8
 #define STACK_SIZE (32 * PGSIZE)
-
-#define MAX(a, b) ((a) > (b))? (a) : (b)
-#define MIN(a, b) ((a) > (b))? (b) : (a)
