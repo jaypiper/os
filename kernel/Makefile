@@ -10,3 +10,5 @@ endif
 include $(AM_HOME)/Makefile
 include ../Makefile.lab
 image:
+	make -C tools mkfs
+	./tools/mkfs 64 build/kernel-x86_64-qemu fs-img/
