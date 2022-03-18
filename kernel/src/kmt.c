@@ -113,11 +113,16 @@ void kmt_teardown(task_t *task){
   pmm->free((void*)task);
 }
 
+task_t* kmt_gettask(){
+  return CURRENT_TASK;
+}
+
 
 MODULE_DEF(kmt) = {
   .init = kmt_init,
   .create = kmt_create,
   .teardown = kmt_teardown,
+  .gettask = kmt_gettask,
   .spin_init  = spin_init,
   .spin_lock  = spin_lock,
   .spin_unlock  = spin_unlock,
