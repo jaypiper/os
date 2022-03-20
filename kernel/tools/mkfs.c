@@ -80,41 +80,54 @@ static int get_blk_idx(int idx, inode_t* inode){
   return blk_start[idx];
 }
 
+static void insert_dirent(diren_t* diren, inode_t* inode){
+  int inode_blk_idx = (inode->size) / BLK_SIZE;
+  int offset = inode->size % BLK_SIZE;
+  void* dirent_blk_start;
+  int left_size = sizeof(diren_t);
+  void* insert_pos = (void*)diren;
+  while(left_size){
+    int insert_size = MIN(BLK_SIZE - offset, left_size);
+    if(offset == 0){ // alloc a new block
+      int newblk_idx = alloc_block();
+      insert_blk_into_inode(inode, newblk_idx);
+      dirent_blk_start = IN_DISK(BLK2ADDR(newblk_idx));
+    }else{
+      dirent_blk_start = IN_DISK(BLK2ADDR(get_blk_idx(inode_blk_idx, inode)));
+    }
+    memcpy(dirent_blk_start + offset, insert_pos, insert_size);
+    insert_pos += insert_size;
+    left_size -= insert_size;
+    offset = 0;
+  }
+  inode->size += sizeof(diren_t);
+}
+
 static void insert_into_dir(int parent_inode, int child_inode, char* name){
   inode_t* parent = (inode_t*)IN_DISK(INODE_ADDR(parent_inode));
-  int entry_idx = (parent->size) / sizeof(diren_t);  // number of entries
-  Assert(parent->size % sizeof(diren_t) == 0, "size 0x%x dirent 0x%lx", parent->size, sizeof(diren_t));
-  void* dirent_blk_start;
-  int insert_idx = entry_idx % DIREN_PER_BLOCK;   // entry offset in selected blk
   int name_len = strlen(name);
-  diren_t* pre_dirent = NULL;
-  int has_start = 0;
+  diren_t child = {.type = DIRENT_START};
+  int is_first = 1;
+  int has_insert = 0;
+  int next_entry_idx = (parent->size) / sizeof(diren_t);
   while(name_len){
-    if(insert_idx == 0){ // alloc a new block for parent
-      int newblk_idx = alloc_block();
-      insert_blk_into_inode(parent, newblk_idx);
-      dirent_blk_start = IN_DISK(BLK2ADDR(newblk_idx));
-      insert_idx = 0;
-    }else{
-      int diren_blk_idx = entry_idx / DIREN_PER_BLOCK;   // blk idx in inode
-      diren_blk_idx = get_blk_idx(diren_blk_idx, parent);           // blk idx in disk
-      dirent_blk_start = IN_DISK(BLK2ADDR(diren_blk_idx));
+    child.next_entry = next_entry_idx;
+
+    if(!is_first){ // insert the previous dirent
+      insert_dirent(&child, parent);
+      has_insert = 1;
     }
-    diren_t* child = (diren_t*)dirent_blk_start + insert_idx;
-    strncpy(child->name, name, DIREN_NAME_LEN);
+
+    is_first = 0;
+    child.type = has_insert ? DIRENT_MID : DIRENT_START;
+    strncpy(child.name, name, DIREN_NAME_LEN);
+    name += DIREN_NAME_LEN;
+    next_entry_idx ++;
     name_len = MAX(0, name_len - DIREN_NAME_LEN);
-    if(pre_dirent){
-      pre_dirent->next_entry = entry_idx;
-      pre_dirent->type = has_start ? DIRENT_MID : DIRENT_START;
-      has_start = 1;
-    }
-    insert_idx ++; entry_idx ++;
-    parent->size += sizeof(diren_t);
-    pre_dirent = child;
   }
-  Assert(pre_dirent, "parent %d child %d name %s", parent_inode, child_inode, name);
-  pre_dirent->inode_idx = child_inode;
-  pre_dirent->type = has_start ? DIRENT_END : DIRENT_SINGLE;
+  child.inode_idx = child_inode;
+  child.type = has_insert ? DIRENT_END : DIRENT_SINGLE;
+  insert_dirent(&child, parent);
 }
 
 static int new_inode(int type){
