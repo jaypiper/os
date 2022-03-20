@@ -141,6 +141,8 @@ static int new_inode(int type){
 }
 
 static void createFileList(int root, char *basePath){
+  insert_into_dir(root, root, ".");
+  insert_into_dir(root, root, "..");
   DIR *dir;
   struct dirent *ptr;
   char base[1000];
@@ -276,9 +278,6 @@ int main(int argc, char *argv[]) {
   sb->used_blk = 0;
 
   int root_idx = new_inode(FT_DIR);
-  /* create . and ..*/
-  insert_into_dir(root_idx, root_idx, ".");
-  insert_into_dir(root_idx, root_idx, "..");
   /* create fs */
   createFileList(root_idx, argv[3]);
 
