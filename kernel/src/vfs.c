@@ -618,7 +618,7 @@ release:
 
 
 
-void readFileList(int root_idx, int depth){
+void vfs_readFileList(int root_idx, int depth){
 	inode_t root_inode;
 	sd_read(INODE_ADDR(root_idx), &root_inode, sizeof(inode_t));
 	if(root_inode.type != FT_DIR) return;
@@ -641,7 +641,7 @@ void readFileList(int root_idx, int depth){
       }
       printf("%s\n", diren.name);
 		}
-		readFileList(diren.inode_idx, depth + 1);
+		vfs_readFileList(diren.inode_idx, depth + 1);
 	}
 }
 
