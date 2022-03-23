@@ -77,11 +77,10 @@ static int free_blk(int blk_no){
 	sd_write(bitmap_blk_start + blk_no / 8, &bitmap, sizeof(uint32_t));
 	return 0;
 }
-
 static int alloc_inode(int type, inode_t* inode){
 	int inode_blk_start = BLK2ADDR(sb->inode_start);
 	int inode_start = inode_blk_start;
-	for(int inode_no = 0; inode_no < sb->n_inode; inode_no ++){
+	for(int inode_no = 0; inode_no < N_INODE; inode_no ++){
 		sd_read(inode_start, inode, sizeof(inode_t));
 		// printf("type %d\n", inode->type );
 		if(inode->type == FT_UNUSED){
