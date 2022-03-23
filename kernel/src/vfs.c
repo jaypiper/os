@@ -202,6 +202,42 @@ static void remove_inode_blk_by_inode(inode_t* inode){ // free all blks in inode
 	}
 }
 
+static void insert_dirent(diren_t* diren, inode_t* inode, int inode_no){
+	int inode_blk_idx = (inode->size) / BLK_SIZE;
+  int offset = inode->size % BLK_SIZE;
+  int dirent_blk_start;
+  int left_size = sizeof(diren_t);
+  void* insert_pos = (void*)diren;
+  while(left_size){
+    int insert_size = MIN(BLK_SIZE - offset, left_size);
+    if(offset == 0){ // alloc a new block
+      int newblk_idx = alloc_blk();
+      insert_blk_into_inode(inode_no, inode, newblk_idx);
+      dirent_blk_start = BLK2ADDR(newblk_idx);
+    }else{
+      dirent_blk_start = BLK2ADDR(get_blk_idx(inode_blk_idx, inode));
+    }
+		sd_write(dirent_blk_start + offset, insert_pos, insert_size);
+    // memcpy(dirent_blk_start + offset, insert_pos, insert_size);
+    insert_pos += insert_size;
+    left_size -= insert_size;
+    offset = 0;
+  }
+  inode->size += sizeof(diren_t);
+	sd_write(INODE_ADDR(inode_no) + OFFSET_IN_PSTRUCT(inode, size), &inode->size, sizeof(int));
+}
+
+static void insert_into_dir(int parent_inode, int child_inode, char* name){
+	inode_t parent;
+	sd_read(INODE_ADDR(parent_inode), &parent, sizeof(inode_t));
+  Assert(parent.size % sizeof(diren_t) == 0, "size 0x%x dirent 0x%lx", parent.size, sizeof(diren_t));
+	diren_t pre_dirent;
+	pre_dirent.inode_idx = child_inode;
+  pre_dirent.type = DIRENT_SINGLE;
+	strncpy(pre_dirent.name, name, DIREN_NAME_LEN);
+	insert_dirent(&pre_dirent, &parent, parent_inode);
+}
+
 void fill_standard_fd(task_t* task){
 	task->ofiles[0] = stdin_info;
 	task->ofiles[1] = stdout_info;
@@ -344,9 +380,25 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	int pathname_len = strlen(pathname);
 	Assert(pathname_len > 0 && pathname_len < MAX_STRING_BUF_LEN, "invalid pathname_len %d: %s", pathname_len, pathname);
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
-	inode_t inode;
-	int inode_no = get_inode_by_name(pathname, &inode, root_inode_no);
-	if(inode_no < 0) return -1;
+	char string_buf[MAX_STRING_BUF_LEN];
+	strcpy(string_buf, pathname);
+	int name_idx;
+	for(name_idx = strlen(pathname) - 1; name_idx >= 0; name_idx--){
+		if(string_buf[name_idx] == '/') {
+			string_buf[name_idx] = 0;
+			break;
+		}
+	}
+	Assert(strlen(string_buf + name_idx + 1) > 0, "pathname is not a file %s", pathname);
+	inode_t dir_inode;
+	int dir_inode_no = get_inode_by_name(string_buf, &dir_inode, root_inode_no);
+	if(dir_inode_no < 0) return -1;
+	inode_t file_inode;
+	int file_inode_no = get_inode_by_name(string_buf + name_idx + 1, &file_inode, dir_inode_no);
+	if(file_inode_no < 0 && (flags & O_CREAT)){
+		file_inode_no = alloc_inode(FT_FILE, &file_inode);
+		insert_into_dir(dir_inode_no, file_inode_no, string_buf + name_idx);
+	}
 	task_t* cur_task = kmt->gettask();
 	for(int i = STDERR_FILENO + 1; i < MAX_OPEN_FILE; i++){
 		if(!cur_task->ofiles[i]){
@@ -356,8 +408,9 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 			tmp_ofile->read = file_read;
 			tmp_ofile->lseek = file_lseek;
 			tmp_ofile->offset = 0;
-			tmp_ofile->inode_no = inode_no;
+			tmp_ofile->inode_no = file_inode_no;
 			tmp_ofile->flag = flags;
+			return i;
 		}
 	}
 	Assert(0, "number of opening files is more than %d", MAX_OPEN_FILE);
@@ -366,42 +419,6 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 static int vfs_lseek(int fd, int offset, int whence){
 	task_t* cur_task = kmt->gettask();
 	return cur_task->ofiles[fd]->lseek(cur_task->ofiles[fd], fd, offset, whence);
-}
-
-static void insert_dirent(diren_t* diren, inode_t* inode, int inode_no){
-	int inode_blk_idx = (inode->size) / BLK_SIZE;
-  int offset = inode->size % BLK_SIZE;
-  int dirent_blk_start;
-  int left_size = sizeof(diren_t);
-  void* insert_pos = (void*)diren;
-  while(left_size){
-    int insert_size = MIN(BLK_SIZE - offset, left_size);
-    if(offset == 0){ // alloc a new block
-      int newblk_idx = alloc_blk();
-      insert_blk_into_inode(inode_no, inode, newblk_idx);
-      dirent_blk_start = BLK2ADDR(newblk_idx);
-    }else{
-      dirent_blk_start = BLK2ADDR(get_blk_idx(inode_blk_idx, inode));
-    }
-		sd_write(dirent_blk_start + offset, insert_pos, insert_size);
-    // memcpy(dirent_blk_start + offset, insert_pos, insert_size);
-    insert_pos += insert_size;
-    left_size -= insert_size;
-    offset = 0;
-  }
-  inode->size += sizeof(diren_t);
-	sd_write(INODE_ADDR(inode_no) + OFFSET_IN_PSTRUCT(inode, size), &inode->size, sizeof(int));
-}
-
-static void insert_into_dir(int parent_inode, int child_inode, char* name){
-	inode_t parent;
-	sd_read(INODE_ADDR(parent_inode), &parent, sizeof(inode_t));
-  Assert(parent.size % sizeof(diren_t) == 0, "size 0x%x dirent 0x%lx", parent.size, sizeof(diren_t));
-	diren_t pre_dirent;
-	pre_dirent.inode_idx = child_inode;
-  pre_dirent.type = DIRENT_SINGLE;
-	strncpy(pre_dirent.name, name, DIREN_NAME_LEN);
-	insert_dirent(&pre_dirent, &parent, parent_inode);
 }
 
 static int vfs_link(const char *oldpath, const char *newpath){
