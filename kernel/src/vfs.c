@@ -449,7 +449,7 @@ static int vfs_link(const char *oldpath, const char *newpath){
 	}
 	Assert(strlen(string_buf + name_idx + 1) > 0, "newpath is not a file %s", newpath);
 	inode_t new_inode;
-	int dir_inode_no = name_idx <= 0 ? 0 : get_inode_by_name(string_buf, &new_inode, ROOT_INODE_NO);
+	int dir_inode_no = name_idx <= 0 ? root_inode_no : get_inode_by_name(string_buf, &new_inode, ROOT_INODE_NO);
 	if(dir_inode_no < 0){
 		printf("no such file or directory %s\n", newpath);
 		return -1;
@@ -520,7 +520,7 @@ static int vfs_mkdir(const char *pathname){
 	}
 	Assert(strlen(string_buf + name_idx + 1) > 0, "%s is not a file", pathname);
 	inode_t new_inode;
-	int dir_inode_no = name_idx <= 0 ? 0 : get_inode_by_name(string_buf, &new_inode, root_inode_no);
+	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &new_inode, root_inode_no);
 	if(dir_inode_no < 0){
 		printf("no such file or directory %s\n", pathname);
 		return -1;
