@@ -597,11 +597,12 @@ void traverse(const char *root) {
 
   vfs->fstat(fd, &s);
   if (s.type == FT_DIR) {
-    while ( (nread = vfs->read(fd, buf, sizeof(diren_t))) > 0) {
+    while ( (nread = vfs->read(fd, buf, BLK_SIZE)) > 0) {
+			printf("nread=%d\n", nread);
       for (int offset = 0;
-          offset +  sizeof(struct ufs_dirent) <= nread;
-          offset += sizeof(struct ufs_dirent)) {
-        struct ufs_dirent *d = (struct ufs_dirent *)(buf + offset);
+          offset +  sizeof(diren_t) <= nread;
+          offset += sizeof(diren_t)) {
+        diren_t *d = (diren_t *)(buf + offset);
         if (d->name[0] != '.') { // 小彩蛋：你这下知道为什么
                                  // Linux 以 “.” 开头的文件是隐藏文件了吧
           char *fname = pmm->alloc(MAX_STRING_BUF_LEN); // assert success
