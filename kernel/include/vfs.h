@@ -13,7 +13,7 @@
 #define N_LOG ((BLK_SIZE - sizeof(superblock_t)) / sizeof(fslog_t))
 #define N_INODE 128  // less than 2^16
 #define INODE_PER_BLOCK (BLK_SIZE / sizeof(inode_t))
-#define INODE_BLK_NUM ((N_INODE - 1) / INODE_PER_BLOCK + 1)
+#define INODE_BLK_NUM ((N_INODE * sizeof(inode_t) - 1) / INODE_PER_BLOCK + 1)
 #define DIREN_PER_BLOCK (BLK_SIZE / sizeof(diren_t))
 #define MAX_DIRECT_FILE_BLOCK 8
 #define MAX_OPEN_FILE 32
@@ -22,9 +22,7 @@
 #define SUPER_BLOCK_ADDR FS_START
 #define LOG_ADDR (SUPER_BLOCK_ADDR + sizeof(superblock_t))
 #define INODE_BASE (FS_START + BLK_SIZE)
-#define INODE_BLK_IDX(idx) ((idx) / INODE_PER_BLOCK)
-#define INODE_BLK_OFFSET(idx) (((idx) % INODE_PER_BLOCK) * sizeof(inode_t))
-#define INODE_ADDR(idx) (INODE_BASE + INODE_BLK_IDX(idx) * BLK_SIZE + INODE_BLK_OFFSET(idx))
+#define INODE_ADDR(idx) (INODE_BASE + idx * sizeof(inode_t))
 
 #define FREE_BITMAP_ADDR (INODE_BASE + (INODE_BLK_NUM * BLK_SIZE))
 
