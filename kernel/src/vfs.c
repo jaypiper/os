@@ -146,11 +146,15 @@ static int insert_blk_into_inode(int inode_no, inode_t* inode, int insert_idx){
 	return 0;
 }
 
-static void get_dirent_by_idx(inode_t* inode, int idx, diren_t* direntry){
-	int diren_blk_idx = idx / DIREN_PER_BLOCK;
-  int idx_in_blk = idx % DIREN_PER_BLOCK;
-  int blk_start = BLK2ADDR(get_blk_idx(diren_blk_idx, inode));
-	sd_read(blk_start + idx_in_blk * sizeof(diren_t), direntry, sizeof(diren_t));
+static void get_dirent_by_idx(inode_t* inode, int idx, diren_t* diren){
+	int blk_idx = idx * sizeof(diren_t) / BLK_SIZE;
+	int blk_offset = (idx * sizeof(diren_t)) % BLK_SIZE;
+	int left_size = sizeof(diren_t);
+	while(left_size){
+		int read_size = MIN(left_size, BLK_SIZE - blk_offset);
+		sd_read(BLK2ADDR(get_blk_idx(blk_idx, inode)) + blk_offset, (void*)diren + sizeof(diren_t) - left_size, read_size);
+		left_size -= read_size;
+	}
 }
 
 static int search_inodeno_in_dir(inode_t* dir_inode, char* name){
