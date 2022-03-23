@@ -318,3 +318,13 @@ void dev_tty_task(void *arg) {
     }
   }
 }
+
+int dev_output_write(ofile_info_t* ofile, int fd, void *buf, int count){
+  // TODO
+  Assert(0, "not implemented");
+}
+
+int dev_error_write(ofile_info_t* ofile, int fd, void *buf, int count){
+  // TODO
+  Assert(0, "not implemented");
+}
