@@ -394,7 +394,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	}
 	Assert(strlen(string_buf + name_idx + 1) > 0, "pathname is not a file %s", pathname);
 	inode_t dir_inode;
-	int dir_inode_no = get_inode_by_name(string_buf, &dir_inode, root_inode_no);
+	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &dir_inode, root_inode_no);
 	if(dir_inode_no < 0) return -1;
 	inode_t file_inode;
 	int file_inode_no = get_inode_by_name(string_buf + name_idx + 1, &file_inode, dir_inode_no);
