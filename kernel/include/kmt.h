@@ -2,6 +2,7 @@
 #define OS_KMT_H
 #include <sem.h>
 #include <common.h>
+#include <vfs.h>
 
 enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUNNABLE};
 
@@ -13,6 +14,8 @@ typedef struct task{
   spinlock_t lock;
   int blocked;
   void* stack;
+  ofile_info_t* ofiles[MAX_OPEN_FILE];
+  int cwd_inode_no;
 }task_t;
 
 #define MAX_TASK 64

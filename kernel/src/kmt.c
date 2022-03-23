@@ -86,6 +86,8 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->context = kcontext((Area){.start = (void*)STACK_START(task), .end = (void*)STACK_END(task)}, entry, arg);
   task->wait_next = NULL;
   task->blocked = 0;
+  memset(task->ofiles, 0, sizeof(task->ofiles));
+  task->cwd_inode_no = ROOT_INODE_NO;
   spin_init(&task->lock, name);
   SET_TASK(task);
   mutex_lock(&task_lock);
