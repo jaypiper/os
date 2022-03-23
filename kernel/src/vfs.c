@@ -293,14 +293,17 @@ static int file_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
 	return ofile->offset;
 }
 
-static int get_inode_by_name(char* pathname, inode_t* inode, int dirno){
+static int get_inode_by_name(const char* pathname, inode_t* inode, int dirno){
 	Assert(strlen(pathname) > 0, "empty string");
-	if(pathname[0] == '/') {
+	char string_buf[MAX_STRING_BUF_LEN];
+	strcpy(string_buf, pathname);
+	char* path_name_start = string_buf;
+	if(path_name_start[0] == '/') {
 		dirno = ROOT_INODE_NO;
-		pathname = pathname + 1;
-		if(!pathname[1]) return dirno;
+		path_name_start = path_name_start + 1;
+		if(!path_name_start[1]) return dirno;
 	}
-	char *token = strtok(pathname, "/");
+	char *token = strtok(path_name_start, "/");
 	int inode_no = dirno;
 	get_inode_by_no(dirno, inode);
 	while(token){
@@ -341,10 +344,8 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	int pathname_len = strlen(pathname);
 	Assert(pathname_len > 0 && pathname_len < MAX_STRING_BUF_LEN, "invalid pathname_len %d: %s", pathname_len, pathname);
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
-	char string_buf[MAX_STRING_BUF_LEN];
-	strcpy(string_buf, pathname);
 	inode_t inode;
-	int inode_no = get_inode_by_name(string_buf, &inode, root_inode_no);
+	int inode_no = get_inode_by_name(pathname, &inode, root_inode_no);
 	if(inode_no < 0) return -1;
 	task_t* cur_task = kmt->gettask();
 	for(int i = STDERR_FILENO + 1; i < MAX_OPEN_FILE; i++){
@@ -409,13 +410,12 @@ static int vfs_link(const char *oldpath, const char *newpath){
 	Assert(oldpath[0] == '/', "file %s is not starting with /", oldpath);
 	int root_inode_no = oldpath[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	inode_t old_inode;
-	char string_buf[MAX_STRING_BUF_LEN];
-	strcpy(string_buf, oldpath);
-	int old_inode_no = get_inode_by_name(string_buf, &old_inode, root_inode_no);
+	int old_inode_no = get_inode_by_name(oldpath, &old_inode, root_inode_no);
 	if(old_inode_no < 0){
 		printf("no such file or directory %s\n", oldpath);
 		return -1;
 	}
+	char string_buf[MAX_STRING_BUF_LEN];
 	strcpy(string_buf, newpath);
 	int name_idx;
 	for(name_idx = strlen(newpath) - 1; name_idx >= 0; name_idx--){
@@ -449,9 +449,7 @@ static int vfs_unlink(const char *pathname){
 	Assert(path_len > 0 && path_len < MAX_STRING_BUF_LEN, "invalid string length %d", path_len);
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	inode_t delete_inode;
-	char string_buf[MAX_STRING_BUF_LEN];
-	strcpy(string_buf, pathname);
-	int delete_no = get_inode_by_name(string_buf, &delete_inode, root_inode_no);
+	int delete_no = get_inode_by_name(pathname, &delete_inode, root_inode_no);
 	if(delete_no < 0){
 		printf("no such file or directory %s\n", pathname);
 		return -1;
@@ -516,12 +514,10 @@ static int vfs_mkdir(const char *pathname){
 static int vfs_chdir(const char *path){
 	int path_len = strlen(path);
 	Assert(path_len > 0 && path_len < MAX_STRING_BUF_LEN, "invalid string length %d", path_len);
-	char string_buf[MAX_STRING_BUF_LEN];
-	strcpy(string_buf, path);
 
 	task_t* task = kmt->gettask();
 	inode_t inode;
-	int inode_no = get_inode_by_name(string_buf, &inode, task->cwd_inode_no);
+	int inode_no = get_inode_by_name(path, &inode, task->cwd_inode_no);
 	if(inode_no < 0){
 		printf("no such file or directory %s\n", path);
 		return -1;
