@@ -27,7 +27,7 @@
 
 #define BLK2ADDR(idx) (((uintptr_t)idx) * BLK_SIZE)
 #define INDIRECT_NUM_PER_BLK (BLK_SIZE / sizeof(uint32_t) - 1)
-#define DIREN_NAME_LEN 31
+#define DIREN_NAME_LEN 27
 
 #define UP_BLK_NUM(idx, num_per_blk) (((idx) + (num_per_blk) - 1) / (num_per_blk))
 
