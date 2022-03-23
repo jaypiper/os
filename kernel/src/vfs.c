@@ -296,6 +296,7 @@ static int file_write(ofile_info_t* ofile, int fd, void *buf, int count){
 		blk_offset = 0;
 		inode_blk_idx ++;
 	}
+	ofile->offset += count;
 	return count;
 }
 
@@ -317,6 +318,7 @@ static int file_read(ofile_info_t* ofile, int fd, void *buf, int count){
 		blk_offset = 0;
 		inode_blk_idx ++;
 	}
+	ofile->offset += ret;
 	return ret;
 }
 
