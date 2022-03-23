@@ -617,4 +617,33 @@ release:
   pmm->free(buf);
 }
 
+
+
+void readFileList(int root_idx, int depth){
+	inode_t root_inode;
+	sd_read(INODE_ADDR(root_idx), &root_inode, sizeof(inode_t));
+	if(root_inode.type != FT_DIR) return;
+  int entry_num = root_inode.size / sizeof(diren_t);
+
+  int entry_idx = 0;
+	diren_t diren;
+	for(entry_idx = 0; entry_idx < entry_num; entry_idx ++){
+		get_dirent_by_idx(&root_inode, entry_idx, &diren);
+		if(diren.type == DIRENT_SINGLE){
+			for(int i = 0; i < depth; i++) printf("  ");
+			printf("[%d]%s\n", entry_idx, diren.name);
+			if((strcmp(diren.name, ".") == 0) || (strcmp(diren.name, "..") == 0)) continue;
+		}else if(diren.type == DIRENT_START){
+			for(int i = 0; i < depth; i++) printf("  ");
+			printf("[%d]", entry_idx);
+      while(diren.type != DIRENT_END){
+        printf("%s", diren.name);
+        get_dirent_by_idx(&root_inode, diren.next_entry, &diren);
+      }
+      printf("%s\n", diren.name);
+		}
+		readFileList(diren.inode_idx, depth + 1);
+	}
+}
+
 #endif

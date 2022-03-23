@@ -98,4 +98,6 @@ int dev_input_read(ofile_info_t* ofile, int fd, void *buf, int count);
 int dev_output_write(ofile_info_t* ofile, int fd, void *buf, int count);
 int dev_error_write(ofile_info_t* ofile, int fd, void *buf, int count);
 
+void readFileList(int root_idx, int depth);
+
 #endif
