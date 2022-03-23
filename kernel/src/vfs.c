@@ -228,7 +228,7 @@ static void insert_dirent(diren_t* diren, inode_t* inode, int inode_no){
     offset = 0;
   }
   inode->size += sizeof(diren_t);
-	sd_write(INODE_ADDR(inode_no) + OFFSET_IN_PSTRUCT(inode, size), &inode->size, sizeof(int));
+	sd_write(INODE_ADDR(inode_no), inode, sizeof(inode_t));
 }
 
 static void insert_into_dir(int parent_inode, int child_inode, char* name){
