@@ -93,6 +93,8 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   mutex_lock(&task_lock);
   Assert(total_task < MAX_TASK, "task full");
   all_task[total_task ++] = task;
+  void fill_standard_fd(task_t* task);
+  fill_standard_fd(task);
   mutex_unlock(&task_lock);
   return 0;
 }
