@@ -345,7 +345,6 @@ static int get_inode_by_name(const char* pathname, inode_t* inode, int dirno){
 	while(token){
 		inode_no = search_inodeno_in_dir(inode, token);
 		if(inode_no <= -1){
-			printf("file %s not find\n", pathname); // TODO: O_CREAT not implemented
 			return -1;
 		}
 		get_inode_by_no(inode_no, inode);
@@ -398,6 +397,9 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	if(file_inode_no < 0 && (flags & O_CREAT)){
 		file_inode_no = alloc_inode(FT_FILE, &file_inode);
 		insert_into_dir(dir_inode_no, file_inode_no, string_buf + name_idx);
+	}
+	if(file_inode_no < 0){
+		printf("no such file or directory %s\n", pathname);
 	}
 	task_t* cur_task = kmt->gettask();
 	for(int i = STDERR_FILENO + 1; i < MAX_OPEN_FILE; i++){
