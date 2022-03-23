@@ -77,6 +77,7 @@ static int free_blk(int blk_no){
 	sd_write(bitmap_blk_start + blk_no / 8, &bitmap, sizeof(uint32_t));
 	return 0;
 }
+
 static int alloc_inode(int type, inode_t* inode){
 	int inode_blk_start = BLK2ADDR(sb->inode_start);
 	int inode_start = inode_blk_start;
@@ -525,7 +526,8 @@ static int vfs_mkdir(const char *pathname){
 
 	int new_inode_no = alloc_inode(FT_DIR, &new_inode);
 	insert_into_dir(dir_inode_no, new_inode_no, string_buf + name_idx + 1);
-
+	insert_into_dir(new_inode_no, new_inode_no, ".");
+	insert_into_dir(new_inode_no, dir_inode_no, "..");
 	return 0;
 }
 
