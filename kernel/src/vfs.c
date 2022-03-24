@@ -219,7 +219,11 @@ static int insert_blk_into_inode(int inode_no, inode_t* inode, int insert_idx){
     inode->addr[blk_num] = insert_idx;
 		sd_write(INODE_ADDR(inode_no), inode, sizeof(inode_t));
   }else{
-    int idx = insert_idx - MAX_DIRECT_FILE_BLOCK;
+    int idx = blk_num - MAX_DIRECT_FILE_BLOCK;
+		if(idx == 0){
+			inode->addr[INDIRECT_IN_INODE] = alloc_blk();
+			sd_write(INODE_ADDR(inode_no) + OFFSET_IN_PSTRUCT(inode, addr[INDIRECT_IN_INODE]), &inode->addr[INDIRECT_IN_INODE], sizeof(int));
+		}
 		int blk_start = BLK2ADDR(inode->addr[INDIRECT_IN_INODE]);
 		int depth = UP_BLK_NUM(idx, INDIRECT_NUM_PER_BLK);
 		for(int i = 0; i < depth - 1; i++){
@@ -390,8 +394,8 @@ static int file_write(ofile_info_t* ofile, int fd, void *buf, int count){
 		left_count -= write_count;
 		blk_offset = 0;
 		inode_blk_idx ++;
+		inode.size += write_count;
 	}
-	inode.size = ofile->offset + count;
 	sd_write(INODE_ADDR(ofile->inode_no) + OFFSET_IN_STRUCT(inode, size), &inode.size, sizeof(int));
 	ofile->offset += count;
 	return count;
