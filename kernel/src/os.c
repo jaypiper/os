@@ -1,5 +1,6 @@
 #include <common.h>
 #include <os.h>
+#include <user.h>
 
 static handler_list_t* handlers_sorted;
 
@@ -26,6 +27,19 @@ static void tty_reader(void *arg) {
   }
 }
 
+#ifdef VFS_DEBUG
+static void vfs_test(void* args){
+  printf("start vfs test\n");
+  void run_fs_test();
+  void traverse(const char *root);
+  run_fs_test();
+  printf("traverse started\n");
+  traverse("");
+  printf("traverse finished\n");
+  while(1);
+}
+#endif
+
 static void os_init() {
   spin_init(&cpu_state_lock, "cpu_lock");
   for(int i = 0; i < MAX_CPU; i++){
@@ -36,11 +50,15 @@ static void os_init() {
   spin_init(&handler_lock, "handler lock");
   pmm->init();
   kmt->init();
+  dev->init();
+  vfs->init();
 #ifdef KMT_DEBUG
   void init_kmt_debug();
   init_kmt_debug();
 #endif
-  dev->init();
+#ifdef VFS_DEBUG
+  kmt->create(task_alloc(), "vfs", vfs_test, NULL);
+#endif
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");
 }
