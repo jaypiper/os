@@ -220,6 +220,7 @@ static void get_dirent_by_idx(inode_t* inode, int idx, diren_t* diren){
 		int read_size = MIN(left_size, BLK_SIZE - blk_offset);
 		sd_read(BLK2ADDR(get_blk_idx(blk_idx, inode)) + blk_offset, (void*)diren + sizeof(diren_t) - left_size, read_size);
 		left_size -= read_size;
+		blk_offset = 0;
 	}
 }
 
