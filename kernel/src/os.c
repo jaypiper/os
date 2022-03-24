@@ -36,6 +36,9 @@ static void vfs_test(void* args){
   printf("traverse started\n");
   traverse("");
   printf("traverse finished\n");
+  printf("start bigfile test\n");
+  void bigfile(char *s);
+  bigfile("bigfile");
   while(1);
 }
 #endif
