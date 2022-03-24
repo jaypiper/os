@@ -16,6 +16,7 @@ typedef struct task{
   void* stack;
   ofile_info_t* ofiles[MAX_OPEN_FILE];
   int cwd_inode_no;
+  int cwd_type;
 }task_t;
 
 #define MAX_TASK 64

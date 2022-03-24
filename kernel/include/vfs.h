@@ -34,9 +34,10 @@
 #define OFFSET_IN_STRUCT(_struct, _member) ((uintptr_t)&_struct._member - (uintptr_t)&_struct)
 #define OFFSET_IN_PSTRUCT(p_struct, _member) ((uintptr_t)&p_struct->_member - (uintptr_t)p_struct)
 
-enum{FT_UNUSED = 0, FT_FILE , FT_DIR, FT_LINK};
+enum{FT_UNUSED = 0, FT_FILE , FT_DIR, FT_LINK, FT_PROC_DIR, FT_PROC_FILE};
 // entry type [single | start [mid...] end]
 enum{DIRENT_INVALID = 0, DIRENT_END, DIRENT_MID, DIRENT_START, DIRENT_SINGLE};
+enum{CWD_INVALID = 0, CWD_UFS, CWD_PROCFS, CWD_DEVFS};
 
 typedef struct superblock{
     uint32_t super_magic;
@@ -73,12 +74,29 @@ typedef struct diren{
     uint8_t type;
 }diren_t;
 
+#define PROC_NAME_LEN (32 - sizeof(uintptr_t))
+
+typedef struct proc_inode{
+    int type;
+    int size;
+    void* mem;
+}proc_inode_t;
+
+typedef struct proc_diren{
+    proc_inode_t* inode;
+    char name[PROC_NAME_LEN];
+}proc_diren_t;
+
 typedef struct ofile_info{
     int (*write)(struct ofile_info* ofile, int fd, void *buf, int count);
     int (*read)(struct ofile_info* ofile, int fd, void *buf, int count);
     int (*lseek)(struct ofile_info* ofile, int fd, int offset, int whence);
     int offset;
-    int inode_no;
+    union{
+        int inode_no;
+        proc_inode_t* proc_inode;
+    };
+    int type;       // ufs, proc, dev
     int flag;
 }ofile_info_t;
 
@@ -99,5 +117,6 @@ int dev_output_write(ofile_info_t* ofile, int fd, void *buf, int count);
 int dev_error_write(ofile_info_t* ofile, int fd, void *buf, int count);
 
 void vfs_readFileList(int root_idx, int depth);
+void new_proc_init(int id, const char* name);
 
 #endif

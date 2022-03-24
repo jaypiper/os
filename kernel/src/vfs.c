@@ -16,6 +16,73 @@ static ofile_info_t* stdin_info;
 static ofile_info_t* stdout_info;
 static ofile_info_t* stderr_info;
 
+static proc_inode_t* proc_dir = NULL;
+
+static void insert_into_proc_dir(proc_inode_t* parent_inode, proc_inode_t* child_inode, const char* name){
+	Assert(parent_inode && (parent_inode->type == FT_PROC_DIR), "insert_into_proc_dir parent(0x%x) type %d", parent_inode, parent_inode->type);
+	if(!parent_inode->mem) parent_inode->mem = pmm->alloc(BLK_SIZE);
+	Assert(BLK_SIZE - parent_inode->size >= sizeof(proc_diren_t), "proc size %x\n", parent_inode->size);
+	Assert(parent_inode->size % sizeof(proc_diren_t) == 0, "invalid parent size %d", parent_inode->size);
+	int idx = parent_inode->size / sizeof(proc_diren_t);
+	proc_diren_t* insert_dirent = (proc_diren_t*)parent_inode->mem + idx;
+	insert_dirent->inode = child_inode;
+	Assert(strlen(name) < PROC_NAME_LEN, "name %s is too long", name);
+	strcpy(insert_dirent->name, name);
+	parent_inode->size += sizeof(proc_diren_t);
+}
+
+static proc_inode_t* insert_proc_inode(proc_inode_t* parent, char* name, const char* msg, int type){
+	proc_inode_t* new_inode = pmm->alloc(sizeof(proc_inode_t));
+	insert_into_proc_dir(parent, new_inode, name);
+	new_inode->type = type;
+	new_inode->size = strlen(msg);
+	if(msg) new_inode->mem = pmm->alloc(BLK_SIZE);
+	memcpy(new_inode->mem, msg, new_inode->size);
+	return new_inode;
+}
+
+static void proc_init(){
+	if(proc_dir) return;
+
+	proc_dir = pmm->alloc(sizeof(proc_inode_t));
+	proc_dir->type = FT_PROC_DIR;
+	proc_dir->size = 0;
+	proc_dir->mem = NULL;
+	/* add cpuinfo */
+	insert_proc_inode(proc_dir, "cpuinfo", "name: xxxxx", FT_PROC_FILE);
+	/* add meminfo */
+	insert_proc_inode(proc_dir, "meminfo", "MemTotal: xxxxx", FT_PROC_FILE);
+}
+
+static int proc_read(ofile_info_t* ofile, int fd, void* buf, int count){
+	proc_inode_t* proc_inode = ofile->proc_inode;
+
+	int ret = MIN(proc_inode->size - ofile->offset, count);
+	if(ret <= 0) return 0;
+	memcpy(buf, proc_inode->mem, ret);
+	return ret;
+}
+
+static int proc_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
+	proc_inode_t* proc_inode = ofile->proc_inode;
+	switch(whence){
+		case SEEK_SET: ofile->offset = offset; break;
+		case SEEK_CUR: ofile->offset += offset; break;
+		case SEEK_END: ofile->offset = proc_inode->size; break;
+		default: Assert(0, "invalid whence %d", whence);
+	}
+	return ofile->offset;
+}
+
+void new_proc_init(int id, const char* name){
+	proc_init();
+	char string_buf[32];
+	memset(string_buf, 0, sizeof(string_buf));
+	sprintf(string_buf, "%d", id);
+	proc_inode_t* id_inode = insert_proc_inode(proc_dir, string_buf, NULL, FT_PROC_DIR);
+	insert_proc_inode(id_inode, "name", name, FT_PROC_FILE);
+}
+
 static int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count){
 	Assert(0, "invalid write for fd %d", fd);
 }
@@ -43,7 +110,6 @@ static int get_blk_idx(int idx, inode_t* inode){
 		uint32_t next_blk;
 		sd_read(blk_start + INDIRECT_NUM_PER_BLK * sizeof(uint32_t), &next_blk, sizeof(uint32_t));
 		blk_start = BLK2ADDR(next_blk);
-		// blk_start = sd_read(BLK2ADDR(blk_start[INDIRECT_NUM_PER_BLK]), );
 		idx -= INDIRECT_NUM_PER_BLK;
   }
   Assert(idx < INDIRECT_NUM_PER_BLK, "idx %d INDIRECT_NUM_PER_BLK %ld", idx, INDIRECT_NUM_PER_BLK);
@@ -222,7 +288,6 @@ static void insert_dirent(diren_t* diren, inode_t* inode, int inode_no){
       dirent_blk_start = BLK2ADDR(get_blk_idx(inode_blk_idx, inode));
     }
 		sd_write(dirent_blk_start + offset, insert_pos, insert_size);
-    // memcpy(dirent_blk_start + offset, insert_pos, insert_size);
     insert_pos += insert_size;
     left_size -= insert_size;
     offset = 0;
@@ -251,7 +316,6 @@ void fill_standard_fd(task_t* task){
 static void vfs_init(){
 	// TODO: create /proc, /dev
 	// TODO: recover from log
-	// TODO: stdin/stdout/stderr should in task_t
 	dev_sd = dev->lookup("sda");
 	sd_op->init(dev_sd);
 	sb = pmm->alloc(BLK_SIZE);
@@ -269,6 +333,7 @@ static void vfs_init(){
 	stdout_info->write = dev_error_write;
 	stdout_info->read = invalid_read;
 	stdout_info->lseek = invalid_lseek;
+	proc_init();
 }
 
 static int file_write(ofile_info_t* ofile, int fd, void *buf, int count){
@@ -380,10 +445,71 @@ static int vfs_close(int fd){
 	return 0;
 }
 
+static proc_inode_t* search_inode_in_proc_dir(proc_inode_t* parent, char* token){
+	int entry_num = parent->size / sizeof(proc_diren_t);
+	for(int i = 0; i < entry_num; i++){
+		proc_diren_t* proc_dirent = (proc_diren_t*)parent->mem + i;
+		if(strcmp(token, proc_dirent->name) == 0){
+			return proc_dirent->inode;
+		}
+	}
+	return NULL;
+}
+
+static int fill_task_ofile(ofile_info_t* ofile){
+	task_t* cur_task = kmt->gettask();
+	for(int i = STDERR_FILENO + 1; i < MAX_OPEN_FILE; i++){
+		if(!cur_task->ofiles[i]){
+			cur_task->ofiles[i] = ofile;
+			return i;
+		}
+	}
+	Assert(0, "number of opening files is more than %d", MAX_OPEN_FILE);
+}
+
+static int proc_open(const char* pathname, int flags){
+	if(pathname[0] == '/') pathname = pathname + 1;
+
+	proc_inode_t* parent = proc_dir;
+	if(!pathname || !pathname[0]){
+
+	}else{
+		char string_buf[MAX_STRING_BUF_LEN];
+		strcpy(string_buf, pathname);
+		char* token = strtok(string_buf, "/");
+		while(token){
+			parent = search_inode_in_proc_dir(parent, token);
+			if(!parent){
+				printf("/proc/%s not found\n", pathname);
+				break;
+			}
+			token = strtok(NULL, "/");
+		}
+	}
+	ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
+	tmp_ofile->read = proc_read;
+	tmp_ofile->write = invalid_write;
+	tmp_ofile->lseek = proc_lseek;
+	tmp_ofile->proc_inode = parent;
+	tmp_ofile->type = CWD_PROCFS;
+	tmp_ofile->flag = flags;
+	tmp_ofile->offset = 0;
+	return fill_task_ofile(tmp_ofile);
+}
+
+static int dev_open(const char* pathname, int flags){
+	// TODO
+return 0;
+}
+
 static int vfs_open(const char *pathname, int flags){  // must start with /
 	// traverse inode block
 	int pathname_len = strlen(pathname);
 	Assert(pathname_len > 0 && pathname_len < MAX_STRING_BUF_LEN, "invalid pathname_len %d: %s", pathname_len, pathname);
+	/* /proc, /dev can only be accessed by pathname started with '/' */
+	if(strncmp(pathname, "/proc", 5) == 0) return proc_open(pathname + 5, flags);
+	if(strncmp(pathname, "/dev", 4) == 0) return dev_open(pathname + 4, flags);
+
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	char string_buf[MAX_STRING_BUF_LEN];
 	strcpy(string_buf, pathname);
@@ -406,21 +532,17 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	if(file_inode_no < 0){
 		printf("no such file or directory %s\n", pathname);
 	}
-	task_t* cur_task = kmt->gettask();
-	for(int i = STDERR_FILENO + 1; i < MAX_OPEN_FILE; i++){
-		if(!cur_task->ofiles[i]){
-			ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
-			cur_task->ofiles[i] = tmp_ofile;
-			tmp_ofile->write = file_write;
-			tmp_ofile->read = file_read;
-			tmp_ofile->lseek = file_lseek;
-			tmp_ofile->offset = 0;
-			tmp_ofile->inode_no = file_inode_no;
-			tmp_ofile->flag = flags;
-			return i;
-		}
-	}
-	Assert(0, "number of opening files is more than %d", MAX_OPEN_FILE);
+	ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
+	tmp_ofile->write = file_write;
+	tmp_ofile->read = file_read;
+	tmp_ofile->lseek = file_lseek;
+	tmp_ofile->offset = 0;
+	tmp_ofile->inode_no = file_inode_no;
+	tmp_ofile->type =CWD_UFS;
+	tmp_ofile->flag = flags;
+
+	return fill_task_ofile(tmp_ofile);
+
 }
 
 static int vfs_lseek(int fd, int offset, int whence){
@@ -542,7 +664,7 @@ static int vfs_chdir(const char *path){
 	inode_t inode;
 	int inode_no = get_inode_by_name(path, &inode, task->cwd_inode_no);
 	if(inode_no < 0){
-		printf("no such file or directory %s\n", path);
+		printf("chdir: no such file or directory %s\n", path);
 		return -1;
 	}
 	task->cwd_inode_no = inode_no;
@@ -598,7 +720,6 @@ void traverse(const char *root) {
   vfs->fstat(fd, &s);
   if (s.type == FT_DIR) {
     while ( (nread = vfs->read(fd, buf, BLK_SIZE)) > 0) {
-			printf("nread=%d\n", nread);
       for (int offset = 0;
           offset +  sizeof(diren_t) <= nread;
           offset += sizeof(diren_t)) {
@@ -618,8 +739,6 @@ release:
   if (fd >= 0) vfs->close(fd);
   pmm->free(buf);
 }
-
-
 
 void vfs_readFileList(int root_idx, int depth){
 	inode_t root_inode;
@@ -647,5 +766,6 @@ void vfs_readFileList(int root_idx, int depth){
 		vfs_readFileList(diren.inode_idx, depth + 1);
 	}
 }
+
 
 #endif

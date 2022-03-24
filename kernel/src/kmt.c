@@ -1,6 +1,7 @@
 #include <common.h>
 #include <pmm.h>
 #include <kmt.h>
+#include <vfs.h>
 
 static task_t* head = NULL;
 
@@ -88,13 +89,16 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->blocked = 0;
   memset(task->ofiles, 0, sizeof(task->ofiles));
   task->cwd_inode_no = ROOT_INODE_NO;
+  task->cwd_type = CWD_UFS;
   spin_init(&task->lock, name);
   SET_TASK(task);
   mutex_lock(&task_lock);
   Assert(total_task < MAX_TASK, "task full");
-  all_task[total_task ++] = task;
+  all_task[total_task] = task;
   void fill_standard_fd(task_t* task);
   fill_standard_fd(task);
+  new_proc_init(total_task, name);
+  total_task++;
   mutex_unlock(&task_lock);
   return 0;
 }
