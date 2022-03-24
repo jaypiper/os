@@ -370,6 +370,7 @@ static int file_read(ofile_info_t* ofile, int fd, void *buf, int count){
 	inode_t inode;
 	get_inode_by_no(ofile->inode_no, &inode);
 	int ret = MIN(inode.size - ofile->offset, count);
+	if(ret <= 0) return 0;
 	int left_count = ret;
 	int inode_blk_idx = ofile->offset / BLK_SIZE;
 	int blk_offset = ofile->offset % BLK_SIZE;
