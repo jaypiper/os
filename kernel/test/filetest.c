@@ -62,3 +62,56 @@ void bigfile(char *s){
   }
 }
 
+
+void dirfile(char *s){
+  int fd;
+
+  fd = vfs->open("dirfile", O_CREAT);
+  if(fd < 0){
+    printf("%s: create dirfile failed\n", s);
+    return;
+  }
+  vfs->close(fd);
+  if(vfs->chdir("dirfile") == 0){
+    printf("%s: chdir dirfile succeeded!\n", s);
+    return;
+  }
+  fd = vfs->open("dirfile/xx", 0);
+  if(fd >= 0){
+    printf("%s: create dirfile/xx succeeded!\n", s);
+    return;
+  }
+  fd = vfs->open("dirfile/xx", O_CREAT);
+  if(fd >= 0){
+    printf("%s: create dirfile/xx succeeded!\n", s);
+    return;
+  }
+  if(vfs->mkdir("dirfile/xx") == 0){
+    printf("%s: mkdir dirfile/xx succeeded!\n", s);
+    return;
+  }
+  if(vfs->unlink("dirfile/xx") == 0){
+    printf("%s: unlink dirfile/xx succeeded!\n", s);
+    return;
+  }
+  if(vfs->link("README", "dirfile/xx") == 0){
+    printf("%s: link to dirfile/xx succeeded!\n", s);
+    return;
+  }
+  if(vfs->unlink("dirfile") != 0){
+    printf("%s: unlink dirfile failed!\n", s);
+    return;
+  }
+
+  fd = vfs->open(".", O_RDWR);
+  if(fd >= 0){
+    printf("%s: open . for writing succeeded!\n", s);
+    return;
+  }
+  fd = vfs->open(".", 0);
+  if(vfs->write(fd, "x", 1) > 0){
+    printf("%s: write . succeeded!\n", s);
+    return;
+  }
+  vfs->close(fd);
+}
