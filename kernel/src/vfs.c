@@ -41,7 +41,7 @@ static proc_inode_t* insert_proc_inode(proc_inode_t* parent, char* name, const c
 	return new_inode;
 }
 
-static void proc_init(){
+static void vfs_proc_init(){
 	if(proc_dir) return;
 
 	proc_dir = pmm->alloc(sizeof(proc_inode_t));
@@ -75,7 +75,7 @@ static int proc_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
 }
 
 void new_proc_init(int id, const char* name){
-	proc_init();
+	vfs_proc_init();
 	char string_buf[32];
 	memset(string_buf, 0, sizeof(string_buf));
 	sprintf(string_buf, "%d", id);
@@ -333,7 +333,7 @@ static void vfs_init(){
 	stdout_info->write = dev_error_write;
 	stdout_info->read = invalid_read;
 	stdout_info->lseek = invalid_lseek;
-	proc_init();
+	vfs_proc_init();
 }
 
 static int file_write(ofile_info_t* ofile, int fd, void *buf, int count){
