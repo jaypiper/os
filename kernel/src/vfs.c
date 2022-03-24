@@ -2,7 +2,7 @@
 #include <kmt.h>
 #include <vfs.h>
 #include <user.h>
-
+#include <dev_sim.h>
 static superblock_t* sb;
 static fslog_t* log;
 static device_t* dev_sd;
@@ -17,6 +17,8 @@ static ofile_info_t* stdout_info;
 static ofile_info_t* stderr_info;
 
 static proc_inode_t* proc_dir = NULL;
+static dev_inode_t* dev_start = NULL;
+static int dev_num = 0;
 
 static void insert_into_proc_dir(proc_inode_t* parent_inode, proc_inode_t* child_inode, const char* name){
 	Assert(parent_inode && (parent_inode->type == FT_PROC_DIR), "insert_into_proc_dir parent(0x%x) type %d", parent_inode, parent_inode->type);
@@ -54,6 +56,32 @@ static void vfs_proc_init(){
 	insert_proc_inode(proc_dir, "meminfo", "MemTotal: xxxxx", FT_PROC_FILE);
 }
 
+static void vfs_dev_init(){
+	dev_start = pmm->alloc(sizeof(dev_inode_t) * MAX_DEV_NUM);
+	dev_num = 0;
+	/* add dev null */
+	dev_inode_t* new_dev = dev_start + dev_num ++;
+	new_dev->size = 0;
+	strcpy(new_dev->name, "null");
+	new_dev->read = null_read;
+	new_dev->write = null_write;
+	new_dev->lseek = null_lseek;
+	/* add dev zero */
+	new_dev = dev_start + dev_num ++;
+	new_dev->size = 0;
+	strcpy(new_dev->name, "zero");
+	new_dev->read = zero_read;
+	new_dev->write = invalid_write;
+	new_dev->lseek = zero_lseek;
+	/* add dev random */
+	new_dev = dev_start + dev_num ++;
+	new_dev->size = 0;
+	strcpy(new_dev->name, "random");
+	new_dev->read = random_read;
+	new_dev->write = invalid_write;
+	new_dev->lseek = random_lseek;
+}
+
 static int proc_read(ofile_info_t* ofile, int fd, void* buf, int count){
 	proc_inode_t* proc_inode = ofile->proc_inode;
 
@@ -76,6 +104,7 @@ static int proc_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
 
 void new_proc_init(int id, const char* name){
 	vfs_proc_init();
+	vfs_dev_init();
 	char string_buf[32];
 	memset(string_buf, 0, sizeof(string_buf));
 	sprintf(string_buf, "%d", id);
@@ -83,15 +112,15 @@ void new_proc_init(int id, const char* name){
 	insert_proc_inode(id_inode, "name", name, FT_PROC_FILE);
 }
 
-static int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count){
+int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count){
 	Assert(0, "invalid write for fd %d", fd);
 }
 
-static int invalid_read(ofile_info_t* ofile, int fd, void *buf, int count){
+int invalid_read(ofile_info_t* ofile, int fd, void *buf, int count){
 	Assert(0, "invalid read for fd %d", fd);
 }
 
-static int invalid_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
+int invalid_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
 	Assert(0, "invalid lseek for fd %d", fd);
 }
 
@@ -483,7 +512,7 @@ static int proc_open(const char* pathname, int flags){
 			parent = search_inode_in_proc_dir(parent, token);
 			if(!parent){
 				printf("/proc/%s not found\n", pathname);
-				break;
+				return -1;
 			}
 			token = strtok(NULL, "/");
 		}
@@ -499,9 +528,36 @@ static int proc_open(const char* pathname, int flags){
 	return fill_task_ofile(tmp_ofile);
 }
 
+static dev_inode_t* find_dev(const char* pathname){
+	if(!pathname || (strlen(pathname) > DEV_NAME_LEN)) return NULL;
+	for(int i = 0; i < dev_num; i++){
+		dev_inode_t* select = dev_start + i;
+		if(strcmp(pathname, select->name) == 0) return select;
+	}
+	return NULL;
+}
+
 static int dev_open(const char* pathname, int flags){
-	// TODO
-return 0;
+	if(pathname[0] != '/'){
+		printf("/dev%s not found\n", pathname);
+		return -1;
+	}
+	pathname = pathname + 1;
+	dev_inode_t* dev_inode = find_dev(pathname);
+	if(!dev_inode){
+		printf("/dev%s not found\n", pathname);
+		return -1;
+	}
+
+	ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
+	tmp_ofile->read = dev_inode->read;
+	tmp_ofile->write = dev_inode->write;
+	tmp_ofile->lseek = dev_inode->lseek;
+	tmp_ofile->dev_inode = dev_inode;
+	tmp_ofile->type = CWD_DEVFS;
+	tmp_ofile->flag = flags;
+	tmp_ofile->offset = 0;
+	return fill_task_ofile(tmp_ofile);
 }
 
 static int vfs_open(const char *pathname, int flags){  // must start with /

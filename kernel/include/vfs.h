@@ -87,6 +87,19 @@ typedef struct proc_diren{
     char name[PROC_NAME_LEN];
 }proc_diren_t;
 
+#define DEV_NAME_LEN 16
+#define MAX_DEV_NUM 16
+
+typedef struct ofile_info ofile_info_t;
+
+typedef struct dev_inode{
+    int size;
+    char name[16];
+    int (*write)(struct ofile_info* ofile, int fd, void *buf, int count);
+    int (*read)(struct ofile_info* ofile, int fd, void *buf, int count);
+    int (*lseek)(struct ofile_info* ofile, int fd, int offset, int whence);
+}dev_inode_t;
+
 typedef struct ofile_info{
     int (*write)(struct ofile_info* ofile, int fd, void *buf, int count);
     int (*read)(struct ofile_info* ofile, int fd, void *buf, int count);
@@ -95,6 +108,7 @@ typedef struct ofile_info{
     union{
         int inode_no;
         proc_inode_t* proc_inode;
+        dev_inode_t* dev_inode;
     };
     int type;       // ufs, proc, dev
     int flag;
@@ -118,5 +132,9 @@ int dev_error_write(ofile_info_t* ofile, int fd, void *buf, int count);
 
 void vfs_readFileList(int root_idx, int depth);
 void new_proc_init(int id, const char* name);
+
+int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count);
+int invalid_read(ofile_info_t* ofile, int fd, void *buf, int count);
+int invalid_lseek(ofile_info_t* ofile, int fd, int offset, int whence);
 
 #endif
