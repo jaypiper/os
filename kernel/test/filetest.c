@@ -14,7 +14,7 @@ void bigfile(char *s){
   // unlink("bigfile.dat");
   fd = vfs->open("bigfile.dat", O_CREAT | O_RDWR);
   if(fd < 0){
-    printf("%s: cannot create bigfile", s);
+    printf("%s: cannot create bigfile\n", s);
     return;
   }
   for(i = 0; i < N; i++){
@@ -50,7 +50,7 @@ void bigfile(char *s){
       return;
     }
     if(buf[0] != i/2 || buf[SZ/2-1] != i/2){
-      printf("%s: read bigfile wrong data\n", s);
+      printf("%s: read bigfile wrong data. read %d %d expect %d, total %d\n", s, buf[0], buf[SZ/2-1], i/2, total);
       return;
     }
     total += cc;
