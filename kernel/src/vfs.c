@@ -395,10 +395,10 @@ static int file_write(ofile_info_t* ofile, int fd, void *buf, int count){
 		left_count -= write_count;
 		blk_offset = 0;
 		inode_blk_idx ++;
-		inode.size += write_count;
+		ofile->offset += write_count;
+		inode.size = MAX(ofile->offset, inode.size);
 	}
 	sd_write(INODE_ADDR(ofile->inode_no) + OFFSET_IN_STRUCT(inode, size), &inode.size, sizeof(int));
-	ofile->offset += count;
 	return count;
 }
 
