@@ -745,6 +745,7 @@ static int vfs_unlink(const char *pathname){
 		return -1;
 	}
 	if(delete_inode.type == FT_LINK){
+		remove_inode_from_parent(dir_inode_no, delete_no);
 		int link_no = link_inodeno_by_inode(&delete_inode);
 		inode_t origin_inode;
 		get_inode_by_no(link_no, &origin_inode);
