@@ -181,7 +181,7 @@ static int alloc_inode(int type, inode_t* inode){
 		// printf("type %d\n", inode->type );
 		if(inode->type == FT_UNUSED){
 			inode->type = type;
-			inode->n_link = 0;
+			inode->n_link = 1;
 			inode->size = 0;
 			memset(inode->addr, 0, sizeof(inode->addr));
 			sd_write(inode_start, inode, sizeof(inode_t));
