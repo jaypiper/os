@@ -103,15 +103,5 @@ void dirfile(char *s){
     return;
   }
 
-  fd = vfs->open(".", O_RDWR);
-  if(fd >= 0){
-    printf("%s: open . for writing succeeded!\n", s);
-    return;
-  }
-  fd = vfs->open(".", 0);
-  if(vfs->write(fd, "x", 1) > 0){
-    printf("%s: write . succeeded!\n", s);
-    return;
-  }
   vfs->close(fd);
 }
