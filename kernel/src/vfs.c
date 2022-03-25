@@ -719,6 +719,11 @@ static int vfs_unlink(const char *pathname){
 		return -1;
 	}
 
+	if(delete_inode.type == FT_DIR && delete_inode.size != 0){
+		printf("can not unlink a non-empty dir %s\n", pathname);
+		return -1;
+	}
+
 	if(delete_inode.type == FT_LINK){
 		int link_no = link_inodeno_by_inode(&delete_inode);
 		inode_t origin_inode;
