@@ -258,30 +258,10 @@ static void get_dirent_by_idx(inode_t* inode, int idx, diren_t* diren){
 
 static int search_inodeno_in_dir(inode_t* dir_inode, char* name){
 	int entry_num = dir_inode->size / sizeof(diren_t);
-	int left_entry_num = entry_num;
-	int blk_idx = 0, total_blk_num = UP_BLK_NUM(entry_num, DIREN_PER_BLOCK);
-	int blk_start = dir_inode->addr[blk_idx];
 	diren_t direntry;
-	for(blk_idx = 0; blk_idx < total_blk_num; blk_idx ++){
-		blk_start = BLK2ADDR(get_blk_idx(blk_idx, dir_inode));
-		int dirent_addr = blk_start;
-		for(int i = 0; i < MIN(left_entry_num, DIREN_PER_BLOCK); i++){
-			sd_read(dirent_addr, &direntry, sizeof(diren_t));
-			if(direntry.type == DIRENT_SINGLE){
-				if(!strncmp(direntry.name, name, DIREN_NAME_LEN)){
-					return direntry.inode_idx;
-				}
-			}else if(direntry.type == DIRENT_START){
-				char* match_name = name;
-				while(!strncmp(direntry.name, match_name, DIREN_NAME_LEN)){
-					if(direntry.type == DIRENT_END) return direntry.inode_idx;
-					get_dirent_by_idx(dir_inode, direntry.next_entry, &direntry);
-					match_name = name + DIREN_NAME_LEN;
-				}
-			}
-			dirent_addr += sizeof(diren_t);
-		}
-		left_entry_num = MAX(0, left_entry_num - DIREN_PER_BLOCK);
+	for(int i = 0; i < entry_num; i++){
+		get_dirent_by_idx(dir_inode, i, &direntry);
+		if(!strcmp(direntry.name, name)) return direntry.inode_idx;
 	}
 	return -1;
 }
