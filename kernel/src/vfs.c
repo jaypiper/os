@@ -619,10 +619,9 @@ static int vfs_lseek(int fd, int offset, int whence){
 static int vfs_link(const char *oldpath, const char *newpath){
 	int oldpath_len = strlen(oldpath);
 	Assert(oldpath_len > 0 && oldpath_len < MAX_STRING_BUF_LEN, "invalid string length %d", oldpath_len);
-	Assert(oldpath[0] == '/', "file %s is not starting with /", oldpath);
-	int root_inode_no = oldpath[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
+	int old_root_inode_no = oldpath[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	inode_t old_inode;
-	int old_inode_no = get_inode_by_name(oldpath, &old_inode, root_inode_no);
+	int old_inode_no = get_inode_by_name(oldpath, &old_inode, old_root_inode_no);
 	if(old_inode_no < 0){
 		printf("link: no such file or directory %s\n", oldpath);
 		return -1;
@@ -637,8 +636,9 @@ static int vfs_link(const char *oldpath, const char *newpath){
 		}
 	}
 	Assert(strlen(string_buf + name_idx + 1) > 0, "newpath is not a file %s", newpath);
+	int new_root_inode_no = newpath[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	inode_t new_inode;
-	int dir_inode_no = name_idx <= 0 ? root_inode_no : get_inode_by_name(string_buf, &new_inode, ROOT_INODE_NO);
+	int dir_inode_no = name_idx <= 0 ? new_root_inode_no : get_inode_by_name(string_buf, &new_inode, new_root_inode_no);
 	if(dir_inode_no < 0){
 		printf("link: no such file or directory %s\n", newpath);
 		return -1;
