@@ -697,9 +697,10 @@ static void remove_inode_from_parent(int dir_inode_no, int delete_no){
 		if(diren.inode_idx == delete_no){
 			remove_dirent_from_inode(&dir_inode, &diren, i);
 			sd_write(INODE_ADDR(dir_inode_no), &dir_inode, sizeof(inode_t));
-			break;
+			return;
 		}
 	}
+	Assert(0, "delete no %d is not in dir %d\n", delete_no, dir_inode_no);
 }
 
 static int vfs_unlink(const char *pathname){
