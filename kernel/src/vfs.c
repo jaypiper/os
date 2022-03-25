@@ -334,6 +334,7 @@ static void insert_into_dir(int parent_inode, int child_inode, char* name){
 	inode_t parent;
 	sd_read(INODE_ADDR(parent_inode), &parent, sizeof(inode_t));
   Assert(parent.size % sizeof(diren_t) == 0, "size 0x%x dirent 0x%lx", parent.size, sizeof(diren_t));
+	Assert(parent.type == FT_DIR, "parent is not a dir, type %d\n", parent.type);
 	diren_t pre_dirent;
 	pre_dirent.inode_idx = child_inode;
   pre_dirent.type = DIRENT_SINGLE;
