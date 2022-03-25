@@ -765,7 +765,7 @@ static int vfs_mkdir(const char *pathname){
 		printf("mkdir: no such file or directory %s\n", pathname);
 		return -1;
 	}
-	if(new_inode.type != FT_DIR){
+	if((dir_inode_no != 0) && (new_inode.type != FT_DIR)){
 		printf("mkdir: %s is not a dir\n", pathname);
 		return -1;
 	}
