@@ -656,10 +656,75 @@ static int vfs_link(const char *oldpath, const char *newpath){
 	return 0;
 }
 
+static int split_base_name(char* name){
+	int name_idx;
+	for(name_idx = strlen(name) - 1; name_idx >= 0; name_idx --){
+		if(name[name_idx] == '/'){
+			name[name_idx] = 0;
+			break;
+		}
+	}
+	return name_idx;
+}
+
+static void replace_dirent_by_idx(inode_t* inode, int idx, diren_t* new_diren){
+	int blk_idx = idx * sizeof(diren_t) / BLK_SIZE;
+	int blk_offset = (idx * sizeof(diren_t)) % BLK_SIZE;
+	int left_size = sizeof(diren_t);
+	while(left_size){
+		int write_size = MIN(left_size, BLK_SIZE - blk_offset);
+		sd_write(BLK2ADDR(get_blk_idx(blk_idx, inode)) + blk_offset, (void*)new_diren + sizeof(diren_t) - left_size, write_size);
+		left_size -= write_size;
+		blk_offset = 0;
+		blk_idx += 1;
+	}
+}
+
+static inline void remove_dirent_from_inode(inode_t* inode, diren_t* diren, int diren_idx){
+	int entry_num = inode->size / sizeof(diren_t);
+	int pre_blkidx = inode->size / BLK_SIZE;
+	if(diren_idx == (entry_num - 1)){ // last dirent of inode, nothiong else to do
+	}else{
+		diren_t last_diren;
+		get_dirent_by_idx(inode, entry_num - 1, &last_diren);
+		replace_dirent_by_idx(inode, diren_idx, &last_diren);
+	}
+	inode->size -= sizeof(diren_t);
+	int new_blkidx = inode->size / BLK_SIZE;
+	if(pre_blkidx != new_blkidx){
+		int blk_no = get_blk_idx(pre_blkidx, inode);
+		free_blk(blk_no);
+	}
+
+}
+
+static void remove_inode_from_parent(int dir_inode_no, int delete_no){
+	inode_t dir_inode;
+	get_inode_by_no(dir_inode_no, &dir_inode);
+	Assert(dir_inode.type == FT_DIR, "inode %d is not a dir");
+	Assert(dir_inode.size % sizeof(diren_t) == 0, "invalid inode size %d\n", dir_inode.size);
+	int entry_num = dir_inode.size / sizeof(diren_t);
+	diren_t diren;
+	for(int i = 0; i < entry_num; i++){
+		get_dirent_by_idx(&dir_inode, i, &diren);
+		if(diren.inode_idx == delete_no){
+			remove_dirent_from_inode(&dir_inode, &diren, i);
+			sd_write(INODE_ADDR(dir_inode_no), &dir_inode, sizeof(inode_t));
+			break;
+		}
+	}
+}
+
 static int vfs_unlink(const char *pathname){
 	int path_len = strlen(pathname);
 	Assert(path_len > 0 && path_len < MAX_STRING_BUF_LEN, "invalid string length %d", path_len);
+	char string_buf[MAX_STRING_BUF_LEN];
+	strcpy(string_buf, pathname);
+	int name_idx = split_base_name(string_buf);
+	Assert(strlen(string_buf + name_idx + 1) > 0, "pathname is not a file %s", pathname);
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
+	inode_t dir_inode;
+	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &dir_inode, root_inode_no);
 	inode_t delete_inode;
 	int delete_no = get_inode_by_name(pathname, &delete_inode, root_inode_no);
 	if(delete_no < 0){
@@ -680,7 +745,7 @@ static int vfs_unlink(const char *pathname){
 	}
 	remove_inode_blk_by_inode(&delete_inode);
 	free_inode(delete_no);
-
+	remove_inode_from_parent(dir_inode_no, delete_no);
 	return 0;
 }
 
