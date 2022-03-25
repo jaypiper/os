@@ -113,15 +113,15 @@ void new_proc_init(int id, const char* name){
 }
 
 int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count){
-	Assert(0, "invalid write for fd %d", fd);
+	return -1;
 }
 
 int invalid_read(ofile_info_t* ofile, int fd, void *buf, int count){
-	Assert(0, "invalid read for fd %d", fd);
+	return -1;
 }
 
 int invalid_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
-	Assert(0, "invalid lseek for fd %d", fd);
+	return -1;
 }
 
 static void get_inode_by_no(int inode_no, inode_t* inode){
