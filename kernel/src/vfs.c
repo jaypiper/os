@@ -589,7 +589,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	if(dir_inode_no < 0) return -1;
 	inode_t file_inode;
 	int file_inode_no = string_buf[name_idx + 1] == 0 ? dir_inode_no : get_inode_by_name(string_buf + name_idx + 1, &file_inode, dir_inode_no);
-	if(file_inode_no < 0 && (flags & O_CREAT)){
+	if(file_inode_no < 0 && (flags & O_CREAT) && ((dir_inode_no == root_inode_no) || (dir_inode.type == FT_DIR))){
 		file_inode_no = alloc_inode(FT_FILE, &file_inode);
 		insert_into_dir(dir_inode_no, file_inode_no, string_buf + name_idx + 1);
 	}
