@@ -632,6 +632,10 @@ static int vfs_link(const char *oldpath, const char *newpath){
 		printf("link: no such file or directory %s\n", oldpath);
 		return -1;
 	}
+	if(old_inode.type == FT_DIR){
+		printf("link: hard link not allowed for directory %s\n", oldpath);
+		return -1;
+	}
 	char string_buf[MAX_STRING_BUF_LEN];
 	strcpy(string_buf, newpath);
 	int name_idx;
