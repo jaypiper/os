@@ -407,3 +407,37 @@ void subdir(char *s) {
   }
 }
 
+void rmdot(char *s) {
+  if(vfs->mkdir("dots") != 0){
+    printf("%s: mkdir dots failed\n", s);
+    return;
+  }
+  if(vfs->chdir("dots") != 0){
+    printf("%s: chdir dots failed\n", s);
+    return;
+  }
+  if(vfs->unlink(".") == 0){
+    printf("%s: rm . worked!\n", s);
+    return;
+  }
+  if(vfs->unlink("..") == 0){
+    printf("%s: rm .. worked!\n", s);
+    return;
+  }
+  if(vfs->chdir("/") != 0){
+    printf("%s: chdir / failed\n", s);
+    return;
+  }
+  if(vfs->unlink("dots/.") == 0){
+    printf("%s: unlink dots/. worked!\n", s);
+    return;
+  }
+  if(vfs->unlink("dots/..") == 0){
+    printf("%s: unlink dots/.. worked!\n", s);
+    return;
+  }
+  if(vfs->unlink("dots") != 0){
+    printf("%s: unlink dots failed!\n", s);
+    return;
+  }
+}
