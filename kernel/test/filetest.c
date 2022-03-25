@@ -139,3 +139,59 @@ void unlinkopen(char *s) {
   }
 }
 
+void linktest(char *s) {
+  enum { SZ = 5 };
+  int fd;
+
+  vfs->unlink("lf1");
+  vfs->unlink("lf2");
+
+  fd = vfs->open("lf1", O_CREAT|O_RDWR);
+  if(fd < 0){
+    printf("%s: create lf1 failed\n", s);
+    return;
+  }
+  if(vfs->write(fd, "hello", SZ) != SZ){
+    printf("%s: write lf1 failed\n", s);
+    return;
+  }
+  vfs->close(fd);
+
+  if(vfs->link("lf1", "lf2") < 0){
+    printf("%s: link lf1 lf2 failed\n", s);
+    return;
+  }
+  vfs->unlink("lf1");
+
+  if(vfs->open("lf1", 0) >= 0){
+    printf("%s: unlinked lf1 but it is still there!\n", s);
+    return;
+  }
+
+  fd = vfs->open("lf2", 0);
+  if(fd < 0){
+    printf("%s: open lf2 failed\n", s);
+    return;
+  }
+  if(vfs->read(fd, buf, sizeof(buf)) != SZ){
+    printf("%s: read lf2 failed\n", s);
+    return;
+  }
+  vfs->close(fd);
+
+  if(vfs->link("lf2", "lf2") >= 0){
+    printf("%s: link lf2 lf2 succeeded! oops\n", s);
+    return;
+  }
+
+  vfs->unlink("lf2");
+  if(vfs->link("lf2", "lf1") >= 0){
+    printf("%s: link non-existent succeeded! oops\n", s);
+    return;
+  }
+
+  if(vfs->link(".", "lf1") >= 0){
+    printf("%s: link . lf1 succeeded! oops\n", s);
+    return;
+  }
+}
