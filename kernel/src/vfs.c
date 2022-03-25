@@ -665,18 +665,21 @@ static int vfs_unlink(const char *pathname){
 		printf("unlink: no such file or directory %s\n", pathname);
 		return -1;
 	}
-	int link_no = link_inodeno_by_inode(&delete_inode);
+	if(delete_inode.type == FT_LINK){
+		int link_no = link_inodeno_by_inode(&delete_inode);
+		inode_t origin_inode;
+		get_inode_by_no(link_no, &origin_inode);
+		origin_inode.n_link --;
+		if(origin_inode.n_link == 0){
+			remove_inode_blk_by_inode(&origin_inode);
+			free_inode(link_no);
+		}else{
+			sd_write(INODE_ADDR(link_no) + OFFSET_IN_STRUCT(origin_inode, n_link), &origin_inode.n_link, sizeof(int));
+		}
+	}
 	remove_inode_blk_by_inode(&delete_inode);
 	free_inode(delete_no);
-	inode_t origin_inode;
-	get_inode_by_no(link_no, &origin_inode);
-	origin_inode.n_link --;
-	if(origin_inode.n_link == 0){
-		remove_inode_blk_by_inode(&origin_inode);
-		free_inode(link_no);
-	}else{
-		sd_write(INODE_ADDR(link_no) + OFFSET_IN_STRUCT(origin_inode, n_link), &origin_inode.n_link, sizeof(int));
-	}
+
 	return 0;
 }
 
