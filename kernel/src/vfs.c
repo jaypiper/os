@@ -474,7 +474,7 @@ static int vfs_read(int fd, void *buf, int count){
 static int vfs_close(int fd){
 	task_t* cur_task = kmt->gettask();
 	if(!cur_task->ofiles[fd]){
-		printf("file %d is not open\n", fd);
+		printf("close: file %d is not open\n", fd);
 		return -1;
 	}
 	pmm->free(cur_task->ofiles[fd]);
@@ -594,7 +594,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 		insert_into_dir(dir_inode_no, file_inode_no, string_buf + name_idx + 1);
 	}
 	if(file_inode_no < 0){
-		printf("no such file or directory %s\n", pathname);
+		printf("open: no such file or directory %s\n", pathname);
 		return -1;
 	}
 	ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
@@ -623,7 +623,7 @@ static int vfs_link(const char *oldpath, const char *newpath){
 	inode_t old_inode;
 	int old_inode_no = get_inode_by_name(oldpath, &old_inode, root_inode_no);
 	if(old_inode_no < 0){
-		printf("no such file or directory %s\n", oldpath);
+		printf("link: no such file or directory %s\n", oldpath);
 		return -1;
 	}
 	char string_buf[MAX_STRING_BUF_LEN];
@@ -639,7 +639,7 @@ static int vfs_link(const char *oldpath, const char *newpath){
 	inode_t new_inode;
 	int dir_inode_no = name_idx <= 0 ? root_inode_no : get_inode_by_name(string_buf, &new_inode, ROOT_INODE_NO);
 	if(dir_inode_no < 0){
-		printf("no such file or directory %s\n", newpath);
+		printf("link: no such file or directory %s\n", newpath);
 		return -1;
 	}
 
@@ -661,7 +661,7 @@ static int vfs_unlink(const char *pathname){
 	inode_t delete_inode;
 	int delete_no = get_inode_by_name(pathname, &delete_inode, root_inode_no);
 	if(delete_no < 0){
-		printf("no such file or directory %s\n", pathname);
+		printf("unlink: no such file or directory %s\n", pathname);
 		return -1;
 	}
 	int link_no = link_inodeno_by_inode(&delete_inode);
@@ -710,7 +710,7 @@ static int vfs_mkdir(const char *pathname){
 	inode_t new_inode;
 	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &new_inode, root_inode_no);
 	if(dir_inode_no < 0){
-		printf("no such file or directory %s\n", pathname);
+		printf("mkdir: no such file or directory %s\n", pathname);
 		return -1;
 	}
 
@@ -743,7 +743,7 @@ static int vfs_chdir(const char *path){
 static int vfs_dup(int fd){
 	task_t* task = kmt->gettask();
 	if(fd >= MAX_OPEN_FILE || !task->ofiles[fd]){
-		printf("invalid fd %d\n", fd);
+		printf("dup: invalid fd %d\n", fd);
 		return -1;
 	}
 	for(int i = 0; i < MAX_OPEN_FILE; i++){
@@ -752,7 +752,7 @@ static int vfs_dup(int fd){
 			return i;
 		}
 	}
-	printf("ofiles full\n");
+	printf("dup: ofiles full\n");
 	return -1;
 }
 
