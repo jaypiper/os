@@ -738,6 +738,11 @@ static int vfs_unlink(const char *pathname){
 		}
 	}
 
+	if(dir_inode_no == delete_no){
+		printf("unlink: refuse to unlink .\n");
+		return -1;
+	}
+
 	remove_inode_from_parent(dir_inode_no, delete_no);
 	delete_inode.n_link --;
 	if(delete_inode.n_link == 0){
