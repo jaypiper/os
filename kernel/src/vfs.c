@@ -720,7 +720,7 @@ static int vfs_unlink(const char *pathname){
 		return -1;
 	}
 
-	if(delete_inode.type == FT_DIR && delete_inode.size != 0){
+	if(delete_inode.type == FT_DIR && delete_inode.size > 2 * sizeof(diren_t)){
 		printf("can not unlink a non-empty dir %s\n", pathname);
 		return -1;
 	}
