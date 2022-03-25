@@ -62,6 +62,44 @@ void bigfile(char *s){
   }
 }
 
+// directory that uses indirect blocks
+void bigdir(char *s) {
+  enum { N = 500 };
+  int i, fd;
+  char name[10];
+
+  vfs->unlink("bd");
+
+  fd = vfs->open("bd", O_CREAT);
+  if(fd < 0){
+    printf("%s: bigdir create failed\n", s);
+    return;
+  }
+  vfs->close(fd);
+
+  for(i = 0; i < N; i++){
+    name[0] = 'x';
+    name[1] = '0' + (i / 64);
+    name[2] = '0' + (i % 64);
+    name[3] = '\0';
+    if(vfs->link("bd", name) != 0){
+      printf("%s: bigdir link(bd, %s) failed, i=%d\n", s, name, i);
+      return;
+    }
+  }
+
+  vfs->unlink("bd");
+  for(i = 0; i < N; i++){
+    name[0] = 'x';
+    name[1] = '0' + (i / 64);
+    name[2] = '0' + (i % 64);
+    name[3] = '\0';
+    if(vfs->unlink(name) != 0){
+      printf("%s: bigdir unlink failed", s);
+      return;
+    }
+  }
+}
 
 void dirfile(char *s){
   int fd;
