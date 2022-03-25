@@ -200,6 +200,17 @@ static int free_inode(int no){
 	return 0;
 }
 
+static int split_base_name(char* name){
+	int name_idx;
+	for(name_idx = strlen(name) - 1; name_idx >= 0; name_idx --){
+		if(name[name_idx] == '/'){
+			name[name_idx] = 0;
+			break;
+		}
+	}
+	return name_idx;
+}
+
 static int link_inodeno_by_inode(inode_t* inode){
 	Assert(inode->type == FT_LINK, "inode is not a link %d", inode->type);
 	return inode->link_no;
@@ -557,13 +568,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	char string_buf[MAX_STRING_BUF_LEN];
 	strcpy(string_buf, pathname);
-	int name_idx;
-	for(name_idx = strlen(pathname) - 1; name_idx >= 0; name_idx--){
-		if(string_buf[name_idx] == '/') {
-			string_buf[name_idx] = 0;
-			break;
-		}
-	}
+	int name_idx = split_base_name(string_buf);;
 	inode_t dir_inode;
 	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &dir_inode, root_inode_no);
 	if(dir_inode_no < 0) return -1;
@@ -617,13 +622,7 @@ static int vfs_link(const char *oldpath, const char *newpath){
 	}
 	char string_buf[MAX_STRING_BUF_LEN];
 	strcpy(string_buf, newpath);
-	int name_idx;
-	for(name_idx = strlen(newpath) - 1; name_idx >= 0; name_idx--){
-		if(string_buf[name_idx] == '/') {
-			string_buf[name_idx] = 0;
-			break;
-		}
-	}
+	int name_idx = split_base_name(string_buf);
 	Assert(strlen(string_buf + name_idx + 1) > 0, "newpath is not a file %s", newpath);
 	int new_root_inode_no = newpath[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	inode_t new_inode;
@@ -646,17 +645,6 @@ static int vfs_link(const char *oldpath, const char *newpath){
 	old_inode.n_link ++;
 	sd_write(INODE_ADDR(old_inode_no) + OFFSET_IN_STRUCT(old_inode, n_link), &old_inode.n_link, sizeof(int));
 	return 0;
-}
-
-static int split_base_name(char* name){
-	int name_idx;
-	for(name_idx = strlen(name) - 1; name_idx >= 0; name_idx --){
-		if(name[name_idx] == '/'){
-			name[name_idx] = 0;
-			break;
-		}
-	}
-	return name_idx;
 }
 
 static void replace_dirent_by_idx(inode_t* inode, int idx, diren_t* new_diren){
@@ -769,13 +757,7 @@ static int vfs_mkdir(const char *pathname){
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	char string_buf[MAX_STRING_BUF_LEN];
 	strcpy(string_buf, pathname);
-	int name_idx;
-	for(name_idx = strlen(pathname) - 1; name_idx >= 0; name_idx--){
-		if(string_buf[name_idx] == '/') {
-			string_buf[name_idx] = 0;
-			break;
-		}
-	}
+	int name_idx = split_base_name(string_buf);
 	Assert(strlen(string_buf + name_idx + 1) > 0, "%s is not a file", pathname);
 	inode_t new_inode;
 	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &new_inode, root_inode_no);
