@@ -560,7 +560,10 @@ static int dev_open(const char* pathname, int flags){
 static int vfs_open(const char *pathname, int flags){  // must start with /
 	// traverse inode block
 	int pathname_len = strlen(pathname);
-	Assert(pathname_len > 0 && pathname_len < MAX_STRING_BUF_LEN, "invalid pathname_len %d: %s", pathname_len, pathname);
+	if(pathname_len <= 0 || pathname_len >= MAX_STRING_BUF_LEN){
+		printf("open: invalid pathname length %s %d\n", pathname, pathname_len);
+		return -1;
+	}
 	/* /proc, /dev can only be accessed by pathname started with '/' */
 	if(strncmp(pathname, "/proc", 5) == 0) return proc_open(pathname + 5, flags);
 	if(strncmp(pathname, "/dev", 4) == 0) return dev_open(pathname + 4, flags);
@@ -615,7 +618,15 @@ static int vfs_lseek(int fd, int offset, int whence){
 
 static int vfs_link(const char *oldpath, const char *newpath){
 	int oldpath_len = strlen(oldpath);
-	Assert(oldpath_len > 0 && oldpath_len < MAX_STRING_BUF_LEN, "invalid string length %d", oldpath_len);
+	if(oldpath_len <= 0 || oldpath_len >= MAX_STRING_BUF_LEN){
+		printf("link: invalid oldpath length %s %d\n", oldpath, oldpath_len);
+		return -1;
+	}
+	int newpath_len = strlen(newpath);
+	if(newpath_len <= 0 || newpath_len >= MAX_STRING_BUF_LEN){
+		printf("link: invalid newpath length %s %d\n", newpath, newpath_len);
+		return -1;
+	}
 	int old_root_inode_no = oldpath[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	inode_t old_inode;
 	int old_inode_no = get_inode_by_name(oldpath, &old_inode, old_root_inode_no);
@@ -771,7 +782,10 @@ static int vfs_fstat(int fd, struct ufs_stat *buf){
 
 static int vfs_mkdir(const char *pathname){
 	int path_len = strlen(pathname);
-	Assert(path_len > 0 && path_len < MAX_STRING_BUF_LEN, "invalid string length %d", path_len);
+	if(path_len <= 0 || path_len >= MAX_STRING_BUF_LEN){
+		printf("mkdir: invalid pathname length %s %d\n", pathname, path_len);
+		return -1;
+	}
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	char string_buf[MAX_STRING_BUF_LEN];
 	strcpy(string_buf, pathname);
@@ -807,7 +821,10 @@ static int vfs_mkdir(const char *pathname){
 
 static int vfs_chdir(const char *path){
 	int path_len = strlen(path);
-	Assert(path_len > 0 && path_len < MAX_STRING_BUF_LEN, "invalid string length %d", path_len);
+	if(path_len <= 0 || path_len >= MAX_STRING_BUF_LEN){
+		printf("chdir: invalid path length %s %d\n", path, path_len);
+		return -1;
+	}
 
 	task_t* task = kmt->gettask();
 	inode_t inode;
