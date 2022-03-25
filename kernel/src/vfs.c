@@ -792,7 +792,13 @@ static int vfs_mkdir(const char *pathname){
 	int name_idx = split_base_name(string_buf);
 	Assert(strlen(string_buf + name_idx + 1) > 0, "%s is not a file", pathname);
 	inode_t new_inode;
-	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &new_inode, root_inode_no);
+	int dir_inode_no;
+	if(name_idx <= 0){
+		dir_inode_no = root_inode_no;
+		get_inode_by_no(root_inode_no, &new_inode);
+	}else{
+		dir_inode_no = get_inode_by_name(string_buf, &new_inode, root_inode_no);
+	}
 	if(dir_inode_no < 0){
 		printf("mkdir: no such file or directory %s\n", pathname);
 		return -1;
