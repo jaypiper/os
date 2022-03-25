@@ -731,6 +731,10 @@ static int vfs_chdir(const char *path){
 		printf("chdir: no such file or directory %s\n", path);
 		return -1;
 	}
+	if(inode.type != FT_DIR){
+		printf("%s is not a dir\n", path);
+		return -1;
+	}
 	task->cwd_inode_no = inode_no;
 	return 0;
 }
