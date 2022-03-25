@@ -587,10 +587,17 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 		file_inode_no = link_inodeno_by_inode(&file_inode);
 		get_inode_by_no(file_inode_no, &file_inode);
 	}
-	ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
 	int flag_mode = flags & 3;
-	tmp_ofile->write = (flag_mode == O_WRONLY) || (flag_mode == O_RDWR) ? file_write : invalid_write;
-	tmp_ofile->read = (flag_mode == O_RDONLY) || (flag_mode == O_RDWR) ? file_read : invalid_read;
+	int writable = (flag_mode == O_WRONLY) || (flag_mode == O_RDWR);
+	int readable =  (flag_mode == O_RDONLY) || (flag_mode == O_RDWR);
+	if(file_inode.type == FT_DIR && writable){
+		printf("dir %s is not writable\n");
+		return -1;
+	}
+
+	ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
+	tmp_ofile->write = writable ? file_write : invalid_write;
+	tmp_ofile->read = readable ? file_read : invalid_read;
 	tmp_ofile->lseek = file_lseek;
 	tmp_ofile->offset = 0;
 	tmp_ofile->inode_no = file_inode_no;
