@@ -435,8 +435,11 @@ static int get_inode_by_name(const char* pathname, inode_t* inode, int dirno){
 	char* path_name_start = string_buf;
 	if(path_name_start[0] == '/') {
 		dirno = ROOT_INODE_NO;
+		if(!path_name_start[1]){
+			get_inode_by_no(dirno, inode);
+			return dirno;
+		}
 		path_name_start = path_name_start + 1;
-		if(!path_name_start[1]) return dirno;
 	}
 	char *token = strtok(path_name_start, "/");
 	int inode_no = dirno;
