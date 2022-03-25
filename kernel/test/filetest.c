@@ -441,3 +441,39 @@ void rmdot(char *s) {
     return;
   }
 }
+
+// recursive mkdir
+// also tests empty file names.
+void iref(char *s) {
+  int N = 50;
+  int i, fd;
+
+  for(i = 0; i < N; i++){
+    if(vfs->mkdir("irefd") != 0){
+      printf("%s: mkdir irefd failed %d\n", s, i);
+      return;
+    }
+    if(vfs->chdir("irefd") != 0){
+      printf("%s: chdir irefd failed\n", s);
+      return;
+    }
+
+    vfs->mkdir("");
+    vfs->link("README", "");
+    fd = vfs->open("", O_CREAT);
+    if(fd >= 0)
+      vfs->close(fd);
+    fd = vfs->open("xx", O_CREAT);
+    if(fd >= 0)
+      vfs->close(fd);
+    vfs->unlink("xx");
+  }
+
+  // clean up
+  for(i = 0; i < N; i++){
+    vfs->chdir("..");
+    vfs->unlink("irefd");
+  }
+
+  vfs->chdir("/");
+}
