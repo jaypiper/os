@@ -756,10 +756,16 @@ static int vfs_unlink(const char *pathname){
 		}else{
 			sd_write(INODE_ADDR(link_no) + OFFSET_IN_STRUCT(origin_inode, n_link), &origin_inode.n_link, sizeof(int));
 		}
+	}else{
+		remove_inode_from_parent(dir_inode_no, delete_no);
+		delete_inode.n_link --;
+		if(delete_inode.n_link == 0){
+			remove_inode_blk_by_inode(&delete_inode);
+			free_inode(delete_no);
+		}else{
+			sd_write(INODE_ADDR(delete_no) + OFFSET_IN_STRUCT(delete_inode, n_link), &delete_inode.n_link, sizeof(int));
+		}
 	}
-	remove_inode_blk_by_inode(&delete_inode);
-	free_inode(delete_no);
-	remove_inode_from_parent(dir_inode_no, delete_no);
 	return 0;
 }
 
