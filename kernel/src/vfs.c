@@ -202,9 +202,7 @@ static int free_inode(int no){
 
 static int link_inodeno_by_inode(inode_t* inode){
 	Assert(inode->type == FT_LINK, "inode is not a link %d", inode->type);
-	link_t inode_link;
-	sd_read(BLK2ADDR(inode->addr[0]), &inode_link, sizeof(inode_link));
-	return inode_link.inode_no;
+	return inode->link_no;
 }
 
 static int __attribute__ ((unused)) link_inodeno_by_no(int inode_no){
@@ -660,10 +658,9 @@ static int vfs_link(const char *oldpath, const char *newpath){
 	}
 	new_inode_no = alloc_inode(FT_LINK, &new_inode);
 	insert_into_dir(dir_inode_no, new_inode_no, string_buf + name_idx + 1);
-	int new_blk_no = alloc_blk();
-	insert_blk_into_inode(new_inode_no, &new_inode, new_blk_no);
-	link_t new_link = {.inode_no = old_inode_no};
-	sd_write(BLK2ADDR(new_blk_no), &new_link, sizeof(link_t));
+	new_inode.link_no = old_inode_no;
+	sd_write(INODE_ADDR(new_inode_no) + OFFSET_IN_STRUCT(new_inode, link_no), &new_inode.link_no, sizeof(int));
+
 	old_inode.n_link ++;
 	sd_write(INODE_ADDR(old_inode_no) + OFFSET_IN_STRUCT(old_inode, n_link), &old_inode.n_link, sizeof(int));
 	return 0;

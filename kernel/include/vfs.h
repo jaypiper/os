@@ -57,7 +57,10 @@ typedef struct inode{
     int type;
     int n_link;
     uint32_t size;
-    uint32_t addr[MAX_DIRECT_FILE_BLOCK + 2];  // blk idx: direct(12), depth(1), next_block(1)
+    union{
+        uint32_t addr[MAX_DIRECT_FILE_BLOCK + 2];  // blk idx: direct(12), depth(1), next_block(1)
+        int link_no; // for link file
+    };
 } inode_t;
 
 typedef struct fslog{
@@ -114,9 +117,6 @@ typedef struct ofile_info{
     int flag;
 }ofile_info_t;
 
-typedef struct link_info{
-    int inode_no;
-}link_t;
 
 #define MAX32bit 0xffffffff
 #define ROOT_INODE_NO 0
