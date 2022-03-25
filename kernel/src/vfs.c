@@ -599,8 +599,8 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 		return -1;
 	}
 	ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
-	tmp_ofile->write = file_write;
-	tmp_ofile->read = file_read;
+	tmp_ofile->write = (flags & O_WRONLY) || (flags & O_RDWR) ? file_write : invalid_write;
+	tmp_ofile->read = (flags & O_RDONLY) || (flags & O_RDWR) ? file_read : invalid_write;
 	tmp_ofile->lseek = file_lseek;
 	tmp_ofile->offset = 0;
 	tmp_ofile->inode_no = file_inode_no;
