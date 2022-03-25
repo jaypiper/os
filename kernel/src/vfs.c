@@ -595,6 +595,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	}
 	if(file_inode_no < 0){
 		printf("no such file or directory %s\n", pathname);
+		return -1;
 	}
 	ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
 	tmp_ofile->write = file_write;
