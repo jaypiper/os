@@ -304,8 +304,8 @@ static void insert_dirent(diren_t* diren, inode_t* inode, int inode_no){
     insert_pos += insert_size;
     left_size -= insert_size;
     offset = 0;
+		inode->size += insert_size;
   }
-  inode->size += sizeof(diren_t);
 	sd_write(INODE_ADDR(inode_no), inode, sizeof(inode_t));
 }
 
