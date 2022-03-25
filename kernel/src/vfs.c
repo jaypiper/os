@@ -591,6 +591,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	int file_inode_no = string_buf[name_idx + 1] == 0 ? dir_inode_no : get_inode_by_name(string_buf + name_idx + 1, &file_inode, dir_inode_no);
 	if(file_inode_no < 0 && (flags & O_CREAT) && ((dir_inode_no == root_inode_no) || (dir_inode.type == FT_DIR))){
 		file_inode_no = alloc_inode(FT_FILE, &file_inode);
+		if(file_inode_no < 0) return -1;
 		insert_into_dir(dir_inode_no, file_inode_no, string_buf + name_idx + 1);
 	}
 	if(file_inode_no < 0){
@@ -657,6 +658,7 @@ static int vfs_link(const char *oldpath, const char *newpath){
 		return -1;
 	}
 	new_inode_no = alloc_inode(FT_LINK, &new_inode);
+	if(new_inode_no < 0) return -1;
 	insert_into_dir(dir_inode_no, new_inode_no, string_buf + name_idx + 1);
 	new_inode.link_no = old_inode_no;
 	sd_write(INODE_ADDR(new_inode_no) + OFFSET_IN_STRUCT(new_inode, link_no), &new_inode.link_no, sizeof(int));
@@ -807,6 +809,7 @@ static int vfs_mkdir(const char *pathname){
 	}
 
 	int new_inode_no = alloc_inode(FT_DIR, &new_inode);
+	if(new_inode_no < 0) return -1;
 	insert_into_dir(dir_inode_no, new_inode_no, string_buf + name_idx + 1);
 	insert_into_dir(new_inode_no, new_inode_no, ".");
 	insert_into_dir(new_inode_no, dir_inode_no, "..");
