@@ -653,8 +653,12 @@ static int vfs_link(const char *oldpath, const char *newpath){
 		printf("link: no such file or directory %s\n", newpath);
 		return -1;
 	}
-
-	int new_inode_no = alloc_inode(FT_LINK, &new_inode);
+	int new_inode_no = get_inode_by_name(string_buf + name_idx + 1, &new_inode, dir_inode_no);
+	if(new_inode_no >= 0){
+		printf("link: file %s exists\n", newpath);
+		return -1;
+	}
+	new_inode_no = alloc_inode(FT_LINK, &new_inode);
 	insert_into_dir(dir_inode_no, new_inode_no, string_buf + name_idx + 1);
 	int new_blk_no = alloc_blk();
 	insert_blk_into_inode(new_inode_no, &new_inode, new_blk_no);
