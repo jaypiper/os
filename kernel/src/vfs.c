@@ -714,6 +714,10 @@ static int vfs_mkdir(const char *pathname){
 		printf("mkdir: no such file or directory %s\n", pathname);
 		return -1;
 	}
+	if(new_inode.type != FT_DIR){
+		printf("mkdir: %s is not a dir\n", pathname);
+		return -1;
+	}
 
 	int new_inode_no = alloc_inode(FT_DIR, &new_inode);
 	insert_into_dir(dir_inode_no, new_inode_no, string_buf + name_idx + 1);
