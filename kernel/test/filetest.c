@@ -233,3 +233,177 @@ void linktest(char *s) {
     return;
   }
 }
+
+void subdir(char *s) {
+  int fd, cc;
+
+  vfs->unlink("ff");
+  if(vfs->mkdir("dd") != 0){
+    printf("%s: mkdir dd failed\n", s);
+    return;
+  }
+
+  fd = vfs->open("dd/ff", O_CREAT | O_RDWR);
+  if(fd < 0){
+    printf("%s: create dd/ff failed\n", s);
+    return;
+  }
+  vfs->write(fd, "ff", 2);
+  vfs->close(fd);
+
+  if(vfs->unlink("dd") >= 0){
+    printf("%s: unlink dd (non-empty dir) succeeded!\n", s);
+    return;
+  }
+
+  if(vfs->mkdir("/dd/dd") != 0){
+    printf("subdir mkdir dd/dd failed\n", s);
+    return;
+  }
+
+  fd = vfs->open("dd/dd/ff", O_CREAT | O_RDWR);
+  if(fd < 0){
+    printf("%s: create dd/dd/ff failed\n", s);
+    return;
+  }
+  vfs->write(fd, "FF", 2);
+  vfs->close(fd);
+
+  fd = vfs->open("dd/dd/../ff", 0);
+  if(fd < 0){
+    printf("%s: open dd/dd/../ff failed\n", s);
+    return;
+  }
+  cc = vfs->read(fd, buf, sizeof(buf));
+  if(cc != 2 || buf[0] != 'f'){
+    printf("%s: dd/dd/../ff wrong content\n", s);
+    return;
+  }
+  vfs->close(fd);
+
+  if(vfs->link("dd/dd/ff", "dd/dd/ffff") != 0){
+    printf("link dd/dd/ff dd/dd/ffff failed\n", s);
+    return;
+  }
+
+  if(vfs->unlink("dd/dd/ff") != 0){
+    printf("%s: unlink dd/dd/ff failed\n", s);
+    return;
+  }
+  if(vfs->open("dd/dd/ff", O_RDONLY) >= 0){
+    printf("%s: open (unlinked) dd/dd/ff succeeded\n", s);
+    return;
+  }
+
+  if(vfs->chdir("dd") != 0){
+    printf("%s: chdir dd failed\n", s);
+    return;
+  }
+  if(vfs->chdir("dd/../../dd") != 0){
+    printf("%s: chdir dd/../../dd failed\n", s);
+    return;
+  }
+  if(vfs->chdir("dd/../../../dd") != 0){
+    printf("chdir dd/../../dd failed\n", s);
+    return;
+  }
+  if(vfs->chdir("./..") != 0){
+    printf("%s: chdir ./.. failed\n", s);
+    return;
+  }
+
+  fd = vfs->open("dd/dd/ffff", 0);
+  if(fd < 0){
+    printf("%s: open dd/dd/ffff failed\n", s);
+    return;
+  }
+  if(vfs->read(fd, buf, sizeof(buf)) != 2){
+    printf("%s: read dd/dd/ffff wrong len\n", s);
+    return;
+  }
+  vfs->close(fd);
+
+  if(vfs->open("dd/dd/ff", O_RDONLY) >= 0){
+    printf("%s: open (unlinked) dd/dd/ff succeeded!\n", s);
+    return;
+  }
+
+  if(vfs->open("dd/ff/ff", O_CREAT|O_RDWR) >= 0){
+    printf("%s: create dd/ff/ff succeeded!\n", s);
+    return;
+  }
+  if(vfs->open("dd/xx/ff", O_CREAT|O_RDWR) >= 0){
+    printf("%s: create dd/xx/ff succeeded!\n", s);
+    return;
+  }
+  if(vfs->open("dd", O_RDWR) >= 0){
+    printf("%s: open dd rdwr succeeded!\n", s);
+    return;
+  }
+  if(vfs->open("dd", O_WRONLY) >= 0){
+    printf("%s: open dd wronly succeeded!\n", s);
+    return;
+  }
+  if(vfs->link("dd/ff/ff", "dd/dd/xx") == 0){
+    printf("%s: link dd/ff/ff dd/dd/xx succeeded!\n", s);
+    return;
+  }
+  if(vfs->link("dd/xx/ff", "dd/dd/xx") == 0){
+    printf("%s: link dd/xx/ff dd/dd/xx succeeded!\n", s);
+    return;
+  }
+  if(vfs->link("dd/ff", "dd/dd/ffff") == 0){
+    printf("%s: link dd/ff dd/dd/ffff succeeded!\n", s);
+    return;
+  }
+  if(vfs->mkdir("dd/ff/ff") == 0){
+    printf("%s: mkdir dd/ff/ff succeeded!\n", s);
+    return;
+  }
+  if(vfs->mkdir("dd/xx/ff") == 0){
+    printf("%s: mkdir dd/xx/ff succeeded!\n", s);
+    return;
+  }
+  if(vfs->mkdir("dd/dd/ffff") == 0){
+    printf("%s: mkdir dd/dd/ffff succeeded!\n", s);
+    return;
+  }
+  if(vfs->unlink("dd/xx/ff") == 0){
+    printf("%s: unlink dd/xx/ff succeeded!\n", s);
+    return;
+  }
+  if(vfs->unlink("dd/ff/ff") == 0){
+    printf("%s: unlink dd/ff/ff succeeded!\n", s);
+    return;
+  }
+  if(vfs->chdir("dd/ff") == 0){
+    printf("%s: chdir dd/ff succeeded!\n", s);
+    return;
+  }
+  if(vfs->chdir("dd/xx") == 0){
+    printf("%s: chdir dd/xx succeeded!\n", s);
+    return;
+  }
+
+  if(vfs->unlink("dd/dd/ffff") != 0){
+    printf("%s: unlink dd/dd/ff failed\n", s);
+    return;
+  }
+  if(vfs->unlink("dd/ff") != 0){
+    printf("%s: unlink dd/ff failed\n", s);
+    return;
+  }
+  if(vfs->unlink("dd") == 0){
+    printf("%s: unlink non-empty dd succeeded!\n", s);
+    return;
+  }
+  if(vfs->unlink("dd/dd") < 0){
+    printf("%s: unlink dd/dd failed\n", s);
+    return;
+  }
+  if(vfs->unlink("dd") < 0){
+    printf("%s: unlink dd failed\n", s);
+    return;
+  }
+}
+
