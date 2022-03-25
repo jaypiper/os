@@ -11,7 +11,7 @@
 #define LOG_SIZE (BLK_SIZE - sizeof(superblock_t))
 #define N_SUPER (FS_START / BLK_SIZE)
 #define N_LOG ((BLK_SIZE - sizeof(superblock_t)) / sizeof(fslog_t))
-#define N_INODE 128  // less than 2^16
+#define N_INODE 512  // less than 2^16
 #define INODE_BLK_NUM ((N_INODE * sizeof(inode_t) - 1) / BLK_SIZE + 1)
 #define DIREN_PER_BLOCK (BLK_SIZE / sizeof(diren_t))
 #define MAX_DIRECT_FILE_BLOCK 8
