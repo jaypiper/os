@@ -105,3 +105,37 @@ void dirfile(char *s){
 
   vfs->close(fd);
 }
+
+void unlinkopen(char *s) {
+  int SZ = 5;
+  int fd = vfs->open("unlinkopen", O_CREAT | O_RDWR);
+  vfs->write(fd, "hello", SZ);
+  vfs->close(fd);
+  vfs->unlink("unlinkopen");
+  if(vfs->open("unlinkopen", O_RDWR) == 0){
+    printf("unlinkopen fail1\n");
+    return;
+  }
+  fd = vfs->open("unlinkopen", O_CREAT | O_RDWR);
+  vfs->write(fd, "aaaaa", SZ);
+  vfs->close(fd);
+  fd = vfs->open("unlinkopen2", O_CREAT | O_RDWR);
+  vfs->write(fd, "bbbbb", SZ);
+  vfs->close(fd);
+  vfs->unlink("unlinkopen");
+  if(vfs->open("unlinkopen", O_RDWR) == 0){
+    printf("unlinkopen fail2\n");
+    return;
+  }
+  fd = vfs->open("unlinkopen2", O_RDWR);
+  if(fd < 0){
+    printf("unlinkopen fail3\n");
+    return;
+  }
+  vfs->read(fd, buf, SZ);
+  if(buf[0] != 'b'){
+    printf("unlinkopen fail4\n");
+    return;
+  }
+}
+
