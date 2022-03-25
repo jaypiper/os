@@ -781,7 +781,16 @@ static int vfs_mkdir(const char *pathname){
 		printf("mkdir: %s is not a dir\n", pathname);
 		return -1;
 	}
-
+	if(string_buf[name_idx + 1] == 0){
+		printf("mkdir: %s is not valid\n", pathname);
+		return -1;
+	}
+	inode_t file_inode;
+	int file_inode_no = get_inode_by_name(string_buf + name_idx + 1, &file_inode, dir_inode_no);
+	if(file_inode_no >= 0){
+		printf("mkdir: %s is already exists\n", pathname);
+		return -1;
+	}
 	int new_inode_no = alloc_inode(FT_DIR, &new_inode);
 	if(new_inode_no < 0) return -1;
 	insert_into_dir(dir_inode_no, new_inode_no, string_buf + name_idx + 1);
