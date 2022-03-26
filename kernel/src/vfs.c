@@ -57,6 +57,8 @@ static void vfs_proc_init(){
 }
 
 static void vfs_dev_init(){
+	if(dev_start) return;
+
 	dev_start = pmm->alloc(sizeof(dev_inode_t) * MAX_DEV_NUM);
 	dev_num = 0;
 	/* add dev null */
@@ -364,6 +366,7 @@ static void vfs_init(){
 	stderr_info->lseek = invalid_lseek;
 	stderr_info->count = 1;
 	vfs_proc_init();
+	vfs_dev_init();
 }
 
 static int file_write(ofile_info_t* ofile, int fd, void *buf, int count){
