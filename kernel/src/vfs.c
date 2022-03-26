@@ -21,6 +21,7 @@ static dev_inode_t* dev_start = NULL;
 static int dev_num = 0;
 
 static sem_t fs_lock;
+static sem_t procfs_lock;
 
 static void insert_into_proc_dir(proc_inode_t* parent_inode, proc_inode_t* child_inode, const char* name){
 	Assert(parent_inode && (parent_inode->type == FT_PROC_DIR), "insert_into_proc_dir parent(0x%x) type %d", parent_inode, parent_inode->type);
@@ -56,6 +57,7 @@ void vfs_proc_init(){
 	insert_proc_inode(proc_dir, "cpuinfo", "name: xxxxx", FT_PROC_FILE);
 	/* add meminfo */
 	insert_proc_inode(proc_dir, "meminfo", "MemTotal: xxxxx", FT_PROC_FILE);
+	kmt->sem_init(&procfs_lock, "procfs lock", 1);
 }
 
 void vfs_dev_init(){
@@ -110,8 +112,10 @@ void new_proc_init(int id, const char* name){
 	char string_buf[32];
 	memset(string_buf, 0, sizeof(string_buf));
 	sprintf(string_buf, "%d", id);
+	kmt->sem_wait(&procfs_lock);
 	proc_inode_t* id_inode = insert_proc_inode(proc_dir, string_buf, NULL, FT_PROC_DIR);
 	insert_proc_inode(id_inode, "name", name, FT_PROC_FILE);
+	kmt->sem_signal(&procfs_lock);
 }
 
 int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count){
@@ -366,7 +370,6 @@ static void vfs_init(){
 	stderr_info->lseek = invalid_lseek;
 	stderr_info->count = 1;
 	kmt->sem_init(&fs_lock, "fs lock", 1);
-	kmt->sem_init(&procfs_lock, "procfs lock", 1);
 }
 
 static int file_write(ofile_info_t* ofile, int fd, void *buf, int count){
@@ -527,7 +530,7 @@ static int fill_task_ofile(ofile_info_t* ofile){
 
 static int proc_open(const char* pathname, int flags){
 	if(pathname[0] == '/') pathname = pathname + 1;
-
+	kmt->sem_wait(&procfs_lock);
 	proc_inode_t* parent = proc_dir;
 	if(!pathname || !pathname[0]){
 
@@ -544,6 +547,7 @@ static int proc_open(const char* pathname, int flags){
 			token = strtok(NULL, "/");
 		}
 	}
+	kmt->sem_signal(&procfs_lock);
 	ofile_info_t* tmp_ofile = pmm->alloc(sizeof(ofile_info_t));
 	tmp_ofile->read = proc_read;
 	tmp_ofile->write = invalid_write;
