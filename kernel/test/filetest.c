@@ -4,10 +4,9 @@
 
 /* based on xv6 usertest.c */
 
-
-char buf[BLK_SIZE * 16];
-
 int bigfile(char *s){
+  char buf[BLK_SIZE];
+
   int N = 20, SZ=600;
   int fd, i, total, cc;
 
@@ -27,7 +26,6 @@ int bigfile(char *s){
 
   struct ufs_stat stat;
   vfs->fstat(fd, &stat);
-  printf("after write, id=%d type=%d size=%d\n", stat.id, stat.type, stat.size);
 
   vfs->close(fd);
 
@@ -148,6 +146,7 @@ int dirfile(char *s){
 }
 
 int unlinkopen(char *s) {
+  char buf[BLK_SIZE];
   int SZ = 5;
   int fd = vfs->open("unlinkopen", O_CREAT | O_RDWR);
   vfs->write(fd, "hello", SZ);
@@ -182,6 +181,7 @@ int unlinkopen(char *s) {
 }
 
 int linktest(char *s) {
+  char buf[BLK_SIZE];
   enum { SZ = 5 };
   int fd;
 
@@ -241,6 +241,7 @@ int linktest(char *s) {
 }
 
 int subdir(char *s) {
+  char buf[BLK_SIZE];
   int fd, cc;
 
   vfs->unlink("ff");
@@ -491,6 +492,7 @@ int iref(char *s) {
 }
 
 int duptest(char* s){
+  char buf[BLK_SIZE];
   int fd = vfs->open("file", O_CREAT | O_RDWR);
   int fd2 = vfs->dup(fd);
   vfs->write(fd, "hello", 5);
@@ -508,6 +510,7 @@ int duptest(char* s){
 }
 
 int devtest(char* s){
+  char buf[BLK_SIZE];
   int SZ = 12;
   // zero
   int fd = vfs->open("/dev/zero", O_RDONLY);
@@ -549,6 +552,7 @@ int devtest(char* s){
 }
 
 int proctest(char* s){
+  char buf[BLK_SIZE];
   int SZ = 20;
   // cpuinfo
   memset(buf, 0, SZ);
