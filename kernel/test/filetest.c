@@ -507,6 +507,46 @@ int duptest(char* s){
   return 0;
 }
 
+int devtest(char* s){
+  int SZ = 12;
+  // zero
+  int fd = vfs->open("/dev/zero", O_RDONLY);
+  memset(buf, 'a', SZ);
+  vfs->read(fd, buf, SZ);
+  for(int i = 0; i < SZ; i++){
+    if(buf[i] != 0){
+      printf("%s: read non-zero from /dev/zero\n", s);
+      return -1;
+    }
+  }
+  if(vfs->close(fd) != 0){
+    printf("%s: dev close zero\n");
+    return -1;
+  }
+  // random
+  fd = vfs->open("/dev/random", O_RDONLY);
+  if(vfs->read(fd, buf, SZ) != SZ){
+    printf("%s: read random size\n");
+    return -1;
+  }
+  if(vfs->close(fd) != 0){
+    printf("%s: dev close random\n");
+    return -1;
+  }
+  // null
+  fd = vfs->open("/dev/null", O_RDWR);
+  int wdsize = vfs->write(fd, buf, SZ);
+  if(wdsize != SZ){
+    printf("%s: write size %d\n", s, wdsize);
+    return -1;
+  }
+  if(vfs->close(fd) != 0){
+    printf("%s: dev close null\n");
+    return -1;
+  }
+  // TODO: sda test
+  return 0;
+}
 
 void filetest(){
   struct test {
@@ -522,6 +562,7 @@ void filetest(){
     {rmdot, "rmdot"},
     {iref, "iref"},
     {duptest, "duptest"},
+    {devtest, "devtest"},
     {0, 0}
   };
   for (struct test *t = tests; t->s != 0; t++){
