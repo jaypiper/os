@@ -410,6 +410,10 @@ static int file_read(ofile_info_t* ofile, int fd, void *buf, int count){
 	kmt->sem_wait(&fs_lock);
 	inode_t inode;
 	get_inode_by_no(ofile->inode_no, &inode);
+	if(inode.type != FT_FILE && inode.type != FT_DIR){
+		printf("file_read: invalid inode type %d inode_no %d\n", inode.type, ofile->inode_no);
+		return -1;
+	}
 	int ret = MIN(inode.size - ofile->offset, count);
 	if(ret <= 0){
 		kmt->sem_signal(&fs_lock);
