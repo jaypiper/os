@@ -762,7 +762,7 @@ static inline void remove_dirent_from_inode(inode_t* inode, diren_t* diren, int 
 static void remove_inode_from_parent(int dir_inode_no, int delete_no){
 	inode_t dir_inode;
 	get_inode_by_no(dir_inode_no, &dir_inode);
-	Assert(dir_inode.type == FT_DIR, "inode %d is not a dir");
+	Assert(dir_inode.type == FT_DIR, "inode %d is not a dir", dir_inode_no);
 	Assert(dir_inode.size % sizeof(diren_t) == 0, "invalid inode size %d\n", dir_inode.size);
 	int entry_num = dir_inode.size / sizeof(diren_t);
 	diren_t diren;
