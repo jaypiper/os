@@ -462,11 +462,19 @@ static int get_inode_by_name(const char* pathname, inode_t* inode, int dirno){
 
 static int vfs_write(int fd, void *buf, int count){
 	task_t* cur_task = kmt->gettask();
+	if(!cur_task->ofiles[fd]){
+		printf("write: invalid fd %d\n", fd);
+		return -1;
+	}
 	return cur_task->ofiles[fd]->write(cur_task->ofiles[fd], fd, buf, count);
 }
 
 static int vfs_read(int fd, void *buf, int count){
 	task_t* cur_task = kmt->gettask();
+	if(!cur_task->ofiles[fd]){
+		printf("read: invalid fd %d\n", fd);
+		return -1;
+	}
 	return cur_task->ofiles[fd]->read(cur_task->ofiles[fd], fd, buf, count);
 }
 
@@ -626,6 +634,10 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 
 static int vfs_lseek(int fd, int offset, int whence){
 	task_t* cur_task = kmt->gettask();
+	if(!cur_task->ofiles[fd]){
+		printf("lseek: invalid fd %d\n", fd);
+		return -1;
+	}
 	return cur_task->ofiles[fd]->lseek(cur_task->ofiles[fd], fd, offset, whence);
 }
 
@@ -780,8 +792,13 @@ static int vfs_unlink(const char *pathname){
 }
 
 static int vfs_fstat(int fd, struct ufs_stat *buf){
+	task_t* cur_task = kmt->gettask();
+	if(!cur_task->ofiles[fd]){
+		printf("fstat: invalid fd %d\n", fd);
+		return -1;
+	}
 	inode_t inode;
-	int inode_no = kmt->gettask()->ofiles[fd]->inode_no;
+	int inode_no = cur_task->ofiles[fd]->inode_no;
 	get_inode_by_no(inode_no, &inode);
 	if(inode_no < 0){
 		printf("fstat: invalid fd %d\n", fd);
