@@ -77,6 +77,8 @@ void kmt_init(){
   }
   memset(running_task, 0, sizeof(running_task));
   total_task = 0;
+  extern void vfs_proc_init();
+  vfs_proc_init();
 }
 
 
