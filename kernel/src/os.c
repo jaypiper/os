@@ -29,16 +29,10 @@ static void tty_reader(void *arg) {
 
 #ifdef VFS_DEBUG
 static void vfs_test(void* args){
-  printf("start vfs test\n");
-  void run_fs_test();
-  void traverse(const char *root);
-  run_fs_test();
-  printf("traverse started\n");
-  traverse("");
-  printf("traverse finished\n");
-  printf("start bigfile test\n");
-  void bigfile(char *s);
-  bigfile("bigfile");
+  printf("start filetest test\n");
+  void filetest(char* s);
+  filetest("filetest");
+  printf("finish filetest test\n");
   while(1);
 }
 #endif
