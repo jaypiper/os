@@ -20,6 +20,8 @@ static proc_inode_t* proc_dir = NULL;
 static dev_inode_t* dev_start = NULL;
 static int dev_num = 0;
 
+static sem_t fs_lock;
+
 static void insert_into_proc_dir(proc_inode_t* parent_inode, proc_inode_t* child_inode, const char* name){
 	Assert(parent_inode && (parent_inode->type == FT_PROC_DIR), "insert_into_proc_dir parent(0x%x) type %d", parent_inode, parent_inode->type);
 	if(!parent_inode->mem) parent_inode->mem = pmm->alloc(BLK_SIZE);
@@ -363,10 +365,13 @@ static void vfs_init(){
 	stderr_info->read = invalid_read;
 	stderr_info->lseek = invalid_lseek;
 	stderr_info->count = 1;
+	kmt->sem_init(&fs_lock, "fs lock", 1);
+	kmt->sem_init(&procfs_lock, "procfs lock", 1);
 }
 
 static int file_write(ofile_info_t* ofile, int fd, void *buf, int count){
 	// TODO: lseek may cause offset beyond the end of the file
+	kmt->sem_wait(&fs_lock);
 	inode_t inode;
 	get_inode_by_no(ofile->inode_no, &inode);
 	int left_count = count;
@@ -393,14 +398,19 @@ static int file_write(ofile_info_t* ofile, int fd, void *buf, int count){
 		inode.size = MAX(ofile->offset, inode.size);
 	}
 	sd_write(INODE_ADDR(ofile->inode_no) + OFFSET_IN_STRUCT(inode, size), &inode.size, sizeof(int));
+	kmt->sem_signal(&fs_lock);
 	return count;
 }
 
 static int file_read(ofile_info_t* ofile, int fd, void *buf, int count){
+	kmt->sem_wait(&fs_lock);
 	inode_t inode;
 	get_inode_by_no(ofile->inode_no, &inode);
 	int ret = MIN(inode.size - ofile->offset, count);
-	if(ret <= 0) return 0;
+	if(ret <= 0){
+		kmt->sem_signal(&fs_lock);
+		return 0;
+	}
 	int left_count = ret;
 	int inode_blk_idx = ofile->offset / BLK_SIZE;
 	int blk_offset = ofile->offset % BLK_SIZE;
@@ -416,6 +426,7 @@ static int file_read(ofile_info_t* ofile, int fd, void *buf, int count){
 		inode_blk_idx ++;
 	}
 	ofile->offset += ret;
+	kmt->sem_signal(&fs_lock);
 	return ret;
 }
 
@@ -425,7 +436,9 @@ static int file_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
 		case SEEK_SET: ofile->offset = offset; break;
 		case SEEK_CUR: ofile->offset += offset; break;
 		case SEEK_END:
+			kmt->sem_wait(&fs_lock);
 			get_inode_by_no(ofile->inode_no, &inode);
+			kmt->sem_signal(&fs_lock);
 			ofile->offset = inode.size; break;
 		default: Assert(0, "invalid whence %d", whence);
 	}
@@ -587,13 +600,17 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	if(strncmp(pathname, "/proc", 5) == 0) return proc_open(pathname + 5, flags);
 	if(strncmp(pathname, "/dev", 4) == 0) return dev_open(pathname + 4, flags);
 
+	kmt->sem_wait(&fs_lock);
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
 	char string_buf[MAX_STRING_BUF_LEN];
 	strcpy(string_buf, pathname);
 	int name_idx = split_base_name(string_buf);;
 	inode_t dir_inode;
 	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &dir_inode, root_inode_no);
-	if(dir_inode_no < 0) return -1;
+	if(dir_inode_no < 0){
+		kmt->sem_signal(&fs_lock);
+		return -1;
+	}
 	inode_t file_inode;
 	int file_inode_no = string_buf[name_idx + 1] == 0 ? dir_inode_no : get_inode_by_name(string_buf + name_idx + 1, &file_inode, dir_inode_no);
 	if(file_inode_no < 0 && (flags & O_CREAT) && ((dir_inode_no == root_inode_no) || (dir_inode.type == FT_DIR))){
@@ -603,6 +620,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	}
 	if(file_inode_no < 0){
 		printf("open: no such file or directory %s\n", pathname);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 	while(file_inode.type == FT_LINK) {
@@ -614,6 +632,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	int readable =  (flag_mode == O_RDONLY) || (flag_mode == O_RDWR);
 	if(file_inode.type == FT_DIR && writable){
 		printf("dir %s is not writable\n");
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 
@@ -627,8 +646,8 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	tmp_ofile->type =CWD_UFS;
 	tmp_ofile->flag = flags;
 
+	kmt->sem_signal(&fs_lock);
 	return fill_task_ofile(tmp_ofile);
-
 }
 
 static int vfs_lseek(int fd, int offset, int whence){
@@ -652,14 +671,18 @@ static int vfs_link(const char *oldpath, const char *newpath){
 		return -1;
 	}
 	int old_root_inode_no = oldpath[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
+
+	kmt->sem_wait(&fs_lock);
 	inode_t old_inode;
 	int old_inode_no = get_inode_by_name(oldpath, &old_inode, old_root_inode_no);
 	if(old_inode_no < 0){
 		printf("link: no such file or directory %s\n", oldpath);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 	if(old_inode.type == FT_DIR){
 		printf("link: hard link not allowed for directory %s\n", oldpath);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 	char string_buf[MAX_STRING_BUF_LEN];
@@ -671,21 +694,27 @@ static int vfs_link(const char *oldpath, const char *newpath){
 	int dir_inode_no = name_idx <= 0 ? new_root_inode_no : get_inode_by_name(string_buf, &new_inode, new_root_inode_no);
 	if(dir_inode_no < 0){
 		printf("link: no such file or directory %s\n", newpath);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 	int new_inode_no = get_inode_by_name(string_buf + name_idx + 1, &new_inode, dir_inode_no);
 	if(new_inode_no >= 0){
 		printf("link: file %s exists\n", newpath);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 	new_inode_no = alloc_inode(FT_LINK, &new_inode);
-	if(new_inode_no < 0) return -1;
+	if(new_inode_no < 0){
+		kmt->sem_signal(&fs_lock);
+		return -1;
+	}
 	insert_into_dir(dir_inode_no, new_inode_no, string_buf + name_idx + 1);
 	new_inode.link_no = old_inode_no;
 	sd_write(INODE_ADDR(new_inode_no) + OFFSET_IN_STRUCT(new_inode, link_no), &new_inode.link_no, sizeof(int));
 
 	old_inode.n_link ++;
 	sd_write(INODE_ADDR(old_inode_no) + OFFSET_IN_STRUCT(old_inode, n_link), &old_inode.n_link, sizeof(int));
+	kmt->sem_signal(&fs_lock);
 	return 0;
 }
 
@@ -798,7 +827,9 @@ static int vfs_fstat(int fd, struct ufs_stat *buf){
 	}
 	inode_t inode;
 	int inode_no = cur_task->ofiles[fd]->inode_no;
+	kmt->sem_wait(&fs_lock);
 	get_inode_by_no(inode_no, &inode);
+	kmt->sem_signal(&fs_lock);
 	if(inode_no < 0){
 		printf("fstat: invalid fd %d\n", fd);
 		return -1;
@@ -820,6 +851,8 @@ static int vfs_mkdir(const char *pathname){
 	strcpy(string_buf, pathname);
 	int name_idx = split_base_name(string_buf);
 	Assert(strlen(string_buf + name_idx + 1) > 0, "%s is not a file", pathname);
+
+	kmt->sem_wait(&fs_lock);
 	inode_t new_inode;
 	int dir_inode_no;
 	if(name_idx <= 0){
@@ -830,27 +863,35 @@ static int vfs_mkdir(const char *pathname){
 	}
 	if(dir_inode_no < 0){
 		printf("mkdir: no such file or directory %s\n", pathname);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 	if((dir_inode_no != 0) && (new_inode.type != FT_DIR)){
 		printf("mkdir: %s is not a dir\n", pathname);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 	if(string_buf[name_idx + 1] == 0){
 		printf("mkdir: %s is not valid\n", pathname);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 	inode_t file_inode;
 	int file_inode_no = get_inode_by_name(string_buf + name_idx + 1, &file_inode, dir_inode_no);
 	if(file_inode_no >= 0){
 		printf("mkdir: %s is already exists\n", pathname);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 	int new_inode_no = alloc_inode(FT_DIR, &new_inode);
-	if(new_inode_no < 0) return -1;
+	if(new_inode_no < 0){
+		kmt->sem_signal(&fs_lock);
+		return -1;
+	}
 	insert_into_dir(dir_inode_no, new_inode_no, string_buf + name_idx + 1);
 	insert_into_dir(new_inode_no, new_inode_no, ".");
 	insert_into_dir(new_inode_no, dir_inode_no, "..");
+	kmt->sem_signal(&fs_lock);
 	return 0;
 }
 
@@ -862,8 +903,12 @@ static int vfs_chdir(const char *path){
 	}
 
 	task_t* task = kmt->gettask();
+
+	kmt->sem_wait(&fs_lock);
 	inode_t inode;
 	int inode_no = get_inode_by_name(path, &inode, task->cwd_inode_no);
+	kmt->sem_signal(&fs_lock);
+
 	if(inode_no < 0){
 		printf("chdir: no such file or directory %s\n", path);
 		return -1;
