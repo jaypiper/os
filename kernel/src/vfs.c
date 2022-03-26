@@ -785,17 +785,20 @@ static int vfs_unlink(const char *pathname){
 	int name_idx = split_base_name(string_buf);
 	Assert(strlen(string_buf + name_idx + 1) > 0, "pathname is not a file %s", pathname);
 	int root_inode_no = pathname[0] == '/' ? ROOT_INODE_NO : kmt->gettask()->cwd_inode_no;
+	kmt->sem_wait(&fs_lock);
 	inode_t dir_inode;
 	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &dir_inode, root_inode_no);
 	inode_t delete_inode;
 	int delete_no = get_inode_by_name(pathname, &delete_inode, root_inode_no);
 	if(delete_no < 0){
 		printf("unlink: no such file or directory %s\n", pathname);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 
 	if(delete_inode.type == FT_DIR && delete_inode.size > 2 * sizeof(diren_t)){
 		printf("can not unlink a non-empty dir %s\n", pathname);
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 
@@ -814,6 +817,7 @@ static int vfs_unlink(const char *pathname){
 
 	if(dir_inode_no == delete_no){
 		printf("unlink: refuse to unlink .\n");
+		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
 
@@ -825,7 +829,7 @@ static int vfs_unlink(const char *pathname){
 	}else{
 		sd_write(INODE_ADDR(delete_no) + OFFSET_IN_STRUCT(delete_inode, n_link), &delete_inode.n_link, sizeof(int));
 	}
-
+	kmt->sem_signal(&fs_lock);
 	return 0;
 }
 
