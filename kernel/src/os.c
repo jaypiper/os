@@ -29,10 +29,11 @@ static void tty_reader(void *arg) {
 
 #ifdef VFS_DEBUG
 static void vfs_test(void* args){
-  printf("start filetest test\n");
-  void filetest(char* s);
-  filetest("filetest");
-  printf("finish filetest test\n");
+  void filetest(int idx);
+  char c = args ? ((char*)args)[0] : 0;
+  if((c >= '0') && (c <= '9')) filetest(c - '0');
+  else if((c >= 'a') && (c <= 'z')) filetest(c - 'a' + 10);
+  else filetest(-1);
   while(1);
 }
 #endif

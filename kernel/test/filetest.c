@@ -575,7 +575,7 @@ int proctest(char* s){
   return 0;
 }
 
-void filetest(){
+void filetest(int idx){
   struct test {
     int (*f)(char *);
     char *s;
@@ -593,8 +593,20 @@ void filetest(){
     {proctest, "proctest"},
     {0, 0}
   };
-  for (struct test *t = tests; t->s != 0; t++){
-    if(t->f(t->s) == -1) return;
+
+  if(idx < 0){
+    for (struct test *t = tests; t->s != 0; t++){
+      if(t->f(t->s) == -1) return;
+    }
+    printf("all file tests passed!!\n");
+    return;
+  } else{
+    struct test *t = &tests[idx];
+    while(1){
+      if(t->f(t->s) == -1){
+        Assert(0, "idx %d %s fail\n", idx, t->s);
+        while(1);
+      }
+    }
   }
-  printf("all file tests passed!!\n");
 }
