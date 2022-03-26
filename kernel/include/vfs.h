@@ -115,6 +115,7 @@ typedef struct ofile_info{
     };
     int type;       // ufs, proc, dev
     int flag;
+    int count;
 }ofile_info_t;
 
 

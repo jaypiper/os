@@ -350,16 +350,19 @@ static void vfs_init(){
 	stdin_info->write = invalid_write;
 	stdin_info->read = dev_input_read;
 	stdin_info->lseek = invalid_lseek;
+	stdin_info->count = 1;
 
 	stdout_info = pmm->alloc(sizeof(ofile_info_t));
 	stdout_info->write = dev_output_write;
 	stdout_info->read = invalid_read;
 	stdout_info->lseek = invalid_lseek;
+	stdout_info->count = 1;
 
 	stderr_info = pmm->alloc(sizeof(ofile_info_t));
 	stderr_info->write = dev_error_write;
 	stderr_info->read = invalid_read;
 	stderr_info->lseek = invalid_lseek;
+	stderr_info->count = 1;
 	vfs_proc_init();
 }
 
@@ -473,7 +476,9 @@ static int vfs_close(int fd){
 		printf("close: file %d is not open\n", fd);
 		return -1;
 	}
-	pmm->free(cur_task->ofiles[fd]);
+	if(--cur_task->ofiles[fd]->count == 0){
+		pmm->free(cur_task->ofiles[fd]);
+	}
 	cur_task->ofiles[fd] = NULL;
 	return 0;
 }
@@ -527,6 +532,7 @@ static int proc_open(const char* pathname, int flags){
 	tmp_ofile->type = CWD_PROCFS;
 	tmp_ofile->flag = flags;
 	tmp_ofile->offset = 0;
+	tmp_ofile->count = 1;
 	return fill_task_ofile(tmp_ofile);
 }
 
@@ -559,6 +565,7 @@ static int dev_open(const char* pathname, int flags){
 	tmp_ofile->type = CWD_DEVFS;
 	tmp_ofile->flag = flags;
 	tmp_ofile->offset = 0;
+	tmp_ofile->count = 1;
 	return fill_task_ofile(tmp_ofile);
 }
 
@@ -608,6 +615,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	tmp_ofile->read = readable ? file_read : invalid_read;
 	tmp_ofile->lseek = file_lseek;
 	tmp_ofile->offset = 0;
+	tmp_ofile->count = 1;
 	tmp_ofile->inode_no = file_inode_no;
 	tmp_ofile->type =CWD_UFS;
 	tmp_ofile->flag = flags;
@@ -861,6 +869,7 @@ static int vfs_dup(int fd){
 	for(int i = 0; i < MAX_OPEN_FILE; i++){
 		if(!task->ofiles[i]){
 			task->ofiles[i] = task->ofiles[fd];
+			task->ofiles[i]->count ++;
 			return i;
 		}
 	}
