@@ -158,24 +158,25 @@ static int alloc_blk(){
 	int search_idx = 0;
 	uint32_t bitmap;
 	for(search_idx = 0; search_idx < sb->n_blk; search_idx += 32){
-		sd_read(bitmap_blk_start + search_idx / 8, &bitmap, sizeof(uint32_t));
+		sd_read(bitmap_blk_start + (search_idx / 32 * 4), &bitmap, sizeof(uint32_t));
 		if(bitmap == MAX32bit) continue;
 		int free_bit = __builtin_ctz(~bitmap);
 		bitmap = bitmap | ((uint32_t)1 << free_bit);
 		sd_write(bitmap_blk_start + (search_idx / 32 * 4), &bitmap, sizeof(uint32_t));
-		return search_idx + free_bit;
+		return sb->data_start + search_idx + free_bit;
 	}
 	printf("alloc: no avaliable block\n");
 	return -1;
 }
 
 static int free_blk(int blk_no){
+	blk_no -= sb->data_start;
 	int bitmap_blk_start = BLK2ADDR(sb->bitmap_start);
 	uint32_t bitmap;
 	sd_read(bitmap_blk_start + (blk_no / 32 * 4), &bitmap, sizeof(uint32_t));
-	Assert(bitmap & (uint32_t)1 << (blk_no & MAX32bit), "blk %d is not allocated", blk_no);
-	bitmap = bitmap & (~((uint32_t)1 << (blk_no & MAX32bit)));
-	sd_write(bitmap_blk_start + blk_no / 8, &bitmap, sizeof(uint32_t));
+	Assert(bitmap & (uint32_t)1 << (blk_no & 0x1f), "blk %d is not allocated", blk_no);
+	bitmap = bitmap & (~((uint32_t)1 << (blk_no & 0x1f)));
+	sd_write(bitmap_blk_start + blk_no / 32 * 4, &bitmap, sizeof(uint32_t));
 	return 0;
 }
 
