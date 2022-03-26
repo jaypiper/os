@@ -548,6 +548,29 @@ int devtest(char* s){
   return 0;
 }
 
+int proctest(char* s){
+  int SZ = 20;
+  // cpuinfo
+  memset(buf, 0, SZ);
+  int fd = vfs->open("/proc/cpuinfo", O_RDONLY);
+  vfs->read(fd, buf, SZ);
+  printf("cpuinfo: %s\n", buf);
+  vfs->close(fd);
+  // meminfo
+  memset(buf, 0, SZ);
+  fd = vfs->open("/proc/meminfo", O_RDONLY);
+  vfs->read(fd, buf, SZ);
+  printf("meminfo: %s\n", buf);
+  vfs->close(fd);
+  // proc 1
+  memset(buf, 0, SZ);
+  vfs->open("/proc/1/name", O_RDONLY);
+  vfs->read(fd, buf, SZ);
+  printf("proc1name: %s\n", buf);
+  vfs->close(fd);
+  return 0;
+}
+
 void filetest(){
   struct test {
     int (*f)(char *);
@@ -563,6 +586,7 @@ void filetest(){
     {iref, "iref"},
     {duptest, "duptest"},
     {devtest, "devtest"},
+    {proctest, "proctest"},
     {0, 0}
   };
   for (struct test *t = tests; t->s != 0; t++){
