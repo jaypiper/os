@@ -131,7 +131,7 @@ int invalid_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
 }
 
 static void get_inode_by_no(int inode_no, inode_t* inode){
-	sd_read(sb->inode_start * BLK_SIZE + inode_no * sizeof(inode_t), inode, sizeof(inode_t));
+	sd_read(INODE_ADDR(inode_no), inode, sizeof(inode_t));
 }
 
 /* get the disk block idx for a given block idx in inode*/
