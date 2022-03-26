@@ -350,14 +350,16 @@ static void vfs_init(){
 	stdin_info->write = invalid_write;
 	stdin_info->read = dev_input_read;
 	stdin_info->lseek = invalid_lseek;
+
 	stdout_info = pmm->alloc(sizeof(ofile_info_t));
 	stdout_info->write = dev_output_write;
 	stdout_info->read = invalid_read;
 	stdout_info->lseek = invalid_lseek;
+
 	stderr_info = pmm->alloc(sizeof(ofile_info_t));
-	stdout_info->write = dev_error_write;
-	stdout_info->read = invalid_read;
-	stdout_info->lseek = invalid_lseek;
+	stderr_info->write = dev_error_write;
+	stderr_info->read = invalid_read;
+	stderr_info->lseek = invalid_lseek;
 	vfs_proc_init();
 }
 
