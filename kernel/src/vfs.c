@@ -185,7 +185,6 @@ static int alloc_inode(int type, inode_t* inode){
 	int inode_start = inode_blk_start;
 	for(int inode_no = 0; inode_no < N_INODE; inode_no ++){
 		sd_read(inode_start, inode, sizeof(inode_t));
-		// printf("type %d\n", inode->type );
 		if(inode->type == FT_UNUSED){
 			inode->type = type;
 			inode->n_link = 1;
@@ -346,7 +345,6 @@ void fill_standard_fd(task_t* task){
 }
 
 static void vfs_init(){
-	// TODO: create /proc, /dev
 	// TODO: recover from log
 	dev_sd = dev->lookup("sda");
 	sd_op->init(dev_sd);
