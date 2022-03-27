@@ -529,8 +529,15 @@ int devtest(char* s){
   int SZ = 12;
   // zero
   int fd = vfs->open("/dev/zero", O_RDONLY);
+  if(fd < 0){
+    printf("%s: open zero fail\n", s);
+    return -1;
+  }
   memset(buf, 'a', SZ);
-  vfs->read(fd, buf, SZ);
+  if(vfs->read(fd, buf, SZ) != SZ){
+    printf("%s: read zero size\n", s);
+    return -1;
+  }
   for(int i = 0; i < SZ; i++){
     if(buf[i] != 0){
       printf("%s: read non-zero from /dev/zero\n", s);
@@ -538,28 +545,36 @@ int devtest(char* s){
     }
   }
   if(vfs->close(fd) != 0){
-    printf("%s: dev close zero\n");
+    printf("%s: dev close zero\n", s);
     return -1;
   }
   // random
   fd = vfs->open("/dev/random", O_RDONLY);
+  if(fd < 0){
+    printf("%s: open random fail\n", s);
+    return -1;
+  }
   if(vfs->read(fd, buf, SZ) != SZ){
-    printf("%s: read random size\n");
+    printf("%s: read random size\n", s);
     return -1;
   }
   if(vfs->close(fd) != 0){
-    printf("%s: dev close random\n");
+    printf("%s: dev close random\n", s);
     return -1;
   }
   // null
   fd = vfs->open("/dev/null", O_RDWR);
+  if(fd < 0){
+    printf("%s: open null fail\n", s);
+    return -1;
+  }
   int wdsize = vfs->write(fd, buf, SZ);
   if(wdsize != SZ){
     printf("%s: write size %d\n", s, wdsize);
     return -1;
   }
   if(vfs->close(fd) != 0){
-    printf("%s: dev close null\n");
+    printf("%s: dev close null\n", s);
     return -1;
   }
   // TODO: sda test
@@ -572,20 +587,28 @@ int proctest(char* s){
   // cpuinfo
   memset(buf, 0, SZ);
   int fd = vfs->open("/proc/cpuinfo", O_RDONLY);
+  if(fd < 0){
+    printf("%s: open cpuinfo fail\n", s);
+    return -1;
+  }
   vfs->read(fd, buf, SZ);
-  printf("cpuinfo: %s\n", buf);
+  // printf("cpuinfo: %s\n", buf);
   vfs->close(fd);
   // meminfo
   memset(buf, 0, SZ);
   fd = vfs->open("/proc/meminfo", O_RDONLY);
+  if(fd < 0){
+    printf("%s: open meminfo fail\n", s);
+    return -1;
+  }
   vfs->read(fd, buf, SZ);
-  printf("meminfo: %s\n", buf);
+  // printf("meminfo: %s\n", buf);
   vfs->close(fd);
   // proc 1
   memset(buf, 0, SZ);
   vfs->open("/proc/1/name", O_RDONLY);
   vfs->read(fd, buf, SZ);
-  printf("proc1name: %s\n", buf);
+  // printf("proc1name: %s\n", buf);
   vfs->close(fd);
   return 0;
 }

@@ -55,7 +55,16 @@ static void os_init() {
   init_kmt_debug();
 #endif
 #ifdef VFS_DEBUG
-  kmt->create(task_alloc(), "vfs", vfs_test, NULL);
+  static char c[20];
+  for(int i = 0; i < 10; i++){
+    c[i] = '0' + i;
+    kmt->create(task_alloc(), "vfs_test", vfs_test, &c[i]);
+  }
+  for(int i = 0; i < 2; i++){
+    c[i + 10] = 'a' + i;
+    kmt->create(task_alloc(), "vfs_test", vfs_test, &c[i+10]);
+  }
+
 #endif
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");
