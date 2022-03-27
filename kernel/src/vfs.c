@@ -467,7 +467,8 @@ static int get_inode_by_name(const char* pathname, inode_t* inode, int dirno){
 		}
 		path_name_start = path_name_start + 1;
 	}
-	char *token = strtok(path_name_start, "/");
+	char* token = path_name_start;
+	int delim_idx = find_replace(path_name_start, "/", 0);
 	int inode_no = dirno;
 	get_inode_by_no(dirno, inode);
 	while(token){
@@ -476,7 +477,8 @@ static int get_inode_by_name(const char* pathname, inode_t* inode, int dirno){
 			return -1;
 		}
 		get_inode_by_no(inode_no, inode);
-		token = strtok(NULL, "/");
+		token = delim_idx == -1 ? NULL : path_name_start + delim_idx + 1;
+		delim_idx = find_replace(path_name_start, "/", delim_idx + 1);
 	}
 	return inode_no;
 }
@@ -543,14 +545,17 @@ static int proc_open(const char* pathname, int flags){
 	}else{
 		char string_buf[MAX_STRING_BUF_LEN];
 		strcpy(string_buf, pathname);
-		char* token = strtok(string_buf, "/");
+		char* token = string_buf;
+		int idx = find_replace(string_buf, "/", 0);
 		while(token){
 			parent = search_inode_in_proc_dir(parent, token);
 			if(!parent){
 				printf("/proc/%s not found\n", pathname);
+				kmt->sem_signal(&procfs_lock);
 				return -1;
 			}
-			token = strtok(NULL, "/");
+			token = idx == -1 ? NULL : string_buf + idx + 1;
+			idx = find_replace(string_buf, "/", idx + 1);
 		}
 	}
 	kmt->sem_signal(&procfs_lock);
