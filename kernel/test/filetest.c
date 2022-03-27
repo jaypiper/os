@@ -178,6 +178,7 @@ int unlinkopen(char *s) {
     return -1;
   }
   vfs->close(fd);
+  vfs->unlink("unlinkopen2");
   return 0;
 }
 
