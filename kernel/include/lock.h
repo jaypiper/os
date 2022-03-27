@@ -15,6 +15,9 @@ void mutex_lock(spinlock_t *lk);
 void mutex_unlock(spinlock_t *lk);
 int mutex_trylock(spinlock_t* lk);
 
+void pushcli();
+void popcli();
+
 #define LOCK_FENCE1_MAGIC 0x12345
 #define LOCK_FENCE2_MAGIC 0x6789a
 

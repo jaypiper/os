@@ -12,13 +12,28 @@ static task_t* all_task[MAX_TASK];
 static spinlock_t task_lock;
 static int total_task;
 
-#define CURRENT_TASK running_task[cpu_current()]
+static inline task_t* get_current_task(){
+  pushcli();
+  task_t* ret = running_task[cpu_current()];
+  popcli();
+  return ret;
+}
+
+// Interrupts must be disabled.
+// only called in interrupt handler
+static inline void set_current_task(task_t* task){
+  // pushcli();
+  running_task[cpu_current()] = task;
+  // popcli();
+}
+
+#define CURRENT_TASK get_current_task()
 #define CURRENT_IDLE idle_task[cpu_current()]
 #define LAST_TASK last_task[cpu_current()]
 
 static Context* kmt_context_save(Event ev, Context * ctx){
   Assert(ctx, "saved NULL context in event %d", ev.event);
-  if(!CURRENT_TASK) CURRENT_TASK = CURRENT_IDLE;
+  if(!CURRENT_TASK) set_current_task(CURRENT_IDLE);
 
   Assert(TASK_STATE_VALID(CURRENT_TASK->state), "in context save, task %s state %d invalid", CURRENT_TASK->name, CURRENT_TASK->state);
   CURRENT_TASK->context = ctx;
@@ -50,7 +65,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
     }
   }
   select->state = TASK_RUNNING;
-  CURRENT_TASK = select;
+  set_current_task(select);
   Assert(TASK_STATE_VALID(select->state), "task state is invalid, name %s state %d\n", select->name, select->state);
   Assert(CHECK_TASK(select), "task %s canary check fail", select->name);
 
