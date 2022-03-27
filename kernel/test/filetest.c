@@ -177,6 +177,7 @@ int unlinkopen(char *s) {
     printf("unlinkopen fail4\n");
     return -1;
   }
+  vfs->close(fd);
   return 0;
 }
 
