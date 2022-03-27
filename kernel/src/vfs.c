@@ -90,10 +90,14 @@ void vfs_dev_init(){
 
 static int proc_read(ofile_info_t* ofile, int fd, void* buf, int count){
 	proc_inode_t* proc_inode = ofile->proc_inode;
-
+	kmt->sem_wait(&procfs_lock);
 	int ret = MIN(proc_inode->size - ofile->offset, count);
-	if(ret <= 0) return 0;
+	if(ret <= 0) {
+		kmt->sem_signal(&procfs_lock);
+		return 0;
+	}
 	memcpy(buf, proc_inode->mem, ret);
+	kmt->sem_signal(&procfs_lock);
 	return ret;
 }
 
@@ -102,7 +106,10 @@ static int proc_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
 	switch(whence){
 		case SEEK_SET: ofile->offset = offset; break;
 		case SEEK_CUR: ofile->offset += offset; break;
-		case SEEK_END: ofile->offset = proc_inode->size; break;
+		case SEEK_END:
+			kmt->sem_wait(&procfs_lock);
+			ofile->offset = proc_inode->size;
+			kmt->sem_signal(&procfs_lock); break;
 		default: Assert(0, "invalid whence %d", whence);
 	}
 	return ofile->offset;
