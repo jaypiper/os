@@ -615,7 +615,7 @@ void filetest(int idx){
     }
     printf("all file tests passed!!\n");
     return;
-  } else{
+  } else if(idx < (sizeof(tests) / sizeof(tests[0]) - 1)){
     struct test *t = &tests[idx];
     while(1){
       if(t->f(t->s) == -1){
@@ -623,5 +623,7 @@ void filetest(int idx){
         while(1);
       }
     }
+  } else{
+    while(1) ;
   }
 }
