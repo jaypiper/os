@@ -237,7 +237,8 @@ static int insert_blk_into_inode(int inode_no, inode_t* inode, int insert_idx){
     int idx = blk_num - MAX_DIRECT_FILE_BLOCK;
 		if(idx == 0){
 			inode->addr[INDIRECT_IN_INODE] = alloc_blk();
-			sd_write(INODE_ADDR(inode_no) + OFFSET_IN_PSTRUCT(inode, addr[INDIRECT_IN_INODE]), &inode->addr[INDIRECT_IN_INODE], sizeof(int));
+			inode->addr[DEPTH_IN_INODE] = 1;
+			sd_write(INODE_ADDR(inode_no) + OFFSET_IN_PSTRUCT(inode, addr[DEPTH_IN_INODE]), &inode->addr[DEPTH_IN_INODE], 2 * sizeof(int));
 		}
 		int blk_start = BLK2ADDR(inode->addr[INDIRECT_IN_INODE]);
 		int depth = UP_BLK_NUM(idx, INDIRECT_NUM_PER_BLK);
@@ -249,6 +250,8 @@ static int insert_blk_into_inode(int inode_no, inode_t* inode, int insert_idx){
     }
     Assert(idx >= 0 && idx < INDIRECT_NUM_PER_BLK, "invalid idx %d, expected [0, %ld)", idx, INDIRECT_NUM_PER_BLK);
     if(idx == (INDIRECT_NUM_PER_BLK - 1)){ // alloc a new page
+			inode->addr[DEPTH_IN_INODE] ++ ;
+			sd_write(INODE_ADDR(inode_no) + OFFSET_IN_PSTRUCT(inode, addr[DEPTH_IN_INODE]), &inode->addr[DEPTH_IN_INODE], sizeof(int));
       int newblk_idx = alloc_blk();
 			sd_write(blk_start + INDIRECT_NUM_PER_BLK * sizeof(int), &newblk_idx, sizeof(int));
       blk_start = BLK2ADDR(newblk_idx);
