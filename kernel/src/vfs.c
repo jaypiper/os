@@ -492,7 +492,7 @@ static int get_inode_by_name(const char* pathname, inode_t* inode, int dirno){
 
 static int vfs_write(int fd, void *buf, int count){
 	task_t* cur_task = kmt->gettask();
-	if(!cur_task->ofiles[fd]){
+	if(fd < 0 || fd >= MAX_OPEN_FILE || !cur_task->ofiles[fd]){
 		printf("write: invalid fd %d\n", fd);
 		return -1;
 	}
@@ -501,7 +501,7 @@ static int vfs_write(int fd, void *buf, int count){
 
 static int vfs_read(int fd, void *buf, int count){
 	task_t* cur_task = kmt->gettask();
-	if(!cur_task->ofiles[fd]){
+	if(fd < 0 || fd >= MAX_OPEN_FILE || !cur_task->ofiles[fd]){
 		printf("read: invalid fd %d\n", fd);
 		return -1;
 	}
