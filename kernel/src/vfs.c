@@ -746,7 +746,7 @@ static void replace_dirent_by_idx(inode_t* inode, int idx, diren_t* new_diren){
 
 static inline void remove_dirent_from_inode(inode_t* inode, diren_t* diren, int diren_idx){
 	int entry_num = inode->size / sizeof(diren_t);
-	int pre_blkidx = inode->size / BLK_SIZE;
+	int pre_blkidx = (inode->size - 1) / BLK_SIZE;
 	if(diren_idx == (entry_num - 1)){ // last dirent of inode, nothiong else to do
 	}else{
 		diren_t last_diren;
@@ -754,7 +754,7 @@ static inline void remove_dirent_from_inode(inode_t* inode, diren_t* diren, int 
 		replace_dirent_by_idx(inode, diren_idx, &last_diren);
 	}
 	inode->size -= sizeof(diren_t);
-	int new_blkidx = inode->size / BLK_SIZE;
+	int new_blkidx = (inode->size - 1) / BLK_SIZE;
 	if(pre_blkidx != new_blkidx){
 		int blk_no = get_blk_idx(pre_blkidx, inode);
 		free_blk(blk_no);
