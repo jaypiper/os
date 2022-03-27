@@ -63,7 +63,7 @@ int bigfile(char *s){
 
 // directory that uses indirect blocks
 int bigdir(char *s) {
-  enum { N = 500 };
+  enum { N = 400 };
   int i, fd;
   char name[10];
 
