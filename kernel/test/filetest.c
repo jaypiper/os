@@ -152,7 +152,7 @@ int unlinkopen(char *s) {
   vfs->write(fd, "hello", SZ);
   vfs->close(fd);
   vfs->unlink("unlinkopen");
-  if(vfs->open("unlinkopen", O_RDWR) == 0){
+  if(vfs->open("unlinkopen", O_RDWR) >= 0){
     printf("unlinkopen fail1\n");
     return -1;
   }
@@ -163,7 +163,7 @@ int unlinkopen(char *s) {
   vfs->write(fd, "bbbbb", SZ);
   vfs->close(fd);
   vfs->unlink("unlinkopen");
-  if(vfs->open("unlinkopen", O_RDWR) == 0){
+  if(vfs->open("unlinkopen", O_RDWR) >= 0){
     printf("unlinkopen fail2\n");
     return -1;
   }
