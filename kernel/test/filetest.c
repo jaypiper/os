@@ -497,17 +497,30 @@ int duptest(char* s){
   char buf[BLK_SIZE];
   int fd = vfs->open("file", O_CREAT | O_RDWR);
   int fd2 = vfs->dup(fd);
+  if(fd2 < 0){
+    printf("%s: dup fail\n", s);
+    return -1;
+  }
   vfs->write(fd, "hello", 5);
   vfs->lseek(fd2, 0, SEEK_SET);
   vfs->read(fd, buf, 5);
-  printf("buf=%s\n", buf);
+  if(strncmp(buf, "hello", 5) != 0){
+    printf("%s: dup read fd fail. read %s\n", s, buf);
+    return -1;
+  }
   vfs->write(fd2, "aaa", 3);
   vfs->close(fd2);
   vfs->lseek(fd, 0, SEEK_SET);
   vfs->read(fd, buf, 8);
-  printf("buf=%s\n", buf);
-  vfs->read(fd2, buf, 1);
-
+  if(strncmp(buf, "helloaaa", 8) != 0){
+    printf("%s: dup read fd fail2. read %s\n", s, buf);
+    return -1;
+  }
+  if(vfs->read(fd2, buf, 1) > 0){
+    printf("%s, dup read sth at the end of file. %d\n", buf[0]);
+    return -1;
+  }
+  vfs->close(fd);
   return 0;
 }
 
