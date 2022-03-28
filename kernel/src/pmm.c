@@ -369,6 +369,7 @@ void pmm_debug_alloc(){
   void* ptr = pmm->alloc(size);
   check_alloc(ptr, size);
   // printf("at 0x%lx alloc_idx %d \n", (uintptr_t)ptr, alloc_idx);
+  if(ptr) memset(ptr, ALLOC_MAGIC, size);
   mutex_lock(&log_lock);
   if(ptr){
     alloc_log[alloc_idx] = ptr;
@@ -378,7 +379,6 @@ void pmm_debug_alloc(){
     disp_util();
   }
   mutex_unlock(&log_lock);
-  if(ptr) memset(ptr, ALLOC_MAGIC, size);
 }
 
 void pmm_debug_free(){
@@ -386,9 +386,9 @@ void pmm_debug_free(){
   void* ptr = alloc_log[free_idx];
   if(ptr) {
     // printf("free %lx free_idx %d \n", (uintptr_t)ptr, free_idx);
+    memset(ptr, FREE_MAGIC, size_log[free_idx]);
     alloc_log[free_idx] = 0;
     total_size -= size_log[free_idx];
-    memset(ptr, FREE_MAGIC, size_log[free_idx]);
     free_idx = (free_idx + 1) & (MAX_LOG_SIZE - 1);
   }
   mutex_unlock(&log_lock);
