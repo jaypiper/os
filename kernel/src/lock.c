@@ -20,8 +20,8 @@ void popcli(){
 bool holding(spinlock_t* lk){
   pushcli();
   int ret = lk->locked && (lk->cpu_id == cpu_current());
-  popcli();
   Assert(lk->locked == 0 || lk->locked == 1, "invalid locked %d %s\n", lk->locked, lk->name);
+  popcli();
   return ret;
 }
 
