@@ -88,7 +88,6 @@ void kmt_init(){
     idle_task[i]->wait_next = NULL;
     idle_task[i]->blocked = 0;
     spin_init(&idle_task[i]->lock, "idle");
-    SET_TASK(idle_task[i]);
   }
   memset(running_task, 0, sizeof(running_task));
   total_task = 0;
