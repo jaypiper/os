@@ -3,6 +3,7 @@
 #include <sem.h>
 #include <common.h>
 #include <vfs.h>
+#include <uproc.h>
 
 enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUNNABLE};
 
@@ -15,6 +16,7 @@ typedef struct task{
   int blocked;
   void* stack;
   ofile_info_t* ofiles[MAX_OPEN_FILE];
+  mm_area_t* mmaps[MAX_MMAP_NUM];
   int cwd_inode_no;
   int cwd_type;
 }task_t;

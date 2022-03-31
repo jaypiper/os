@@ -104,6 +104,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->wait_next = NULL;
   task->blocked = 0;
   memset(task->ofiles, 0, sizeof(task->ofiles));
+  memset(task->mmaps, 0, sizeof(task->mmaps));
   task->cwd_inode_no = ROOT_INODE_NO;
   task->cwd_type = CWD_UFS;
   spin_init(&task->lock, name);
