@@ -183,6 +183,7 @@ static void createFileList(int root, char *basePath){
           }
           tmp_blk_start[tmp_offset] = newblk_no;
         }
+        left_size -= tmp_size;
       }
     }
     else if(ptr->d_type == 10){    //link file (not supported yet)
