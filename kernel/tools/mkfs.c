@@ -36,10 +36,11 @@ static int alloc_block(){
       int free_bit = __builtin_ctz(~bitmap[bitmap_idx]);
       blk_idx += free_bit;
       bitmap[bitmap_idx] = bitmap[bitmap_idx] | ((uint32_t)1 << free_bit);
-      break;
+      return sb->data_start + blk_idx;
     }
   }
-  return sb->data_start + blk_idx;
+  Assert(0, "alloc_block: no available block\n");
+
 }
 
 static void insert_blk_into_inode(inode_t * inode, int blk_idx){
