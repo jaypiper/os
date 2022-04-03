@@ -36,7 +36,8 @@ static Context* kmt_context_save(Event ev, Context * ctx){
   if(!CURRENT_TASK) set_current_task(CURRENT_IDLE);
 
   Assert(TASK_STATE_VALID(CURRENT_TASK->state), "in context save, task %s state %d invalid", CURRENT_TASK->name, CURRENT_TASK->state);
-  CURRENT_TASK->context = ctx;
+  Assert(CURRENT_TASK->ctx_depth >= 0 && CURRENT_TASK->ctx_depth < MAX_CTX_DEPTH - 1, "context save: invalid depth %d", CURRENT_TASK->ctx_depth);
+  CURRENT_TASK->contexts[CURRENT_TASK->ctx_depth ++] = ctx;
   if(CURRENT_TASK->state == TASK_RUNNING) CURRENT_TASK->state = TASK_TO_BE_RUNNABLE;
 
   if(LAST_TASK && LAST_TASK != CURRENT_TASK){
@@ -69,7 +70,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   Assert(TASK_STATE_VALID(select->state), "task state is invalid, name %s state %d\n", select->name, select->state);
   Assert(CHECK_TASK(select), "task %s canary check fail", select->name);
 
-  return select->context;
+  return select->contexts[--select->ctx_depth];
 }
 
 void kmt_init(){
@@ -84,7 +85,8 @@ void kmt_init(){
     idle_task[i]->name = "idle";
     idle_task[i]->state = TASK_RUNNING;
     idle_task[i]->stack = NULL;
-    idle_task[i]->context = NULL;
+    memset(idle_task[i]->contexts, 0, sizeof(idle_task[i]->contexts));
+    idle_task[i]->ctx_depth = 0;
     idle_task[i]->wait_next = NULL;
     idle_task[i]->blocked = 0;
     spin_init(&idle_task[i]->lock, "idle");
@@ -100,7 +102,8 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->name = name;
   task->state = TASK_RUNNABLE;
   task->stack = pmm->alloc(STACK_SIZE);
-  task->context = kcontext((Area){.start = (void*)STACK_START(task), .end = (void*)STACK_END(task)}, entry, arg);
+  task->contexts[0] = kcontext((Area){.start = (void*)STACK_START(task), .end = (void*)STACK_END(task)}, entry, arg);
+  task->ctx_depth = 1;
   task->wait_next = NULL;
   task->blocked = 0;
   memset(task->ofiles, 0, sizeof(task->ofiles));
