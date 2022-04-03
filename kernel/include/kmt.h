@@ -47,7 +47,7 @@ void mark_not_runable(sem_t* sem, int cpu_id);
 void wakeup_task(sem_t* sem);
 void* task_alloc();
 
-#define TASK_STATE_VALID(state) ((state >= TASK_UNUSED) && (state <= TASK_BLOCKED))
+#define TASK_STATE_VALID(state) ((state >= TASK_UNUSED) && (state <= TASK_TO_BE_RUNNABLE))
 #define IN_STACK(addr, task) ((uintptr_t)(addr) >= (uintptr_t)task->stack && (uintptr_t)(addr) < ((uintptr_t)task->stack + STACK_SIZE))
 
 #endif
