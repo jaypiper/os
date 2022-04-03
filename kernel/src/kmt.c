@@ -50,19 +50,21 @@ static Context* kmt_context_save(Event ev, Context * ctx){
 }
 
 static Context* kmt_schedule(Event ev, Context * ctx){
-  task_t* select = !CURRENT_TASK->blocked && CURRENT_TASK->state == TASK_TO_BE_RUNNABLE ? CURRENT_TASK : CURRENT_IDLE;
-
-  for(int i = 0; i < 8 * total_task; i++){
-    int task_idx = rand() % total_task;
-  // for(int task_idx = 0; task_idx < total_task; task_idx ++){
-    int locked = !mutex_trylock(&all_task[task_idx]->lock);
-    if(locked){
-      Assert(all_task[task_idx]->state != TASK_RUNNING, "task %s running", all_task[task_idx]->name);
-      if(all_task[task_idx]->state == TASK_RUNNABLE && !all_task[task_idx]->blocked){
-        select = all_task[task_idx];
-        break;
+  task_t* cur_task = CURRENT_TASK;
+  task_t* select = cur_task && !cur_task->blocked && cur_task->state == TASK_TO_BE_RUNNABLE ? cur_task : CURRENT_IDLE;
+  if(!cur_task || IS_SCHED(ev.event)){ // select a random task
+    for(int i = 0; i < 8 * total_task; i++){
+      int task_idx = rand() % total_task;
+    // for(int task_idx = 0; task_idx < total_task; task_idx ++){
+      int locked = !mutex_trylock(&all_task[task_idx]->lock);
+      if(locked){
+        Assert(all_task[task_idx]->state != TASK_RUNNING, "task %s running", all_task[task_idx]->name);
+        if(all_task[task_idx]->state == TASK_RUNNABLE && !all_task[task_idx]->blocked){
+          select = all_task[task_idx];
+          break;
+        }
+        mutex_unlock(&all_task[task_idx]->lock);
       }
-      mutex_unlock(&all_task[task_idx]->lock);
     }
   }
   select->state = TASK_RUNNING;
