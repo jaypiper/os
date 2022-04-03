@@ -73,7 +73,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   select->state = TASK_RUNNING;
   set_current_task(select);
   Assert(TASK_STATE_VALID(select->state), "task state is invalid, name %s state %d\n", select->name, select->state);
-  Assert(CHECK_TASK(select), "task %s canary check fail", select->name);
+  // Assert(CHECK_TASK(select), "task %s canary check fail", select->name);
 
   return select->contexts[--select->ctx_depth];
 }
