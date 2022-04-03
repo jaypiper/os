@@ -32,4 +32,10 @@
 
 #define TODO() os_panic("please implement me")
 
+#ifdef DEBUG_LOG
+#define printk(...) printf(__VA_ARGS__);
+#else
+#define printk(...) 
+#endif
+
 #endif
