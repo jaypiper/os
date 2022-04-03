@@ -163,28 +163,34 @@ static void createFileList(int root, char *basePath){
       stat(base, &statbuf);
       inode_t* newfile_inode = (inode_t*)IN_DISK(INODE_ADDR(newfile_inode_no));
       newfile_inode->size = statbuf.st_size;
-      uint32_t blk_offset = 0;
+      uint32_t blk_idx = 0;
       uint32_t left_size = statbuf.st_size;
-      uint8_t* file_buf;
+      uint8_t* file_buf = mmap(NULL, statbuf.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+
       while(left_size){
         uint32_t tmp_size = MIN(BLK_SIZE, left_size);
-        file_buf = mmap(NULL, tmp_size, PROT_READ, MAP_SHARED, fd, blk_offset * BLK_SIZE);
         int newblk_no = alloc_block();
-        memcpy(IN_DISK(BLK2ADDR(newblk_no)), file_buf, tmp_size);
-        if(blk_offset < MAX_DIRECT_FILE_BLOCK) newfile_inode->addr[blk_offset] = newblk_no;
+        memcpy(IN_DISK(BLK2ADDR(newblk_no)), file_buf + statbuf.st_size - left_size, tmp_size);
+        if(blk_idx < MAX_DIRECT_FILE_BLOCK) newfile_inode->addr[blk_idx] = newblk_no;
         else{
-          int tmp_depth = (blk_offset - MAX_DIRECT_FILE_BLOCK) / INDIRECT_NUM_PER_BLK;
-          int tmp_offset = (blk_offset - MAX_DIRECT_FILE_BLOCK) % INDIRECT_NUM_PER_BLK;
+          if(blk_idx == MAX_DIRECT_FILE_BLOCK){
+            newfile_inode->addr[INDIRECT_IN_INODE] = alloc_block();
+            newfile_inode->addr[DEPTH_IN_INODE] = 1;
+          }
+          int tmp_depth = (blk_idx - MAX_DIRECT_FILE_BLOCK) / INDIRECT_NUM_PER_BLK;
+          int tmp_offset = (blk_idx - MAX_DIRECT_FILE_BLOCK) % INDIRECT_NUM_PER_BLK;
           uint32_t* tmp_blk_start = IN_DISK(BLK2ADDR(newfile_inode->addr[INDIRECT_IN_INODE]));
-          while(tmp_depth --){
-            if(!tmp_depth && !tmp_offset){
+          while(tmp_depth -- > 0){
+            if(tmp_depth == 1 && tmp_offset == 0){
               *(uint32_t*)IN_DISK(BLK2ADDR(tmp_blk_start[INDIRECT_NUM_PER_BLK])) = alloc_block();
+              newfile_inode->addr[DEPTH_IN_INODE] += 1;
             }
             tmp_blk_start = IN_DISK(BLK2ADDR(tmp_blk_start[INDIRECT_NUM_PER_BLK]));
           }
           tmp_blk_start[tmp_offset] = newblk_no;
         }
         left_size -= tmp_size;
+        blk_idx ++;
       }
     }
     else if(ptr->d_type == 10){    //link file (not supported yet)
