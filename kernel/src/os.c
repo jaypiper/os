@@ -80,8 +80,6 @@ static void os_run() {
 
 Context* os_trap(Event ev, Context *context){
   Assert(ev.event != EVENT_ERROR, "recieve error event");
-  Assert(ev.event != EVENT_PAGEFAULT, "recieve pagefault event");
-  Assert(ev.event != EVENT_SYSCALL, "recieve pagefault event");
   Context* ret = NULL;
   for(handler_list_t* h = handlers_sorted; h; h = h->next){
     if(h->event == EVENT_NULL || h->event == ev.event){
