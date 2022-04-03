@@ -23,9 +23,9 @@ static inline task_t* get_current_task(){
 // Interrupts must be disabled.
 // only called in interrupt handler
 static inline void set_current_task(task_t* task){
-  // pushcli();
+  pushcli();
   running_task[cpu_current()] = task;
-  // popcli();
+  popcli();
 }
 
 #define CURRENT_TASK get_current_task()
