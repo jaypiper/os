@@ -24,6 +24,7 @@ typedef struct task{
   mm_area_t* mmaps[MAX_MMAP_NUM];
   int cwd_inode_no;
   int cwd_type;
+  AddrSpace* as;
 }task_t;
 
 #define MAX_TASK 64
@@ -51,6 +52,9 @@ typedef struct semaphore sem_t;
 void mark_not_runable(sem_t* sem, int cpu_id);
 void wakeup_task(sem_t* sem);
 void* task_alloc();
+int kmt_newforktask(task_t* newtask, const char* name);
+void clear_current_task();
+void release_resources_except_stack(task_t* task);
 
 #define TASK_STATE_VALID(state) ((state >= TASK_UNUSED) && (state <= TASK_TO_BE_RUNNABLE))
 #define IN_STACK(addr, task) ((uintptr_t)(addr) >= (uintptr_t)task->stack && (uintptr_t)(addr) < ((uintptr_t)task->stack + STACK_SIZE))

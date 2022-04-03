@@ -50,6 +50,7 @@ static void os_init() {
   kmt->init();
   dev->init();
   vfs->init();
+  uproc->init();
 #ifdef KMT_DEBUG
   void init_kmt_debug();
   init_kmt_debug();
@@ -68,6 +69,8 @@ static void os_init() {
 #endif
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");
+  void hello_test();
+  kmt->create(task_alloc(), "hello test", hello_test, NULL);
 }
 
 static void os_run() {

@@ -138,4 +138,6 @@ int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count);
 int invalid_read(ofile_info_t* ofile, int fd, void *buf, int count);
 int invalid_lseek(ofile_info_t* ofile, int fd, int offset, int whence);
 
+ofile_info_t* filedup(ofile_info_t* ofile);
+
 #endif

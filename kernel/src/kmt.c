@@ -9,6 +9,7 @@ static task_t* running_task[MAX_CPU];
 static task_t* idle_task[MAX_CPU];
 static task_t* last_task[MAX_CPU];
 static task_t* all_task[MAX_TASK];
+static Context* fork_context[MAX_TASK];
 static spinlock_t task_lock;
 static int total_task;
 
@@ -66,6 +67,8 @@ static Context* kmt_schedule(Event ev, Context * ctx){
         mutex_unlock(&all_task[task_idx]->lock);
       }
     }
+  }else{ // syscall, pagefault: if not exit, keep the current task
+    Assert(select == cur_task, "schedule: select %lx current %lx\n", (uintptr_t)select, (uintptr_t)cur_task);
   }
   select->state = TASK_RUNNING;
   set_current_task(select);
@@ -94,6 +97,7 @@ void kmt_init(){
     spin_init(&idle_task[i]->lock, "idle");
   }
   memset(running_task, 0, sizeof(running_task));
+  memset(fork_context, 0, sizeof(fork_context));
   total_task = 0;
   extern void vfs_proc_init();
   vfs_proc_init();
@@ -108,6 +112,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->ctx_depth = 1;
   task->wait_next = NULL;
   task->blocked = 0;
+  task->as = NULL;
   memset(task->ofiles, 0, sizeof(task->ofiles));
   memset(task->mmaps, 0, sizeof(task->mmaps));
   task->cwd_inode_no = ROOT_INODE_NO;
@@ -125,6 +130,41 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   return 0;
 }
 
+static inline void free_ofiles(task_t* task){
+  for(int i = 0; i <= STDERR_FILENO; i++){
+    task->ofiles[i] = NULL;
+  }
+  for(int i = STDERR_FILENO + 1; i < MAX_OPEN_FILE; i++){
+    if(task->ofiles[i]){
+      pmm->free(task->ofiles[i]);
+      task->ofiles[i] = NULL;
+    }
+  }
+}
+
+static inline void free_mmaps(task_t* task){
+  for(int i = 0; i < MAX_MMAP_NUM; i++){
+    if(task->mmaps[i]){
+      pmm->free(task->mmaps[i]);
+      task->mmaps[i] = NULL;
+    }
+  }
+}
+
+static inline void free_pages(task_t* task){
+  if(!task->as) return;
+  unprotect(task->as);
+  pmm->free(task->as);
+}
+
+void release_resources_except_stack(task_t* task){
+  free_ofiles(task);
+  free_mmaps(task);
+  free_pages(task);
+  // TODO: wakeup task
+  task->wait_next = NULL;
+}
+
 void kmt_teardown(task_t *task){
   mutex_lock(&task_lock);
   int idx = -1;
@@ -139,12 +179,45 @@ void kmt_teardown(task_t *task){
   for(int i = idx; i < total_task; i++){
     running_task[i] = running_task[i + 1];
   }
+  Context* free_context = fork_context[idx];
+  fork_context[idx] = NULL;
   mutex_unlock(&task_lock);
+
+  release_resources_except_stack(task);
+  pmm->free(task->stack);
+
   pmm->free((void*)task);
+  pmm->free(free_context);
 }
 
 task_t* kmt_gettask(){
   return CURRENT_TASK;
+}
+
+int kmt_newforktask(task_t* newtask, const char* name){
+  spin_init(&newtask->lock, name);
+  newtask->name = name;
+  newtask->state = TASK_RUNNABLE;
+  newtask->stack = pmm->alloc(STACK_SIZE);
+
+  SET_TASK(newtask);
+  newtask->wait_next = NULL;
+  newtask->blocked = 0;
+  memset(newtask->ofiles, 0, sizeof(newtask->ofiles));
+  memset(newtask->mmaps, 0, sizeof(newtask->mmaps));
+  mutex_lock(&task_lock);
+  if(total_task >= MAX_TASK){
+    printf("task full");
+    return -1;
+  }
+  if(!fork_context[total_task]){
+    fork_context[total_task] = pmm->alloc(sizeof(Context));
+  }
+  newtask->contexts[0] = fork_context[total_task];
+  newtask->ctx_depth = 1;
+  all_task[total_task ++] = newtask;
+  mutex_unlock(&task_lock);
+  return 0;
 }
 
 
@@ -187,6 +260,12 @@ void wakeup_task(sem_t* sem){
   sem->wait_list = select->wait_next;
   select->blocked = 0;
   select->wait_next = NULL;
+}
+
+void clear_current_task(){
+  pushcli();
+  set_current_task(NULL);
+  popcli();
 }
 
 void* task_alloc(){

@@ -967,7 +967,11 @@ static int vfs_dup(int fd){
 	return -1;
 }
 
-
+ofile_info_t* filedup(ofile_info_t* ofile){
+	// TODO: lock
+	ofile->count ++;
+	return ofile;
+}
 
 MODULE_DEF(vfs) = {
 	.init   = vfs_init,
