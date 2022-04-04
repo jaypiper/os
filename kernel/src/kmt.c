@@ -90,6 +90,7 @@ void kmt_init(){
     idle_task[i]->name = "idle";
     idle_task[i]->state = TASK_RUNNING;
     idle_task[i]->stack = NULL;
+    idle_task[i]->kstack = idle_task[i]->stack;
     memset(idle_task[i]->contexts, 0, sizeof(idle_task[i]->contexts));
     idle_task[i]->ctx_depth = 0;
     idle_task[i]->wait_next = NULL;
@@ -108,6 +109,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->name = name;
   task->state = TASK_RUNNABLE;
   task->stack = pmm->alloc(STACK_SIZE);
+  task->kstack = task->stack;
   task->contexts[0] = kcontext((Area){.start = (void*)STACK_START(task->stack), .end = (void*)STACK_END(task->stack)}, entry, arg);
   task->ctx_depth = 1;
   task->wait_next = NULL;
