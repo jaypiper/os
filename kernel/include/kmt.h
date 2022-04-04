@@ -10,9 +10,11 @@ enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUN
 #define MAX_INT_DEPTH 5
 
 #define TOP_CONTEXT(task) task->contexts[task->int_depth-1]
+#define RUN_STATE(task) task->states[task->int_depth]
+#define NEXT_STATE(task) task->states[task->int_depth+1]
 
 typedef struct task{
-  int state;
+  int states[MAX_INT_DEPTH];
   const char* name;
   Context* contexts[MAX_INT_DEPTH];
   int int_depth;

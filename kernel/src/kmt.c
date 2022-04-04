@@ -36,31 +36,32 @@ static Context* kmt_context_save(Event ev, Context * ctx){
   Assert(ctx, "saved NULL context in event %d", ev.event);
   if(!CURRENT_TASK) set_current_task(CURRENT_IDLE);
 
-  Assert(TASK_STATE_VALID(CURRENT_TASK->state), "in context save, task %s state %d invalid", CURRENT_TASK->name, CURRENT_TASK->state);
+  Assert(TASK_STATE_VALID(RUN_STATE(CURRENT_TASK)), "in context save, task %s state %d invalid", CURRENT_TASK->name, RUN_STATE(CURRENT_TASK));
   Assert(CURRENT_TASK->int_depth >= 0 && CURRENT_TASK->int_depth < MAX_INT_DEPTH - 1, "context save: invalid depth %d", CURRENT_TASK->int_depth);
-  CURRENT_TASK->contexts[CURRENT_TASK->int_depth ++] = ctx;
-  if(CURRENT_TASK->state == TASK_RUNNING) CURRENT_TASK->state = TASK_TO_BE_RUNNABLE;
+  CURRENT_TASK->contexts[CURRENT_TASK->int_depth] = ctx;
+  if(RUN_STATE(CURRENT_TASK) == TASK_RUNNING) NEXT_STATE(CURRENT_TASK) = TASK_TO_BE_RUNNABLE;
+  else NEXT_STATE(CURRENT_TASK) = RUN_STATE(CURRENT_TASK);
 
   if(LAST_TASK && LAST_TASK != CURRENT_TASK){
-    if(LAST_TASK && LAST_TASK->state == TASK_TO_BE_RUNNABLE) LAST_TASK->state = TASK_RUNNABLE;
+    if(LAST_TASK && NEXT_STATE(LAST_TASK) == TASK_TO_BE_RUNNABLE) RUN_STATE(LAST_TASK) = TASK_RUNNABLE;
     mutex_unlock(&LAST_TASK->lock);
   }
   LAST_TASK = CURRENT_TASK;
-
+  CURRENT_TASK->int_depth ++;
   return NULL;
 }
 
 static Context* kmt_schedule(Event ev, Context * ctx){
   task_t* cur_task = CURRENT_TASK;
-  task_t* select = cur_task && !cur_task->blocked && cur_task->state == TASK_TO_BE_RUNNABLE ? cur_task : CURRENT_IDLE;
+  task_t* select = cur_task && !cur_task->blocked && (RUN_STATE(cur_task) == TASK_TO_BE_RUNNABLE) ? cur_task : CURRENT_IDLE;
   if(!cur_task || IS_SCHED(ev.event)){ // select a random task
     for(int i = 0; i < 8 * total_task; i++){
       int task_idx = rand() % total_task;
     // for(int task_idx = 0; task_idx < total_task; task_idx ++){
       int locked = !mutex_trylock(&all_task[task_idx]->lock);
       if(locked){
-        Assert(all_task[task_idx]->state != TASK_RUNNING, "task %s running", all_task[task_idx]->name);
-        if(all_task[task_idx]->state == TASK_RUNNABLE && !all_task[task_idx]->blocked){
+        Assert(RUN_STATE(all_task[task_idx]) != TASK_RUNNING, "task %s running", all_task[task_idx]->name);
+        if(RUN_STATE(all_task[task_idx]) == TASK_RUNNABLE && !all_task[task_idx]->blocked){
           select = all_task[task_idx];
           break;
         }
@@ -70,12 +71,13 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   }else{ // syscall, pagefault: if not exit, keep the current task
     Assert(select == cur_task, "schedule: select %lx current %lx\n", (uintptr_t)select, (uintptr_t)cur_task);
   }
-  select->state = TASK_RUNNING;
+
   set_current_task(select);
-  Assert(TASK_STATE_VALID(select->state), "task state is invalid, name %s state %d\n", select->name, select->state);
+  Assert(TASK_STATE_VALID(RUN_STATE(select)), "task state is invalid, name %s state %d\n", select->name, RUN_STATE(select));
   // Assert(CHECK_TASK(select), "task %s canary check fail", select->name);
 
-  return select->contexts[--select->int_depth];
+  select->int_depth --;
+  return select->contexts[select->int_depth];
 }
 
 void kmt_init(){
@@ -88,7 +90,7 @@ void kmt_init(){
   for(int i = 0; i < cpu_count(); i++){
     idle_task[i] = pmm->alloc(sizeof(task_t));
     idle_task[i]->name = "idle";
-    idle_task[i]->state = TASK_RUNNING;
+    idle_task[i]->states[0] = TASK_RUNNING;
     idle_task[i]->stack = NULL;
     idle_task[i]->kstack = idle_task[i]->stack;
     memset(idle_task[i]->contexts, 0, sizeof(idle_task[i]->contexts));
@@ -107,7 +109,8 @@ void kmt_init(){
 
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *arg){
   task->name = name;
-  task->state = TASK_RUNNABLE;
+  task->states[0] = TASK_RUNNING;
+  task->states[1] = TASK_RUNNABLE;
   task->stack = pmm->alloc(STACK_SIZE);
   task->kstack = task->stack;
   task->contexts[0] = kcontext((Area){.start = (void*)STACK_START(task->stack), .end = (void*)STACK_END(task->stack)}, entry, arg);
@@ -199,7 +202,8 @@ task_t* kmt_gettask(){
 int kmt_newforktask(task_t* newtask, const char* name){
   spin_init(&newtask->lock, name);
   newtask->name = name;
-  newtask->state = TASK_RUNNABLE;
+  newtask->states[0] = TASK_RUNNING;
+  newtask->states[1] = TASK_RUNNABLE;
   newtask->stack = pmm->alloc(STACK_SIZE);
 
   SET_TASK(newtask);
@@ -241,7 +245,7 @@ void mark_not_runable(sem_t* sem, int cpu_id){
   Assert(holding(&sem->lock), "lock in %s is not held", sem->name);
   Assert(cpu_id == cpu_current(), "in mark %s cpu_id=%d cpu current=%d", sem->name, cpu_id, cpu_current());
   Assert(running_task[cpu_id]->lock.locked, "in mark, task %s is not locked", running_task[cpu_id]->name);
-  Assert(running_task[cpu_id]->state == TASK_RUNNING, "in sem mark %s, task %s is not running", sem->name, running_task[cpu_id]->name);
+  Assert(RUN_STATE(running_task[cpu_id]) == TASK_RUNNING, "in sem mark %s, task %s is not running", sem->name, running_task[cpu_id]->name);
   CURRENT_TASK->blocked = 1;
   if(!sem->wait_list){
     sem->wait_list = running_task[cpu_id];
