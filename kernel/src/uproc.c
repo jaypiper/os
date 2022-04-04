@@ -146,7 +146,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   }
 // #endif
   printf("entry 0x%lx\n", _Eheader.e_entry);
-  TOP_CONTEXT(task) = ucontext(as, (Area){.start = (void*)STACK_START(task), .end = (void*)STACK_END(task)}, (void*)_Eheader.e_entry);
+  TOP_CONTEXT(task) = ucontext(as, (Area){.start = (void*)STACK_START(task->stack), .end = (void*)STACK_END(task->stack)}, (void*)_Eheader.e_entry);
   task->blocked = 0;
   task->as = as;
 
