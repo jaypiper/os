@@ -37,8 +37,8 @@ static Context* kmt_context_save(Event ev, Context * ctx){
   if(!CURRENT_TASK) set_current_task(CURRENT_IDLE);
 
   Assert(TASK_STATE_VALID(CURRENT_TASK->state), "in context save, task %s state %d invalid", CURRENT_TASK->name, CURRENT_TASK->state);
-  Assert(CURRENT_TASK->ctx_depth >= 0 && CURRENT_TASK->ctx_depth < MAX_CTX_DEPTH - 1, "context save: invalid depth %d", CURRENT_TASK->ctx_depth);
-  CURRENT_TASK->contexts[CURRENT_TASK->ctx_depth ++] = ctx;
+  Assert(CURRENT_TASK->int_depth >= 0 && CURRENT_TASK->int_depth < MAX_INT_DEPTH - 1, "context save: invalid depth %d", CURRENT_TASK->int_depth);
+  CURRENT_TASK->contexts[CURRENT_TASK->int_depth ++] = ctx;
   if(CURRENT_TASK->state == TASK_RUNNING) CURRENT_TASK->state = TASK_TO_BE_RUNNABLE;
 
   if(LAST_TASK && LAST_TASK != CURRENT_TASK){
@@ -75,7 +75,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   Assert(TASK_STATE_VALID(select->state), "task state is invalid, name %s state %d\n", select->name, select->state);
   // Assert(CHECK_TASK(select), "task %s canary check fail", select->name);
 
-  return select->contexts[--select->ctx_depth];
+  return select->contexts[--select->int_depth];
 }
 
 void kmt_init(){
@@ -92,7 +92,7 @@ void kmt_init(){
     idle_task[i]->stack = NULL;
     idle_task[i]->kstack = idle_task[i]->stack;
     memset(idle_task[i]->contexts, 0, sizeof(idle_task[i]->contexts));
-    idle_task[i]->ctx_depth = 0;
+    idle_task[i]->int_depth = 0;
     idle_task[i]->wait_next = NULL;
     idle_task[i]->blocked = 0;
     spin_init(&idle_task[i]->lock, "idle");
@@ -111,7 +111,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->stack = pmm->alloc(STACK_SIZE);
   task->kstack = task->stack;
   task->contexts[0] = kcontext((Area){.start = (void*)STACK_START(task->stack), .end = (void*)STACK_END(task->stack)}, entry, arg);
-  task->ctx_depth = 1;
+  task->int_depth = 1;
   task->wait_next = NULL;
   task->blocked = 0;
   task->as = NULL;
@@ -216,7 +216,7 @@ int kmt_newforktask(task_t* newtask, const char* name){
     fork_context[total_task] = pmm->alloc(sizeof(Context));
   }
   newtask->contexts[0] = fork_context[total_task];
-  newtask->ctx_depth = 1;
+  newtask->int_depth = 1;
   all_task[total_task ++] = newtask;
   mutex_unlock(&task_lock);
   return 0;

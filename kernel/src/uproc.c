@@ -113,7 +113,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   for(int i = 0; i < STACK_SIZE / PGSIZE; i++){
     map(as, as->area.end - STACK_SIZE + i * PGSIZE, task->stack + i * PGSIZE, PROT_READ|PROT_WRITE);
   }
-  task->ctx_depth = 1;
+  task->int_depth = 1;
   SET_TASK(task);
   void fill_standard_fd(task_t* task);
   fill_standard_fd(task);
