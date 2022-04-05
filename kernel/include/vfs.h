@@ -133,6 +133,8 @@ int dev_error_write(ofile_info_t* ofile, int fd, void *buf, int count);
 
 void vfs_readFileList(int root_idx, int depth);
 void new_proc_init(int id, const char* name);
+void delete_proc(int pid);
+void modify_proc_info(int pid, char* file_name, void* data, int sz);
 
 int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count);
 int invalid_read(ofile_info_t* ofile, int fd, void *buf, int count);

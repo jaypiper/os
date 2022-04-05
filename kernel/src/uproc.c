@@ -149,8 +149,9 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   TOP_CONTEXT(task) = ucontext(as, (Area){.start = (void*)STACK_START(task->kstack), .end = (void*)STACK_END(task->kstack)}, (void*)_Eheader.e_entry);
   task->blocked = 0;
   task->as = as;
+  task->name = path;
 
-  // TODO: /proc update
+  modify_proc_info(task->pid, "name", (void*)task->name, strlen(task->name));
 
   return 0;
 }

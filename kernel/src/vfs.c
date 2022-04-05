@@ -125,6 +125,64 @@ void new_proc_init(int id, const char* name){
 	kmt->sem_signal(&procfs_lock);
 }
 
+void release_proc(proc_inode_t* inode){
+	if(inode->type == FT_PROC_DIR){
+		int num = inode->size / sizeof(proc_diren_t);
+		for(int i = 0; i < num; i++){
+			proc_diren_t* proc_dirent = (proc_diren_t*)inode->mem + i;
+			release_proc(proc_dirent->inode);
+		}
+	}
+	if(inode->mem){
+		pmm->free(inode->mem);
+	}
+	pmm->free(inode);
+}
+
+int search_proc_dirent_idx(proc_inode_t* inode, char* name){
+	proc_diren_t* start = inode->mem;
+	Assert(start, "get_proc_idx: proc empty");
+	int total_num = inode->size / sizeof(proc_inode_t);
+	for(int i = 0; i < total_num; i++){
+		if(strcmp(start[i].name, name) == 0){
+			return i;
+		}
+	}
+	Assert(0, "invalid name %s in inode 0x%lx", name, inode);
+}
+
+int get_proc_idx(int id){
+	char string_buf[32];
+	memset(string_buf, 0, sizeof(string_buf));
+	sprintf(string_buf, "%d", id);
+	return search_proc_dirent_idx(proc_dir, string_buf);
+}
+
+void delete_proc(int pid){
+	kmt->sem_wait(&procfs_lock);
+	int idx = get_proc_idx(pid);
+	proc_diren_t* select = (proc_diren_t*)proc_dir->mem + idx;
+	release_proc(select->inode);
+	int total_num = proc_dir->size / sizeof(proc_diren_t);
+	if(idx != total_num - 1){
+		proc_diren_t* last = (proc_diren_t*)proc_dir->mem + total_num - 1;
+		memcpy(select, last, sizeof(proc_diren_t));
+	}
+	proc_dir->size -= sizeof(proc_diren_t);
+	kmt->sem_signal(&procfs_lock);
+}
+
+void modify_proc_info(int pid, char* file_name, void* data, int sz){
+	kmt->sem_wait(&procfs_lock);
+	int idx = get_proc_idx(pid);
+	proc_inode_t* proc_inode = ((proc_diren_t*)proc_dir->mem + idx)->inode;
+	int file_idx = search_proc_dirent_idx(proc_inode, file_name);
+	proc_inode_t* file_inode = ((proc_diren_t*)proc_inode->mem + file_idx)->inode;
+	memcpy(file_inode->mem, data, sz);
+	file_inode->size = sz;
+	kmt->sem_signal(&procfs_lock);
+}
+
 int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count){
 	return -1;
 }
