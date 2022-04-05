@@ -172,7 +172,7 @@ void release_resources(task_t* task){
   free_ofiles(task);
   free_mmaps(task);
   free_pages(task->as);
-  // TODO: wakeup task
+
   task->wait_next = NULL;
   pmm->free(task->stack);
   pmm->free((void*)task);
@@ -181,12 +181,13 @@ void release_resources(task_t* task){
 void execve_release_resources(task_t* task){
   free_ofiles(task);
   free_mmaps(task);
-  // TODO: wakeup task
+
   task->wait_next = NULL;
 }
 
 void kmt_teardown(task_t *task){
   mutex_lock(&task_lock);
+  Assert(!task->blocked, "blocked task should not be teardown");
   int pid = task->pid;
   Assert(all_task[pid] == task, "teardown: task with pid %d mismatched", pid);
   all_task[pid] = NULL;
