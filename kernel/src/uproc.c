@@ -101,10 +101,11 @@ static int uproc_fork(){
 static int uproc_execve(const char *path, char *argv[], char *envp[]){
   // release resources
   task_t* task = kmt->gettask();
-  release_resources_except_stack(task);
+  execve_release_resources(task);
+  AddrSpace* oldas = task->as;
   AddrSpace* as = pmm->alloc(sizeof(AddrSpace));
   protect(as);
-  task->stack = pmm->alloc(STACK_SIZE);
+  if(task->stack == task->kstack) task->stack = pmm->alloc(STACK_SIZE);
   for(int i = 0; i < STACK_SIZE / PGSIZE; i++){
     map(as, as->area.end - STACK_SIZE + i * PGSIZE, task->stack + i * PGSIZE, PROT_READ|PROT_WRITE);
   }
@@ -147,6 +148,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
 
   modify_proc_info(task->pid, "name", (void*)task->name, strlen(task->name));
 
+  free_pages(oldas);
   return 0;
 }
 

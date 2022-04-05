@@ -59,6 +59,8 @@ void* task_alloc();
 int kmt_newforktask(task_t* newtask, const char* name);
 void clear_current_task();
 void release_resources_except_stack(task_t* task);
+void execve_release_resources(task_t* task);
+void free_pages(AddrSpace* as);
 
 #define TASK_STATE_VALID(state) ((state >= TASK_UNUSED) && (state <= TASK_TO_BE_RUNNABLE))
 #define IN_STACK(addr, task) ((uintptr_t)(addr) >= (uintptr_t)task->stack && (uintptr_t)(addr) < ((uintptr_t)task->stack + STACK_SIZE))

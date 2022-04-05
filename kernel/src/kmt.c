@@ -162,16 +162,23 @@ static inline void free_mmaps(task_t* task){
   }
 }
 
-static inline void free_pages(task_t* task){
-  if(!task->as) return;
-  unprotect(task->as);
-  pmm->free(task->as);
+void free_pages(AddrSpace* as){
+  if(!as) return;
+  unprotect(as);
+  pmm->free(as);
 }
 
 void release_resources_except_stack(task_t* task){
   free_ofiles(task);
   free_mmaps(task);
-  free_pages(task);
+  free_pages(task->as);
+  // TODO: wakeup task
+  task->wait_next = NULL;
+}
+
+void execve_release_resources(task_t* task){
+  free_ofiles(task);
+  free_mmaps(task);
   // TODO: wakeup task
   task->wait_next = NULL;
 }
