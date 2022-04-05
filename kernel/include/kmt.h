@@ -58,7 +58,7 @@ void wakeup_task(sem_t* sem);
 void* task_alloc();
 int kmt_newforktask(task_t* newtask, const char* name);
 void clear_current_task();
-void release_resources_except_stack(task_t* task);
+void release_resources(task_t* task);
 void execve_release_resources(task_t* task);
 void free_pages(AddrSpace* as);
 

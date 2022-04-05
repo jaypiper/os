@@ -168,12 +168,14 @@ void free_pages(AddrSpace* as){
   pmm->free(as);
 }
 
-void release_resources_except_stack(task_t* task){
+void release_resources(task_t* task){
   free_ofiles(task);
   free_mmaps(task);
   free_pages(task->as);
   // TODO: wakeup task
   task->wait_next = NULL;
+  pmm->free(task->stack);
+  pmm->free((void*)task);
 }
 
 void execve_release_resources(task_t* task){
@@ -198,9 +200,8 @@ void kmt_teardown(task_t *task){
     mutex_lock(&task_lock);  // insure task is not running on another CPU
   }
 
-  release_resources_except_stack(task);
-  pmm->free(task->stack);
-  pmm->free((void*)task);
+  release_resources(task);
+
   if(free_context) pmm->free(free_context);
 }
 
