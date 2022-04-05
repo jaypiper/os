@@ -25,7 +25,7 @@ static sem_t procfs_lock;
 
 static void insert_into_proc_dir(proc_inode_t* parent_inode, proc_inode_t* child_inode, const char* name){
 	Assert(parent_inode && (parent_inode->type == FT_PROC_DIR), "insert_into_proc_dir parent(0x%x) type %d", parent_inode, parent_inode->type);
-	if(!parent_inode->mem) parent_inode->mem = pmm->alloc(BLK_SIZE);
+	if(!parent_inode->mem) parent_inode->mem = pmm->alloc(4 * BLK_SIZE);
 	Assert(BLK_SIZE - parent_inode->size >= sizeof(proc_diren_t), "proc size %x\n", parent_inode->size);
 	Assert(parent_inode->size % sizeof(proc_diren_t) == 0, "invalid parent size %d", parent_inode->size);
 	int idx = parent_inode->size / sizeof(proc_diren_t);
