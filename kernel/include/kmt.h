@@ -15,6 +15,7 @@ enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUN
 
 typedef struct task{
   int states[MAX_INT_DEPTH];
+  int pid;
   const char* name;
   Context* contexts[MAX_INT_DEPTH];
   int int_depth;

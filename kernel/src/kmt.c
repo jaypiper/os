@@ -11,7 +11,6 @@ static task_t* last_task[MAX_CPU];
 static task_t* all_task[MAX_TASK];
 static Context* fork_context[MAX_TASK];
 static spinlock_t task_lock;
-static int total_task;
 
 static inline task_t* get_current_task(){
   pushcli();
@@ -55,9 +54,9 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   task_t* cur_task = CURRENT_TASK;
   task_t* select = cur_task && !cur_task->blocked && (RUN_STATE(cur_task) == TASK_TO_BE_RUNNABLE) ? cur_task : CURRENT_IDLE;
   if(!cur_task || IS_SCHED(ev.event)){ // select a random task
-    for(int i = 0; i < 8 * total_task; i++){
-      int task_idx = rand() % total_task;
-    // for(int task_idx = 0; task_idx < total_task; task_idx ++){
+    for(int i = 0; i < 8 * MAX_TASK; i++){
+      int task_idx = rand() % MAX_TASK;
+    // for(int task_idx = 0; task_idx < MAX_TASK; task_idx ++){
       int locked = !mutex_trylock(&all_task[task_idx]->lock);
       if(locked){
         Assert(RUN_STATE(all_task[task_idx]) != TASK_RUNNING, "task %s running", all_task[task_idx]->name);
@@ -101,11 +100,17 @@ void kmt_init(){
   }
   memset(running_task, 0, sizeof(running_task));
   memset(fork_context, 0, sizeof(fork_context));
-  total_task = 0;
   extern void vfs_proc_init();
   vfs_proc_init();
 }
 
+static inline int get_empty_pid(){
+  for(int i = 0; i < MAX_TASK; i++){
+    if(!all_task[i]) return i;
+  }
+  Assert(0, "task full\n");
+  return -1;
+}
 
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *arg){
   task->name = name;
@@ -124,13 +129,14 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->cwd_type = CWD_UFS;
   spin_init(&task->lock, name);
   SET_TASK(task);
+
   mutex_lock(&task_lock);
-  Assert(total_task < MAX_TASK, "task full");
-  all_task[total_task] = task;
+  int pid = get_empty_pid();
+  task->pid = pid;
+  all_task[pid] = task;
   void fill_standard_fd(task_t* task);
   fill_standard_fd(task);
-  new_proc_init(total_task, name);
-  total_task++;
+  new_proc_init(pid, name);
   mutex_unlock(&task_lock);
   return 0;
 }
@@ -172,27 +178,23 @@ void release_resources_except_stack(task_t* task){
 
 void kmt_teardown(task_t *task){
   mutex_lock(&task_lock);
-  int idx = -1;
-  for(int i = 0; i < total_task; i++){
-    if(running_task[i] == task){
-      idx = i;
-      break;
-    }
-  }
-  Assert(idx != -1, "task %s not find", task->name);
-  total_task --;
-  for(int i = idx; i < total_task; i++){
-    running_task[i] = running_task[i + 1];
-  }
-  Context* free_context = fork_context[idx];
-  fork_context[idx] = NULL;
+  int pid = task->pid;
+  Assert(all_task[pid] == task, "teardown: task with pid %d mismatched", pid);
+  all_task[pid] = NULL;
+  Context* free_context = fork_context[pid];
+  fork_context[pid] = NULL;
   mutex_unlock(&task_lock);
+
+  if(task == CURRENT_TASK){
+    set_current_task(NULL);
+  }else{
+    mutex_lock(&task_lock);  // insure task is not running on another CPU
+  }
 
   release_resources_except_stack(task);
   pmm->free(task->stack);
-
   pmm->free((void*)task);
-  pmm->free(free_context);
+  if(free_context) pmm->free(free_context);
 }
 
 task_t* kmt_gettask(){
@@ -212,16 +214,14 @@ int kmt_newforktask(task_t* newtask, const char* name){
   memset(newtask->ofiles, 0, sizeof(newtask->ofiles));
   memset(newtask->mmaps, 0, sizeof(newtask->mmaps));
   mutex_lock(&task_lock);
-  if(total_task >= MAX_TASK){
-    printf("task full");
-    return -1;
-  }
-  if(!fork_context[total_task]){
-    fork_context[total_task] = pmm->alloc(sizeof(Context));
-  }
-  newtask->contexts[0] = fork_context[total_task];
+  int pid = get_empty_pid();
+
+  fork_context[pid] = pmm->alloc(sizeof(Context));
+
+  newtask->pid = pid;
+  newtask->contexts[0] = fork_context[pid];
   newtask->int_depth = 1;
-  all_task[total_task ++] = newtask;
+  all_task[pid] = newtask;
   mutex_unlock(&task_lock);
   return 0;
 }
