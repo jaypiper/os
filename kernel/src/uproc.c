@@ -157,12 +157,6 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
 
 static int uproc_exit(){
   task_t* cur_task = kmt->gettask();
-  for(int i = 0; i < MAX_OPEN_FILE; i++){
-    if(cur_task->ofiles[i]) pmm->free(cur_task->ofiles[i]);
-  }
-  for(int i = 0; i < MAX_MMAP_NUM; i++){
-    if(cur_task->mmaps[i]) pmm->free(cur_task->mmaps[i]);
-  }
   kmt->teardown(cur_task);
   clear_current_task();
   return 0;
