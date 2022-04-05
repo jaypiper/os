@@ -20,12 +20,10 @@ static inline int mmap_contains(mm_area_t* mm, void* addr){
   if(!mm) return 0;
   void* start = (void*)ROUNDDOWN(mm->start, PGSIZE);
   void* end = (void*)ROUNDUP(mm->end, PGSIZE);
-  printf("check 0x%lx [0x%lx, 0x%lx)\n", (uintptr_t)addr, mm->start, mm->end);
   return (addr >= start ) && (addr < end);
 }
 
 Context* handle_pagefault(Event ev, Context* ctx){
-  printf("pgfault addr 0x%lx\n", ev.ref);
   task_t* cur_task = kmt->gettask();
   void* pg_addr = (void*)ROUNDDOWN(ev.ref, PGSIZE);
   for(int i = 0; i < MAX_MMAP_NUM; i++){
@@ -41,7 +39,6 @@ Context* handle_pagefault(Event ev, Context* ctx){
         vfs->lseek(mm->fd, mm->offset, SEEK_SET);
         vfs->read(mm->fd, pa + start_pa, end_pa - start_pa);
       }
-      printf("map va 0x%lx pa 0x%lx\n", pg_addr, pa);
       map(cur_task->as, pg_addr, pa, mm->prot);
       return NULL;
     }
@@ -58,7 +55,6 @@ static void uproc_init(){
 
 static int uproc_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset){
   task_t* task = kmt->gettask();
-  printf("mmap addr 0x%lx len 0x%lx offset 0x%lx\n", addr, len, offset);
   for(int i = 0; i < MAX_MMAP_NUM; i++){
     if(!task->mmaps[i]){
       mm_area_t* tmp_mm = pmm->alloc(sizeof(mm_area_t));
@@ -105,7 +101,6 @@ static int uproc_fork(){
 static int uproc_execve(const char *path, char *argv[], char *envp[]){
   // release resources
   task_t* task = kmt->gettask();
-  printf("execve task 0x%lx\n", task);
   release_resources_except_stack(task);
   AddrSpace* as = pmm->alloc(sizeof(AddrSpace));
   protect(as);
@@ -145,7 +140,6 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
     }
   }
 // #endif
-  printf("entry 0x%lx\n", _Eheader.e_entry);
   TOP_CONTEXT(task) = ucontext(as, (Area){.start = (void*)STACK_START(task->kstack), .end = (void*)STACK_END(task->kstack)}, (void*)_Eheader.e_entry);
   task->blocked = 0;
   task->as = as;
