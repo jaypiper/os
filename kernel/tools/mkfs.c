@@ -183,8 +183,8 @@ static void createFileList(int root, char *basePath){
           int tmp_offset = (blk_idx - MAX_DIRECT_FILE_BLOCK) % INDIRECT_NUM_PER_BLK;
           uint32_t* tmp_blk_start = IN_DISK(BLK2ADDR(newfile_inode->addr[INDIRECT_IN_INODE]));
           while(tmp_depth -- > 0){
-            if(tmp_depth == 1 && tmp_offset == 0){
-              *(uint32_t*)IN_DISK(BLK2ADDR(tmp_blk_start[INDIRECT_NUM_PER_BLK])) = alloc_block();
+            if(tmp_depth == 0 && tmp_offset == 0){
+              tmp_blk_start[INDIRECT_NUM_PER_BLK] = alloc_block();
               newfile_inode->addr[DEPTH_IN_INODE] += 1;
             }
             tmp_blk_start = IN_DISK(BLK2ADDR(tmp_blk_start[INDIRECT_NUM_PER_BLK]));
