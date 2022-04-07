@@ -8,6 +8,8 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <dirent.h>
+
+#define IN_MKFS
 #include <vfs.h>
 #include <util.h>
 

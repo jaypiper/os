@@ -135,6 +135,9 @@ void vfs_readFileList(int root_idx, int depth);
 void new_proc_init(int id, const char* name);
 void delete_proc(int pid);
 void modify_proc_info(int pid, char* file_name, void* data, int sz);
+#ifndef IN_MKFS
+void fill_standard_fd(task_t* task);
+#endif
 
 int invalid_write(ofile_info_t* ofile, int fd, void *buf, int count);
 int invalid_read(ofile_info_t* ofile, int fd, void *buf, int count);

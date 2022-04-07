@@ -134,7 +134,6 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   int pid = get_empty_pid();
   task->pid = pid;
   all_task[pid] = task;
-  void fill_standard_fd(task_t* task);
   fill_standard_fd(task);
   new_proc_init(pid, name);
   mutex_unlock(&task_lock);
