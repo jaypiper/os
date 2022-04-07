@@ -128,6 +128,7 @@ static int (*syscalls[])() = {
 };
 
 Context* do_syscall(Event ev, Context* context){
+  iset(true);
   int syscall_no = context->rax;
   int (*sys_handler)() = syscalls[syscall_no];
   Assert(sys_handler, "invalid syscall %d\n", syscall_no);

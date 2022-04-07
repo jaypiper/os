@@ -51,6 +51,7 @@ static Context* kmt_context_save(Event ev, Context * ctx){
 }
 
 static Context* kmt_schedule(Event ev, Context * ctx){
+  iset(false);
   task_t* cur_task = CURRENT_TASK;
   task_t* select = cur_task && !cur_task->blocked && (RUN_STATE(cur_task) == TASK_TO_BE_RUNNABLE) ? cur_task : CURRENT_IDLE;
   if(!cur_task || IS_SCHED(ev.event)){ // select a random task
