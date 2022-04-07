@@ -36,7 +36,7 @@ Context* handle_pagefault(Event ev, Context* ctx){
         uintptr_t start_pa = start_offset == mm->offset ? mm->start - (uintptr_t)pg_addr : 0;
         uintptr_t end_pa = (uintptr_t)pg_addr == ROUNDDOWN(mm->end, PGSIZE) ? mm->end - (uintptr_t)pg_addr : PGSIZE;
         Assert(start_pa >= 0 && start_pa < PGSIZE && end_pa >= 0 && end_pa <= PGSIZE, "handle_pagefault: start 0x%lx end 0x%lx\n", start_pa, end_pa);
-        vfs->lseek(mm->fd, mm->offset, SEEK_SET);
+        vfs->lseek(mm->fd, start_offset, SEEK_SET);
         vfs->read(mm->fd, pa + start_pa, end_pa - start_pa);
       }
       map(cur_task->as, pg_addr, pa, mm->prot);
