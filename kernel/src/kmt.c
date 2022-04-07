@@ -210,31 +210,35 @@ task_t* kmt_gettask(){
   return CURRENT_TASK;
 }
 
-int kmt_newforktask(task_t* newtask, const char* name){
+int kmt_initforktask(task_t* newtask, const char* name){
   spin_init(&newtask->lock, name);
   newtask->name = name;
   newtask->states[0] = TASK_RUNNING;
   newtask->states[1] = TASK_RUNNABLE;
   newtask->stack = pmm->alloc(STACK_SIZE);
+  newtask->contexts[0] = pmm->alloc(sizeof(Context));
 
   SET_TASK(newtask);
   newtask->wait_next = NULL;
   newtask->blocked = 0;
+  newtask->int_depth = 1;
   memset(newtask->ofiles, 0, sizeof(newtask->ofiles));
   memset(newtask->mmaps, 0, sizeof(newtask->mmaps));
-  mutex_lock(&task_lock);
-  int pid = get_empty_pid();
 
-  fork_context[pid] = pmm->alloc(sizeof(Context));
-
-  newtask->pid = pid;
-  newtask->contexts[0] = fork_context[pid];
-  newtask->int_depth = 1;
-  all_task[pid] = newtask;
-  mutex_unlock(&task_lock);
   return 0;
 }
 
+void kmt_inserttask(task_t* newtask){
+  mutex_lock(&task_lock);
+  int pid = get_empty_pid();
+
+  fork_context[pid] = newtask->contexts[0];
+
+  newtask->pid = pid;
+
+  all_task[pid] = newtask;
+  mutex_unlock(&task_lock);
+}
 
 MODULE_DEF(kmt) = {
   .init = kmt_init,

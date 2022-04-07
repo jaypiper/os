@@ -75,13 +75,12 @@ static int uproc_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t
 static int uproc_fork(){
   task_t* cur_task = kmt->gettask();
   task_t* new_task = pmm->alloc(sizeof(task_t));
-  kmt_newforktask(new_task, cur_task->name);
+  kmt_initforktask(new_task, cur_task->name);
   // copy context
   memcpy(TOP_CONTEXT(new_task), TOP_CONTEXT(cur_task), sizeof(Context));
-  // fork return 0 in child
-  TOP_CONTEXT(new_task)->rax = 0;
   // child share the same ofile with parent
-  for(int i = 0; i < MAX_OPEN_FILE; i++){
+  fill_standard_fd(new_task);
+  for(int i = STDERR_FILENO + 1; i < MAX_OPEN_FILE; i++){
     if(cur_task->ofiles[i]){
       new_task->ofiles[i] = filedup(cur_task->ofiles[i]);
     }
@@ -92,10 +91,20 @@ static int uproc_fork(){
       memcpy(new_task->mmaps[i], cur_task->mmaps[i], sizeof(mm_area_t));
     }
   }
+
+  new_task->kstack = cur_task->kstack;
   new_task->cwd_inode_no = cur_task->cwd_inode_no;
   new_task->cwd_type = cur_task->cwd_type;
-  // TODO: page rdonly
-  return 0; // TODO: return pid
+  // copy pagetable
+  AddrSpace* as = pmm->alloc(sizeof(AddrSpace));
+  protect(as);
+  new_task->as = as;
+  pgtable_ucopy(cur_task->as->ptr, new_task->as->ptr);
+  // fork return 0 in child
+  TOP_CONTEXT(new_task)->rax = 0;
+  TOP_CONTEXT(new_task)->cr3 = as->ptr;
+  kmt_inserttask(new_task);
+  return new_task->pid;
 }
 
 static int uproc_execve(const char *path, char *argv[], char *envp[]){
