@@ -1031,6 +1031,15 @@ ofile_info_t* filedup(ofile_info_t* ofile){
 	return ofile;
 }
 
+void fileclose(ofile_info_t* ofile){
+	// TODO: lock
+	Assert(ofile->count > 0, "invalid ofile count %d\n", ofile->count);
+	if(--ofile->count > 0){
+		return;
+	}
+	pmm->free(ofile);
+}
+
 MODULE_DEF(vfs) = {
 	.init   = vfs_init,
 	.write  = vfs_write,

@@ -147,7 +147,7 @@ static inline void free_ofiles(task_t* task){
   }
   for(int i = STDERR_FILENO + 1; i < MAX_OPEN_FILE; i++){
     if(task->ofiles[i]){
-      pmm->free(task->ofiles[i]);
+      fileclose(task->ofiles[i]);
       task->ofiles[i] = NULL;
     }
   }
