@@ -259,7 +259,6 @@ void mark_not_runable(sem_t* sem, int cpu_id){
   Assert(holding(&sem->lock), "lock in %s is not held", sem->name);
   Assert(cpu_id == cpu_current(), "in mark %s cpu_id=%d cpu current=%d", sem->name, cpu_id, cpu_current());
   Assert(running_task[cpu_id]->lock.locked, "in mark, task %s is not locked", running_task[cpu_id]->name);
-  Assert(RUN_STATE(running_task[cpu_id]) == TASK_RUNNING, "in sem mark %s, task %s is not running", sem->name, running_task[cpu_id]->name);
   CURRENT_TASK->blocked = 1;
   if(!sem->wait_list){
     sem->wait_list = running_task[cpu_id];
