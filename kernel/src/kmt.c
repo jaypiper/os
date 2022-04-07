@@ -203,7 +203,7 @@ void kmt_teardown(task_t *task){
   }
 
   release_resources(task);
-
+  delete_proc(pid);
   if(free_context) pmm->free(free_context);
 }
 
@@ -239,6 +239,7 @@ void kmt_inserttask(task_t* newtask){
 
   all_task[pid] = newtask;
   mutex_unlock(&task_lock);
+  new_proc_init(pid, newtask->name);
 }
 
 MODULE_DEF(kmt) = {
