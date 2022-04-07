@@ -205,7 +205,7 @@ static int get_blk_idx(int idx, inode_t* inode){
   idx -= MAX_DIRECT_FILE_BLOCK;
   Assert(idx < (MAX_DIRECT_FILE_BLOCK + inode->addr[DEPTH_IN_INODE] * INDIRECT_NUM_PER_BLK), "idx %d is out of dir with depth %d", idx, inode->addr[DEPTH_IN_INODE]);
   int blk_start = BLK2ADDR(inode->addr[INDIRECT_IN_INODE]);
-  int depth = UP_BLK_NUM(idx, INDIRECT_NUM_PER_BLK);
+  int depth = inode->addr[DEPTH_IN_INODE];
   for(int i = 0; i < depth - 1; i++){
 		uint32_t next_blk;
 		sd_read(blk_start + INDIRECT_NUM_PER_BLK * sizeof(uint32_t), &next_blk, sizeof(uint32_t));
