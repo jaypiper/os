@@ -54,9 +54,10 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   task_t* cur_task = CURRENT_TASK;
   task_t* select = cur_task && !cur_task->blocked && (RUN_STATE(cur_task) == TASK_TO_BE_RUNNABLE) ? cur_task : CURRENT_IDLE;
   if(!cur_task || IS_SCHED(ev.event)){ // select a random task
-    for(int i = 0; i < 8 * MAX_TASK; i++){
-      int task_idx = rand() % MAX_TASK;
-    // for(int task_idx = 0; task_idx < MAX_TASK; task_idx ++){
+    // for(int i = 0; i < 8 * MAX_TASK; i++){
+    for(int idx = 0; idx < MAX_TASK; idx ++){
+      int task_idx = ((cur_task ? cur_task->pid : 0) + idx) % MAX_TASK;
+      if(!all_task[task_idx]) continue;
       int locked = !mutex_trylock(&all_task[task_idx]->lock);
       if(locked){
         Assert(RUN_STATE(all_task[task_idx]) != TASK_RUNNING, "task %s running", all_task[task_idx]->name);
