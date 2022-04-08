@@ -108,6 +108,11 @@ int sys_write(Context* ctx){ // int fd, const void *buf, size_t count
   return vfs->write(fd, (void*)buf, count);
 }
 
+int sys_brk(Context* ctx){ // void *addr
+  uintptr_t addr = argraw(0, ctx);
+  return uproc->brk((void*)addr);
+}
+
 
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_CHDIR]     = sys_chdir,
@@ -125,6 +130,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_READ]      = sys_read,
 [SYS_UNLINK]    = sys_unlink,
 [SYS_WRITE]     = sys_write,
+[SYS_BRK]       = sys_brk,
 };
 
 Context* do_syscall(Event ev, Context* context){

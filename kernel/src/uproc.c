@@ -169,6 +169,17 @@ static int uproc_exit(){
   return 0;
 }
 
+static int uproc_brk(void* addr){
+  task_t* cur_task = kmt->gettask();
+  if(cur_task->max_brk >= addr) return 0;
+  while(cur_task->max_brk < addr){
+    void* pa = pgalloc(PGSIZE);
+    map(cur_task->as, cur_task->max_brk, pa, PROT_READ|PROT_WRITE);
+    cur_task->max_brk += PGSIZE;
+  }
+  return 0;
+}
+
 #include <syscall.h>
 void hello_test(){
   char* path = "/hello";
@@ -183,6 +194,7 @@ MODULE_DEF(uproc) = {
 	.mmap   = uproc_mmap,
 	.fork   = uproc_fork,
 	.execve = uproc_execve,
+  .brk    = uproc_brk,
 	.exit   = uproc_exit
 };
 
