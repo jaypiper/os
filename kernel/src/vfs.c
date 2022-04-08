@@ -649,7 +649,7 @@ static dev_inode_t* find_dev(const char* pathname){
 
 static int dev_open(const char* pathname, int flags){
 	if(pathname[0] != '/'){
-		printf("/dev%s not found\n", pathname);
+		printf("/dev/%s not found\n", pathname);
 		return -1;
 	}
 	pathname = pathname + 1;
