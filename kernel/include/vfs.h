@@ -127,6 +127,8 @@ typedef struct ofile_info{
 #define	STDOUT_FILENO	1	/* Standard output.  */
 #define	STDERR_FILENO	2	/* Standard error output.  */
 
+#define IS_VALID_FD(fd) ((fd >= 0) && (fd < MAX_OPEN_FILE))
+
 int dev_input_read(ofile_info_t* ofile, int fd, void *buf, int count);
 int dev_output_write(ofile_info_t* ofile, int fd, void *buf, int count);
 int dev_error_write(ofile_info_t* ofile, int fd, void *buf, int count);
