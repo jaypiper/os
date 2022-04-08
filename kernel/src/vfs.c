@@ -690,6 +690,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 	inode_t dir_inode;
 	int dir_inode_no = name_idx <= 0? root_inode_no : get_inode_by_name(string_buf, &dir_inode, root_inode_no);
 	if(dir_inode_no < 0){
+		printf("open: no such file or directory %s\n", pathname);
 		kmt->sem_signal(&fs_lock);
 		return -1;
 	}
@@ -699,6 +700,7 @@ static int vfs_open(const char *pathname, int flags){  // must start with /
 		file_inode_no = alloc_inode(FT_FILE, &file_inode);
 		if(file_inode_no < 0){
 			kmt->sem_signal(&fs_lock);
+			printf("open: no such file or directory %s\n", pathname);
 			return -1;
 		}
 		insert_into_dir(dir_inode_no, file_inode_no, string_buf + name_idx + 1);
