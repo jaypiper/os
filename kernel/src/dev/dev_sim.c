@@ -36,3 +36,16 @@ int random_read(ofile_info_t* ofile, int fd, void *buf, int count){
 int random_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
   return 0;
 }
+
+// events readonly
+
+int events_read(ofile_info_t* ofile, int fd, void *buf, int count){
+  char cmd[128];
+  device_t *tty = dev->lookup("tty1");
+  int nread = tty->ops->read(tty, 0, buf, sizeof(cmd) - 1);
+  return nread;
+}
+
+int useless_lseek(ofile_info_t* ofile, int fd, int offset, int whence){
+  return 0;
+}
