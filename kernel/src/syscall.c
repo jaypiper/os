@@ -109,7 +109,7 @@ int sys_write(Context* ctx){ // int fd, const void *buf, size_t count
 }
 
 
-static int (*syscalls[])() = {
+static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_CHDIR]     = sys_chdir,
 [SYS_CLOSE]     = sys_close,
 [SYS_DUP]       = sys_dup,
@@ -130,6 +130,7 @@ static int (*syscalls[])() = {
 Context* do_syscall(Event ev, Context* context){
   iset(true);
   int syscall_no = context->rax;
+  Assert(syscall_no < MAX_SYSCALL_IDX, "invalid syscall %d\n", syscall_no);
   int (*sys_handler)() = syscalls[syscall_no];
   Assert(sys_handler, "invalid syscall %d\n", syscall_no);
   int ret = sys_handler(context);

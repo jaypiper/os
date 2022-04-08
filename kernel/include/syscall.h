@@ -17,4 +17,6 @@
 #define SYS_LINK      0x56
 #define SYS_UNLINK    0x57
 
+#define MAX_SYSCALL_IDX 0x100
+
 #endif
