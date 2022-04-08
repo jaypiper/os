@@ -330,6 +330,19 @@ int dev_output_write(ofile_info_t* ofile, int fd, void *buf, int count){
 }
 
 int dev_error_write(ofile_info_t* ofile, int fd, void *buf, int count){
-  // TODO
-  Assert(0, "not implemented");
+  char* error_prefix = "\33[1;31m";
+  char* error_suffix = "\33[0m";
+  char* str = buf;
+  for(int i = 0; i < strlen(error_prefix); i++){
+    putch(error_prefix[i]);
+  }
+  for(int i = 0; i < count; i++){
+    putch(str[i]);
+  }
+  for(int i = 0; i < strlen(error_suffix); i++){
+    putch(error_suffix[i]);
+  }
+  device_t *ttydev = dev->lookup("tty1");
+  ttydev->ops->write(ttydev, 0, buf, count);
+  return count;
 }
