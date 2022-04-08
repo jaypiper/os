@@ -57,6 +57,8 @@ void vfs_proc_init(){
 	insert_proc_inode(proc_dir, "cpuinfo", "name: xxxxx", FT_PROC_FILE);
 	/* add meminfo */
 	insert_proc_inode(proc_dir, "meminfo", "MemTotal: xxxxx", FT_PROC_FILE);
+	/* add dispinfo */
+	insert_proc_inode(proc_dir, "dispinfo", "WIDTH: 400\nHEIGHT: 300", FT_PROC_FILE);
 	kmt->sem_init(&procfs_lock, "procfs lock", 1);
 }
 
