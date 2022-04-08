@@ -148,6 +148,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
       if(filesz_end != ROUNDUP(_Pheader.p_vaddr + _Pheader.p_memsz, PGSIZE)){
         uproc_mmap((void*)filesz_end, _Pheader.p_memsz + _Pheader.p_vaddr - filesz_end, PROT_READ| PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
       }
+      task->max_brk = (void*)ROUNDUP(_Pheader.p_vaddr + _Pheader.p_memsz, PGSIZE);
     }
   }
 // #endif
