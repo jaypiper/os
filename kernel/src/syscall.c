@@ -130,9 +130,9 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 Context* do_syscall(Event ev, Context* context){
   iset(true);
   int syscall_no = context->rax;
-  Assert(syscall_no < MAX_SYSCALL_IDX, "invalid syscall %d\n", syscall_no);
+  Assert(syscall_no < MAX_SYSCALL_IDX, "invalid syscall 0x%x\n", syscall_no);
   int (*sys_handler)() = syscalls[syscall_no];
-  Assert(sys_handler, "invalid syscall %d\n", syscall_no);
+  Assert(sys_handler, "invalid syscall 0x%x\n", syscall_no);
   int ret = sys_handler(context);
   context->rax = ret;
   return NULL;
