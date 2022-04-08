@@ -24,6 +24,7 @@ typedef struct task{
   int blocked;
   void* stack;
   void* kstack;
+  void* max_brk;
   ofile_info_t* ofiles[MAX_OPEN_FILE];
   mm_area_t* mmaps[MAX_MMAP_NUM];
   int cwd_inode_no;

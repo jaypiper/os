@@ -95,6 +95,7 @@ static int uproc_fork(){
   new_task->kstack = cur_task->kstack;
   new_task->cwd_inode_no = cur_task->cwd_inode_no;
   new_task->cwd_type = cur_task->cwd_type;
+  new_task->max_brk = cur_task->max_brk;
   // copy pagetable
   AddrSpace* as = pmm->alloc(sizeof(AddrSpace));
   protect(as);
