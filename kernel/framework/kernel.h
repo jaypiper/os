@@ -78,6 +78,7 @@ MODULE(uproc) {
   int (*mmap)(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
   int (*fork)();
   int (*execve)(const char *path, char *argv[], char *envp[]);
+  int (*brk)(void* addr);
   int (*exit)();
 };
 
