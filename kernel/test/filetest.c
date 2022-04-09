@@ -592,7 +592,6 @@ int proctest(char* s){
     return -1;
   }
   vfs->read(fd, buf, SZ);
-  // printf("cpuinfo: %s\n", buf);
   vfs->close(fd);
   // meminfo
   memset(buf, 0, SZ);
@@ -602,13 +601,11 @@ int proctest(char* s){
     return -1;
   }
   vfs->read(fd, buf, SZ);
-  // printf("meminfo: %s\n", buf);
   vfs->close(fd);
   // proc 1
   memset(buf, 0, SZ);
   vfs->open("/proc/1/name", O_RDONLY);
   vfs->read(fd, buf, SZ);
-  // printf("proc1name: %s\n", buf);
   vfs->close(fd);
   return 0;
 }

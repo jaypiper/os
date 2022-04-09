@@ -95,7 +95,7 @@ Context* os_trap(Event ev, Context *context){
     }
   }
   Assert(ret, "returning NULL context for event %d", ev.event);
-  // TODO: check whether ret is sane
+
   return ret;
 }
 

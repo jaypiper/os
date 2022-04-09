@@ -678,7 +678,7 @@ static int dev_open(const char* pathname, int flags){
 	return fill_task_ofile(tmp_ofile);
 }
 
-static int vfs_open(const char *pathname, int flags){  // must start with /
+static int vfs_open(const char *pathname, int flags){
 	// traverse inode block
 	int pathname_len = strlen(pathname);
 	if(pathname_len <= 0 || pathname_len >= MAX_STRING_BUF_LEN){

@@ -200,6 +200,5 @@ void dev_input_task(void *args) {
 }
 
 int dev_input_read(ofile_info_t* ofile, int fd, void *buf, int count){
-  // TODO
-  Assert(0, "not implemented");
+  TODO();
 }

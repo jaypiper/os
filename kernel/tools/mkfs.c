@@ -260,12 +260,10 @@ int main(int argc, char *argv[]) {
   // fstat(fd,&statbuf);
   // Assert(statbuf.st_size <= (1 MB), "input file %s is larger than 1 MB", argv[2]);
   // TODO: check whether kernel.elf is larger than 1M
-  // TODO: argument parsing
 
   assert((ftruncate(fd, size)) == 0);
   assert((disk = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) != (void *)-1);
 
-  // TODO: mkfs
 
   memset(disk + FS_START, 0, size - FS_START);
 
