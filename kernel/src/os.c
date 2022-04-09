@@ -13,7 +13,7 @@ cpu_t* get_cpu(){
   cpu_t* ret = &cpus[cpu_current()];
   return ret;
 }
-
+#ifndef UPROC_DEBUG
 static void tty_reader(void *arg) {
   device_t *tty = dev->lookup(arg);
   char cmd[128], resp[128], ps[16];
@@ -26,7 +26,7 @@ static void tty_reader(void *arg) {
     tty->ops->write(tty, 0, resp, strlen(resp));
   }
 }
-
+#endif
 #ifdef VFS_DEBUG
 static void vfs_test(void* args){
   void filetest(int idx);
@@ -67,10 +67,13 @@ static void os_init() {
   }
 
 #endif
+#ifdef UPROC_DEBUG
+  void uproc_test();
+  kmt->create(task_alloc(), "uproc test", uproc_test, NULL);
+#else
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
   kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");
-  void hello_test();
-  kmt->create(task_alloc(), "hello test", hello_test, NULL);
+#endif
 }
 
 static void os_run() {

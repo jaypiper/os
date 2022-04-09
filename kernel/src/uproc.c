@@ -200,11 +200,18 @@ static int uproc_brk(void* addr){
 }
 
 #include <syscall.h>
-void hello_test(){
-  char* path = "/hello";
+
+void uproc_test(){
+  char* path = "/busybox_unstripped";
   void do_syscall3(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3);
-  do_syscall3(SYS_EXECVE, (uintptr_t)path, 0, 0);
-  // uproc_execve(path, NULL, NULL);
+  char* args[] = {
+    "busybox",
+    "cat",
+    "/a.txt",
+    0
+  };
+  do_syscall3(SYS_EXECVE, (uintptr_t)path, (uintptr_t)args, 0);
+
   Assert(0, "should not reach here\n");
 }
 
