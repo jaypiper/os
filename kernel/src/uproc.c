@@ -120,20 +120,22 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
     map(as, as->area.end - STACK_SIZE + i * PGSIZE, task->stack + i * PGSIZE, PROT_READ|PROT_WRITE);
   }
 
-  int argc = 0;
-  for(argc = 0; argv[argc]; argc ++) ; // count the number of arg
-  *(uintptr_t*)(STACK_START(task->stack)) = argc;
+  if(argv){
+    int argc = 0;
+    for(argc = 0; argv[argc]; argc ++) ; // count the number of arg
+    *(uintptr_t*)(STACK_START(task->stack)) = argc;
 
-  uintptr_t str_start = (uintptr_t)STACK_START(task->stack) + (argc + 2) * sizeof(uintptr_t);  // argc; args; NULL;
-  int offset = sizeof(uintptr_t);
-  for(int i = 0; i < argc; i++){
-    *(uintptr_t*)(STACK_START(task->stack) + offset) = as->area.end - STACK_SIZE + str_start - task->stack;
-    int str_len = strlen(argv[i]);
-    strcpy((void*)str_start, argv[i]);
-    str_start += str_len + 1; // string follewed by 0
-    offset += sizeof(uintptr_t);
+    uintptr_t str_start = (uintptr_t)STACK_START(task->stack) + (argc + 2) * sizeof(uintptr_t);  // argc; args; NULL;
+    int offset = sizeof(uintptr_t);
+    for(int i = 0; i < argc; i++){
+      *(uintptr_t*)(STACK_START(task->stack) + offset) = as->area.end - STACK_SIZE + str_start - task->stack;
+      int str_len = strlen(argv[i]);
+      strcpy((void*)str_start, argv[i]);
+      str_start += str_len + 1; // string follewed by 0
+      offset += sizeof(uintptr_t);
+    }
+    *(uintptr_t*)(STACK_START(task->stack) + offset) = 0;
   }
-  *(uintptr_t*)(STACK_START(task->stack) + offset) = 0;
 
   task->int_depth = 1;
   SET_TASK(task);
