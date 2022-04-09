@@ -88,6 +88,13 @@ void vfs_dev_init(){
 	new_dev->read = random_read;
 	new_dev->write = invalid_write;
 	new_dev->lseek = random_lseek;
+	/* add dev events */
+	new_dev = dev_start + dev_num ++;
+	new_dev->size = 0;
+	strcpy(new_dev->name, "events");
+	new_dev->read = events_read;
+	new_dev->write = invalid_write;
+	new_dev->lseek = useless_lseek;
 }
 
 static int proc_read(ofile_info_t* ofile, int fd, void* buf, int count){
