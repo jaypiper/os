@@ -433,18 +433,21 @@ static void vfs_init(){
 	stdin_info->read = dev_input_read;
 	stdin_info->lseek = invalid_lseek;
 	stdin_info->count = 1;
+	kmt->sem_init(&stdin_info->lock, "stdin_info lock", 1);
 
 	stdout_info = pmm->alloc(sizeof(ofile_info_t));
 	stdout_info->write = dev_output_write;
 	stdout_info->read = invalid_read;
 	stdout_info->lseek = invalid_lseek;
 	stdout_info->count = 1;
+	kmt->sem_init(&stdout_info->lock, "stdout_info lock", 1);
 
 	stderr_info = pmm->alloc(sizeof(ofile_info_t));
 	stderr_info->write = dev_error_write;
 	stderr_info->read = invalid_read;
 	stderr_info->lseek = invalid_lseek;
 	stderr_info->count = 1;
+	kmt->sem_init(&stderr_info->lock, "stderr_info lock", 1);
 	kmt->sem_init(&fs_lock, "fs lock", 1);
 }
 
@@ -642,6 +645,7 @@ static int proc_open(const char* pathname, int flags){
 	tmp_ofile->flag = flags;
 	tmp_ofile->offset = 0;
 	tmp_ofile->count = 1;
+	kmt->sem_init(&tmp_ofile->lock, pathname, 1);
 	return fill_task_ofile(tmp_ofile);
 }
 
@@ -675,6 +679,7 @@ static int dev_open(const char* pathname, int flags){
 	tmp_ofile->flag = flags;
 	tmp_ofile->offset = 0;
 	tmp_ofile->count = 1;
+	kmt->sem_init(&tmp_ofile->lock, pathname, 1);
 	return fill_task_ofile(tmp_ofile);
 }
 
@@ -739,6 +744,7 @@ static int vfs_open(const char *pathname, int flags){
 	tmp_ofile->inode_no = file_inode_no;
 	tmp_ofile->type =CWD_UFS;
 	tmp_ofile->flag = flags;
+	kmt->sem_init(&tmp_ofile->lock, pathname, 1);
 
 	kmt->sem_signal(&fs_lock);
 	return fill_task_ofile(tmp_ofile);
@@ -1037,18 +1043,20 @@ static int vfs_dup(int fd){
 }
 
 ofile_info_t* filedup(ofile_info_t* ofile){
-	// TODO: lock
+	kmt->sem_wait(&ofile->lock);
 	ofile->count ++;
+	kmt->sem_signal(&ofile->lock);
 	return ofile;
 }
 
 void fileclose(ofile_info_t* ofile){
-	// TODO: lock
+	kmt->sem_wait(&ofile->lock);
 	Assert(ofile->count > 0, "invalid ofile count %d\n", ofile->count);
 	if(--ofile->count > 0){
+		kmt->sem_signal(&ofile->lock);
 		return;
 	}
-	pmm->free(ofile);
+	pmm->free(ofile); // no need to unlock ofile lock
 }
 
 MODULE_DEF(vfs) = {

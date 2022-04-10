@@ -103,6 +103,8 @@ typedef struct dev_inode{
     int (*lseek)(struct ofile_info* ofile, int fd, int offset, int whence);
 }dev_inode_t;
 
+#ifndef IN_MKFS
+
 typedef struct ofile_info{
     int (*write)(struct ofile_info* ofile, int fd, void *buf, int count);
     int (*read)(struct ofile_info* ofile, int fd, void *buf, int count);
@@ -116,8 +118,10 @@ typedef struct ofile_info{
     int type;       // ufs, proc, dev
     int flag;
     int count;
+    sem_t lock;
 }ofile_info_t;
 
+#endif
 
 #define MAX32bit 0xffffffff
 #define ROOT_INODE_NO 0
