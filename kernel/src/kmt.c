@@ -55,6 +55,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   task_t* cur_task = CURRENT_TASK;
   task_t* select = cur_task && !cur_task->blocked && (RUN_STATE(cur_task) == TASK_TO_BE_RUNNABLE) ? cur_task : CURRENT_IDLE;
   if(!cur_task || IS_SCHED(ev.event)){ // select a random task
+    spin_lock(&task_lock);
     // for(int i = 0; i < 8 * MAX_TASK; i++){
     for(int idx = 0; idx < MAX_TASK; idx ++){
       int task_idx = ((cur_task ? cur_task->pid : 0) + idx) % MAX_TASK;
@@ -69,6 +70,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
         mutex_unlock(&all_task[task_idx]->lock);
       }
     }
+    spin_unlock(&task_lock);
   }else{ // syscall, pagefault: if not exit, keep the current task
     Assert(select == cur_task, "schedule: select %lx current %lx\n", (uintptr_t)select, (uintptr_t)cur_task);
   }
@@ -134,13 +136,13 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   spin_init(&task->lock, name);
   SET_TASK(task);
 
-  mutex_lock(&task_lock);
+  spin_lock(&task_lock);
   int pid = get_empty_pid();
   task->pid = pid;
   all_task[pid] = task;
   fill_standard_fd(task);
   new_proc_init(pid, name);
-  mutex_unlock(&task_lock);
+  spin_unlock(&task_lock);
   return 0;
 }
 
@@ -189,14 +191,14 @@ void execve_release_resources(task_t* task){
 }
 
 void kmt_teardown(task_t *task){
-  mutex_lock(&task_lock);
+  spin_lock(&task_lock);
   Assert(!task->blocked, "blocked task should not be teardown");
   int pid = task->pid;
   Assert(all_task[pid] == task, "teardown: task with pid %d mismatched", pid);
   all_task[pid] = NULL;
   Context* free_context = fork_context[pid];
   fork_context[pid] = NULL;
-  mutex_unlock(&task_lock);
+  spin_unlock(&task_lock);
 
   if(task == CURRENT_TASK){
     set_current_task(NULL);
@@ -232,7 +234,7 @@ int kmt_initforktask(task_t* newtask, const char* name){
 }
 
 void kmt_inserttask(task_t* newtask){
-  mutex_lock(&task_lock);
+  spin_lock(&task_lock);
   int pid = get_empty_pid();
 
   fork_context[pid] = newtask->contexts[0];
@@ -240,7 +242,7 @@ void kmt_inserttask(task_t* newtask){
   newtask->pid = pid;
 
   all_task[pid] = newtask;
-  mutex_unlock(&task_lock);
+  spin_unlock(&task_lock);
   new_proc_init(pid, newtask->name);
 }
 
