@@ -5,7 +5,7 @@
 #include <vfs.h>
 #include <uproc.h>
 
-enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUNNABLE};
+enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUNNABLE, TASK_DEAD};
 
 #define MAX_INT_DEPTH 5
 
@@ -64,7 +64,7 @@ void release_resources(task_t* task);
 void execve_release_resources(task_t* task);
 void free_pages(AddrSpace* as);
 
-#define TASK_STATE_VALID(state) ((state >= TASK_UNUSED) && (state <= TASK_TO_BE_RUNNABLE))
+#define TASK_STATE_VALID(state) ((state >= TASK_UNUSED) && (state <= TASK_DEAD))
 #define IN_STACK(addr, task) ((uintptr_t)(addr) >= (uintptr_t)task->stack && (uintptr_t)(addr) < ((uintptr_t)task->stack + STACK_SIZE))
 
 #define IS_IRQ(event) (event == EVENT_IRQ_TIMER || event == EVENT_IRQ_IODEV)

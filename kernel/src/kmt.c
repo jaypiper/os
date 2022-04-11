@@ -42,9 +42,16 @@ static Context* kmt_context_save(Event ev, Context * ctx){
   else NEXT_STATE(CURRENT_TASK) = RUN_STATE(CURRENT_TASK);
 
   if(LAST_TASK && LAST_TASK != CURRENT_TASK){
-    if(LAST_TASK && RUN_STATE(LAST_TASK) == TASK_TO_BE_RUNNABLE) RUN_STATE(LAST_TASK) = TASK_RUNNABLE;
-    mutex_unlock(&LAST_TASK->lock);
+    if(LAST_TASK && RUN_STATE(LAST_TASK) == TASK_TO_BE_RUNNABLE){
+      RUN_STATE(LAST_TASK) = TASK_RUNNABLE;
+    }
+    if(RUN_STATE(LAST_TASK) == TASK_DEAD){
+      kmt->teardown(LAST_TASK);
+    }else{
+      mutex_unlock(&LAST_TASK->lock);
+    }
   }
+
   LAST_TASK = CURRENT_TASK;
   CURRENT_TASK->int_depth ++;
   return NULL;
@@ -54,7 +61,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   iset(false);
   task_t* cur_task = CURRENT_TASK;
   task_t* select = cur_task && !cur_task->blocked && (RUN_STATE(cur_task) == TASK_TO_BE_RUNNABLE) ? cur_task : CURRENT_IDLE;
-  if(!cur_task || IS_SCHED(ev.event)){ // select a random task
+  if(RUN_STATE(cur_task) == TASK_DEAD || IS_SCHED(ev.event)){ // select a random task
     spin_lock(&task_lock);
     // for(int i = 0; i < 8 * MAX_TASK; i++){
     for(int idx = 0; idx < MAX_TASK; idx ++){
@@ -203,12 +210,6 @@ void kmt_teardown(task_t *task){
 
   if(free_context) pmm->free(free_context);
   spin_unlock(&task_lock);
-
-  if(task == CURRENT_TASK){
-    set_current_task(NULL);
-  }else{
-    Assert(0, "teardown: task is not running\n");
-  }
 
 }
 

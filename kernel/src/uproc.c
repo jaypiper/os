@@ -187,8 +187,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
 
 static int uproc_exit(){
   task_t* cur_task = kmt->gettask();
-  kmt->teardown(cur_task);
-  clear_current_task();
+  RUN_STATE(cur_task) = TASK_DEAD;
   return 0;
 }
 
