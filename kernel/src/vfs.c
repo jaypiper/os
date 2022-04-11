@@ -38,6 +38,7 @@ static void insert_into_proc_dir(proc_inode_t* parent_inode, proc_inode_t* child
 
 static proc_inode_t* insert_proc_inode(proc_inode_t* parent, char* name, const char* msg, int type){
 	proc_inode_t* new_inode = pmm->alloc(sizeof(proc_inode_t));
+	new_inode->mem = NULL;
 	insert_into_proc_dir(parent, new_inode, name);
 	new_inode->type = type;
 	new_inode->size = strlen(msg);
