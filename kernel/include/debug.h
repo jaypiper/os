@@ -5,6 +5,8 @@
     printf("\33[1;34m[%s,%d,%s] " format "\33[0m\n", \
         __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 
+void assert_dummy_func();
+
 #ifdef MKFS_DEBUG
 #define Assert(cond, ...) \
   do { \
@@ -23,6 +25,7 @@
       printf("\33[1;31m [%d]", cpu_current()); \
       printf(__VA_ARGS__); \
       printf("\33[0m\n"); \
+      assert_dummy_func(); \
       assert(cond); \
       halt(-1); \
     } \
