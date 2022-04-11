@@ -186,6 +186,7 @@ void release_resources(task_t* task){
   free_pages(task->as);
 
   task->wait_next = NULL;
+  if(task->stack != task->kstack) pmm->free(task->kstack);
   pmm->free(task->stack);
   pmm->free((void*)task);
 }
