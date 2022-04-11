@@ -92,7 +92,8 @@ static int uproc_fork(){
     }
   }
 
-  new_task->kstack = cur_task->kstack;
+  new_task->kstack = pmm->alloc(STACK_SIZE);
+  memcpy(new_task->kstack, cur_task->kstack, STACK_SIZE);
   new_task->cwd_inode_no = cur_task->cwd_inode_no;
   new_task->cwd_type = cur_task->cwd_type;
   new_task->max_brk = cur_task->max_brk;
@@ -104,6 +105,7 @@ static int uproc_fork(){
   // fork return 0 in child
   TOP_CONTEXT(new_task)->rax = 0;
   TOP_CONTEXT(new_task)->cr3 = as->ptr;
+  TOP_CONTEXT(new_task)->rsp0 = TOP_CONTEXT(cur_task)->rsp0 - (uintptr_t)cur_task->kstack + (uintptr_t)new_task->kstack;
   kmt_inserttask(new_task);
   return new_task->pid;
 }
