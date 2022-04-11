@@ -57,7 +57,7 @@ void spin_init(spinlock_t *lk, const char* name){
 void mutex_lock(spinlock_t *lk){
   uint64_t us = _sys_time();
   while(atomic_xchg(&(lk->locked), 1)){
-    Assert(_sys_time() - us <= 1000000, "spin lock %s wait too long ", lk->name);
+    Assert(_sys_time() - us <= 1000000, "mutex lock %s wait too long ", lk->name);
   };
 }
 
