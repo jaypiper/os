@@ -194,21 +194,22 @@ void kmt_teardown(task_t *task){
   spin_lock(&task_lock);
   Assert(!task->blocked, "blocked task should not be teardown");
   int pid = task->pid;
+  delete_proc(pid);
   Assert(all_task[pid] == task, "teardown: task with pid %d mismatched", pid);
   all_task[pid] = NULL;
   Context* free_context = fork_context[pid];
   fork_context[pid] = NULL;
+  release_resources(task);
+
+  if(free_context) pmm->free(free_context);
   spin_unlock(&task_lock);
 
   if(task == CURRENT_TASK){
     set_current_task(NULL);
   }else{
-    mutex_lock(&task_lock);  // insure task is not running on another CPU
+    Assert(0, "teardown: task is not running\n");
   }
 
-  release_resources(task);
-  delete_proc(pid);
-  if(free_context) pmm->free(free_context);
 }
 
 task_t* kmt_gettask(){
@@ -235,15 +236,14 @@ int kmt_initforktask(task_t* newtask, const char* name){
 
 void kmt_inserttask(task_t* newtask){
   spin_lock(&task_lock);
+
   int pid = get_empty_pid();
-
   fork_context[pid] = newtask->contexts[0];
-
   newtask->pid = pid;
-
   all_task[pid] = newtask;
-  spin_unlock(&task_lock);
+
   new_proc_init(pid, newtask->name);
+  spin_unlock(&task_lock);
 }
 
 MODULE_DEF(kmt) = {
