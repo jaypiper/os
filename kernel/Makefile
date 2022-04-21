@@ -4,13 +4,14 @@ INC_PATH       := include/ framework/
 
 # export AM_HOME := $(PWD)/../abstract-machine
 ifeq ($(ARCH),)
-export ARCH    := x86_64-qemu
+export ARCH    := riscv64-mycpu
+# export ARCH    := x86_64-qemu
 endif
 
 include $(AM_HOME)/Makefile
 include ../Makefile.lab
-image:
+# image:
 
 mkfs:
 	make -C tools mkfs
-	./tools/mkfs 64 build/kernel-x86_64-qemu fs-img/
+	./tools/mkfs 64 build/kernel-riscv64-mycpu fs-img/
