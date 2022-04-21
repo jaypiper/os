@@ -7,16 +7,8 @@
     args: rdi   rsi   rdx   r10   r8    r9
 */
 static inline uintptr_t argraw(int n, Context* ctx){
-  switch(n){
-    case 0: return ctx->rdi;
-    case 1: return ctx->rsi;
-    case 2: return ctx->rdx;
-    case 3: return ctx->r10;
-    case 4: return ctx->r8;
-    case 5: return ctx->r9;
-    default: Assert(0, "argraw: invalid n %d\n", n);
-  }
-  return -1;
+  Assert(0 <= n && n <= 5, "argraw: invalid n %d\n", n);
+  return ctx->gpr[10 + n];  // a0-a5
 }
 
 int sys_chdir(Context* ctx){ // const char *path
@@ -135,32 +127,32 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 
 Context* do_syscall(Event ev, Context* context){
   iset(true);
-  int syscall_no = context->rax;
+  int syscall_no = context->gpr[17];
   Assert(syscall_no < MAX_SYSCALL_IDX, "invalid syscall 0x%x\n", syscall_no);
   int (*sys_handler)() = syscalls[syscall_no];
   Assert(sys_handler, "invalid syscall 0x%x\n", syscall_no);
   int ret = sys_handler(context);
-  context->rax = ret;
+  context->gpr[0] = ret;
   return NULL;
 }
 
 void do_syscall3(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3){
-  asm volatile("movq %0, %%rdi; \
-                movq %1, %%rsi; \
-                movq %2, %%rdx; \
-                movq %3, %%rax; \
-                int $0x80" : : "r"(val1), "r"(val2), "r"(val3), "r"((unsigned long long)syscall) : "%rdi", "%rsi", "%rdx", "%rax");
+  asm volatile("mv a0, %0; \
+                mv a1, %1; \
+                mv a2, %2; \
+                mv a7, %3; \
+                ecall" : : "r"(val1), "r"(val2), "r"(val3), "r"((unsigned long long)syscall) : "%a0", "%a1", "%a2", "%a7");
 }
 
 void do_syscall2(int syscall, unsigned long long val1, unsigned long long val2){
-  asm volatile("movq %0, %%rdi; \
-                movq %1, %%rsi; \
-                movq %2, %%rax; \
-                syscall" : : "r"(val1), "r"(val2), "r"((unsigned long long)syscall));
+  asm volatile("mv a0, %0; \
+                mv a1, %1; \
+                mv a7, %2; \
+                ecall" : : "r"(val1), "r"(val2), "r"((unsigned long long)syscall));
 }
 
 void do_syscall1(int syscall, long long val1){
-  asm volatile("movq %0, %%rdi; \
-                movq %1, %%rax; \
-                syscall" : : "r"(val1), "r"((unsigned long long)syscall));
+  asm volatile("mv a0, %0; \
+                mv a7, %1; \
+                ecall" : : "r"(val1), "r"((unsigned long long)syscall));
 }

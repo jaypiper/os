@@ -7,6 +7,7 @@
 #include <sem.h>
 #include <limits.h>
 #include <devices.h>
+#include <riscv.h>
 
 // #define PMM_DEBUG
 // #define KMT_DEBUG

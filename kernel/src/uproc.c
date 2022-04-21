@@ -103,9 +103,9 @@ static int uproc_fork(){
   new_task->as = as;
   pgtable_ucopy(cur_task->as->ptr, new_task->as->ptr);
   // fork return 0 in child
-  TOP_CONTEXT(new_task)->rax = 0;
-  TOP_CONTEXT(new_task)->cr3 = as->ptr;
-  TOP_CONTEXT(new_task)->rsp0 = TOP_CONTEXT(cur_task)->rsp0 - (uintptr_t)cur_task->kstack + (uintptr_t)new_task->kstack;
+  TOP_CONTEXT(new_task)->gpr[10] = 0;
+  TOP_CONTEXT(new_task)->satp = MAKE_SATP(as->ptr);
+  TOP_CONTEXT(new_task)->kernel_sp = TOP_CONTEXT(cur_task)->kernel_sp - (uintptr_t)cur_task->kstack + (uintptr_t)new_task->kstack;
   kmt_inserttask(new_task);
   return new_task->pid;
 }
@@ -177,7 +177,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   task->as = as;
   task->name = path;
 
-  TOP_CONTEXT(task)->rdi = (uintptr_t)(as->area.end - STACK_SIZE + STACK_START(task->stack) - task->stack);
+  TOP_CONTEXT(task)->gpr[10] = (uintptr_t)(as->area.end - STACK_SIZE + STACK_START(task->stack) - task->stack);
 
   modify_proc_info(task->pid, "name", (void*)task->name, strlen(task->name));
 
