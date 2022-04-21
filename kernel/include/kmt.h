@@ -36,8 +36,8 @@ typedef struct task{
 #define STACK_START_MAGIC 0x12345678
 #define STACK_END_MAGIC 0x9abcdef0
 
-#define STACK_END(stack) ((uintptr_t)stack + STACK_SIZE - 4)
-#define STACK_START(stack) ((uintptr_t)stack + 4)
+#define STACK_END(stack) ((uintptr_t)stack + STACK_SIZE - 8)
+#define STACK_START(stack) ((uintptr_t)stack + 8)
 #define STACK_END_FENCE(task) (uint32_t*)STACK_END(task)
 #define STACK_START_FENCE(task) (uint32_t*)task->stack
 
