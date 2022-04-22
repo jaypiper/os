@@ -19,6 +19,7 @@ MODULE(os) {
   void (*run)();
   Context *(*trap)(Event ev, Context *context);
   void (*on_irq)(int seq, int event, handler_t handler);
+  void (*test)();
 };
 
 MODULE(pmm) {

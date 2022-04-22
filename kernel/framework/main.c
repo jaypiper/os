@@ -13,6 +13,8 @@ int main() {
     os->init();
     vme_init(pgalloc, pgfree);
     __sync_synchronize();
+    init_satp();
+    os->test();
     printf("os init finished\n");
     init_finish = 1;
   } else{

@@ -51,6 +51,9 @@ static void os_init() {
   dev->init();
   vfs->init();
   uproc->init();
+}
+
+static void os_test(){
 #ifdef KMT_DEBUG
   void init_kmt_debug();
   init_kmt_debug();
@@ -124,6 +127,7 @@ MODULE_DEF(os) = {
   .run  = os_run,
   .trap = os_trap,
   .on_irq = os_on_irq,
+  .test = os_test,
 };
 
 void assert_dummy_func(){};
