@@ -23,5 +23,9 @@
 
 #define MAKE_SATP(pagetable) (SATP_SV39 | (((uint64_t)pagetable) >> 12))
 
+#define NO_RA 1
+#define NO_SP 2
+#define NO_TP 4
+#define NO_A0 10
 
 #endif

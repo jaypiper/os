@@ -8,7 +8,7 @@
 */
 static inline uintptr_t argraw(int n, Context* ctx){
   Assert(0 <= n && n <= 5, "argraw: invalid n %d\n", n);
-  return ctx->gpr[10 + n];  // a0-a5
+  return ctx->gpr[NO_A0 + n];  // a0-a5
 }
 
 int sys_chdir(Context* ctx){ // const char *path
@@ -132,7 +132,7 @@ Context* do_syscall(Event ev, Context* context){
   int (*sys_handler)() = syscalls[syscall_no];
   Assert(sys_handler, "invalid syscall 0x%x\n", syscall_no);
   int ret = sys_handler(context);
-  context->gpr[0] = ret;
+  context->gpr[NO_RA] = ret;
   return NULL;
 }
 
