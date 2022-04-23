@@ -157,7 +157,7 @@ Context* do_syscall(Event ev, Context* context){
   int (*sys_handler)() = syscalls[syscall_no];
   Assert(sys_handler, "invalid syscall 0x%x\n", syscall_no);
   int ret = sys_handler(context);
-  context->gpr[NO_RA] = ret;
+  context->gpr[NO_A0] = ret;
   return NULL;
 }
 
