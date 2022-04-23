@@ -36,13 +36,15 @@ typedef struct task{
 #define STACK_START_MAGIC 0x12345678
 #define STACK_END_MAGIC 0x9abcdef0
 
-#define STACK_END(stack) ((uintptr_t)stack + STACK_SIZE - 8)
-#define STACK_START(stack) ((uintptr_t)stack + 8)
+#define STACK_END(stack) ((uintptr_t)stack + STACK_SIZE)
+#define STACK_START(stack) ((uintptr_t)stack)
 #define STACK_END_FENCE(task) (uint32_t*)STACK_END(task)
 #define STACK_START_FENCE(task) (uint32_t*)task->stack
 
 #define IS_IDLE(task) (task == idle_task[cpu_current()])
 
+
+#if 0
 #define CHECK_TASK(task) IS_IDLE(task) || (((*STACK_START_FENCE(task) == STACK_START_MAGIC) \
                         && (*STACK_END_FENCE(task) == STACK_END_MAGIC)))
 
@@ -51,6 +53,10 @@ typedef struct task{
       *STACK_START_FENCE(task) = STACK_START_MAGIC; \
       *STACK_END_FENCE(task) = STACK_END_MAGIC; \
     } while(0)
+#else
+#define SET_TASK(task)
+#define CHECK_TASK(task)
+#endif
 
 typedef struct semaphore sem_t;
 
