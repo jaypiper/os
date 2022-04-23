@@ -9,7 +9,7 @@
 #define BUF_LEN 64
 static uint8_t buf[6][BUF_LEN];
 
-enum{ARG_NUM = 1, ARG_PTR};
+enum{ARG_NUM = 1, ARG_BUF, ARG_PTR};
 // TODO: add function for every arg type
 
 static inline void copy_from_user(Context* ctx, void* dst, uintptr_t user_addr, size_t count){
@@ -29,15 +29,20 @@ static inline uintptr_t argraw(int n, Context* ctx, int type){
   uintptr_t status;
   r_csr("sstatus", status);
 
-  if(((status & SSTATUS_SPP) == 0) && type == ARG_PTR){
-    copy_from_user(ctx, buf[n], ctx->gpr[NO_A0 + n], BUF_LEN);
-    return (uintptr_t)buf[n];
+  if((status & SSTATUS_SPP) == 0){
+    if(type == ARG_BUF){
+      copy_from_user(ctx, buf[n], ctx->gpr[NO_A0 + n], BUF_LEN);
+      return (uintptr_t)buf[n];
+    } else if(type == ARG_PTR){
+      uintptr_t pg_offset = ctx->gpr[NO_A0 + n] & (PGSIZE - 1);
+      return user_addr_translate(ctx->satp, ctx->gpr[NO_A0 + n] - pg_offset) + pg_offset;
+    }
   }
   return ctx->gpr[NO_A0 + n];  // a0-a5
 }
 
 int sys_chdir(Context* ctx){ // const char *path
-  uintptr_t path = argraw(0, ctx, ARG_PTR);
+  uintptr_t path = argraw(0, ctx, ARG_BUF);
   return vfs->chdir((char*)path);
 }
 
@@ -52,9 +57,9 @@ int sys_dup(Context* ctx){ // int oldfd
 }
 
 int sys_execve(Context* ctx){ // const char *pathname, char *const argv[], char *const envp[]
-  uintptr_t pathname = argraw(0, ctx, ARG_PTR);
-  uintptr_t argv = argraw(1, ctx, ARG_PTR);
-  uintptr_t envp = argraw(2, ctx, ARG_PTR);
+  uintptr_t pathname = argraw(0, ctx, ARG_BUF);
+  uintptr_t argv = argraw(1, ctx, ARG_BUF);
+  uintptr_t envp = argraw(2, ctx, ARG_BUF);
   return uproc->execve((char*)pathname, (char**)argv, (char**)envp);
 }
 
@@ -73,8 +78,8 @@ int sys_fstat(Context* ctx){ // int fd, struct stat *statbuf
 }
 
 int sys_link(Context* ctx){ // const char *oldpath, const char *newpath
-  uintptr_t oldpath = argraw(0, ctx, ARG_PTR);
-  uintptr_t newpath = argraw(1, ctx, ARG_PTR);
+  uintptr_t oldpath = argraw(0, ctx, ARG_BUF);
+  uintptr_t newpath = argraw(1, ctx, ARG_BUF);
   return vfs->link((char*)oldpath, (char*)newpath);
 }
 
@@ -86,12 +91,12 @@ int sys_lseek(Context* ctx){ // int fd, off_t offset, int whence
 }
 
 int sys_mkdir(Context* ctx){ // const char *pathname, mode_t mode
-  uintptr_t pathname = argraw(0, ctx, ARG_PTR);
+  uintptr_t pathname = argraw(0, ctx, ARG_BUF);
   return vfs->mkdir((char*)pathname);
 }
 
 int sys_mmap(Context* ctx){ // void *addr, size_t length, int prot, int flags, int fd, off_t offset
-  uintptr_t addr = argraw(0, ctx, ARG_PTR);
+  uintptr_t addr = argraw(0, ctx, ARG_NUM);
   uintptr_t size = argraw(1, ctx, ARG_NUM);
   int prot = argraw(2, ctx, ARG_NUM);
   int flags = argraw(3, ctx, ARG_NUM);
@@ -101,7 +106,7 @@ int sys_mmap(Context* ctx){ // void *addr, size_t length, int prot, int flags, i
 }
 
 int sys_open(Context* ctx){ // const char *pathname, int flags
-  uintptr_t pathname = argraw(0, ctx, ARG_PTR);
+  uintptr_t pathname = argraw(0, ctx, ARG_BUF);
   int flags = argraw(1, ctx, ARG_NUM);
   return vfs->open((char*)pathname, flags);
 }
@@ -114,19 +119,19 @@ int sys_read(Context* ctx){ // int fd, void *buf, size_t count
 }
 
 int sys_unlink(Context* ctx){ // const char *pathname
-  uintptr_t pathname = argraw(0, ctx, ARG_PTR);
+  uintptr_t pathname = argraw(0, ctx, ARG_BUF);
   return vfs->unlink((char*)pathname);
 }
 
 int sys_write(Context* ctx){ // int fd, const void *buf, size_t count
   int fd = argraw(0, ctx, ARG_NUM);
-  uintptr_t buf = argraw(1, ctx, ARG_PTR);
+  uintptr_t buf = argraw(1, ctx, ARG_BUF);
   uintptr_t count = argraw(2, ctx, ARG_NUM);
   return vfs->write(fd, (void*)buf, count);
 }
 
 int sys_brk(Context* ctx){ // void *addr
-  uintptr_t addr = argraw(0, ctx, ARG_PTR);
+  uintptr_t addr = argraw(0, ctx, ARG_NUM);
   return uproc->brk((void*)addr);
 }
 
