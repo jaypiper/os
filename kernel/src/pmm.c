@@ -293,10 +293,12 @@ MODULE_DEF(pmm) = {
 #ifdef PMM_DEBUG
 
 void check_alloc(void* ptr, size_t size){
+#if 0
   uint8_t* p = (uint8_t*)ptr;
   for(int i = 0; i < size; i++){
     Assert(p[i] != ALLOC_MAGIC, "double allocated at 0x%lx with size 0x%lx\n", ptr, size);
   }
+#endif
 }
 
 typedef struct pmm_workload{
