@@ -94,6 +94,9 @@ void kmt_init(){
   spin_init(&task_lock, "task lock");
   memset(running_task, 0, sizeof(running_task));
   memset(last_task, 0, sizeof(last_task));
+  memset(all_task, 0, sizeof(all_task));
+  memset(idle_task, 0, sizeof(idle_task));
+  memset(fork_context, 0, sizeof(fork_context));
   head = NULL;
   os->on_irq(INT_MIN, EVENT_NULL, kmt_context_save);
   os->on_irq(INT_MAX, EVENT_NULL, kmt_schedule);
@@ -108,10 +111,9 @@ void kmt_init(){
     idle_task[i]->int_depth = 0;
     idle_task[i]->wait_next = NULL;
     idle_task[i]->blocked = 0;
+    idle_task[i]->pid = 0;
     spin_init(&idle_task[i]->lock, "idle");
   }
-  memset(running_task, 0, sizeof(running_task));
-  memset(fork_context, 0, sizeof(fork_context));
   extern void vfs_proc_init();
   vfs_proc_init();
 }
