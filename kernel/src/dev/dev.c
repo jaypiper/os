@@ -40,8 +40,8 @@ static void dev_init() {
 
   DEVICES(INIT);
 
-  kmt->create(pmm->alloc(sizeof(task_t)), "input-task", dev_input_task, NULL);
-  kmt->create(pmm->alloc(sizeof(task_t)), "tty-task",   dev_tty_task,   NULL);
+  // kmt->create(pmm->alloc(sizeof(task_t)), "input-task", dev_input_task, NULL);
+  // kmt->create(pmm->alloc(sizeof(task_t)), "tty-task",   dev_tty_task,   NULL);
 
   extern void vfs_dev_init();
   vfs_dev_init();

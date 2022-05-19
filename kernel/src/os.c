@@ -14,18 +14,18 @@ cpu_t* get_cpu(){
   return ret;
 }
 #ifndef UPROC_DEBUG
-static void tty_reader(void *arg) {
-  device_t *tty = dev->lookup(arg);
-  char cmd[128], resp[128], ps[16];
-  sprintf(ps, "(%s) $ ", arg);
-  while (1) {
-    tty->ops->write(tty, 0, ps, strlen(ps));
-    int nread = tty->ops->read(tty, 0, cmd, sizeof(cmd) - 1);
-    cmd[nread] = '\0';
-    sprintf(resp, "tty reader task: got %d character(s).\n", strlen(cmd));
-    tty->ops->write(tty, 0, resp, strlen(resp));
-  }
-}
+// static void tty_reader(void *arg) {
+//   device_t *tty = dev->lookup(arg);
+//   char cmd[128], resp[128], ps[16];
+//   sprintf(ps, "(%s) $ ", arg);
+//   while (1) {
+//     tty->ops->write(tty, 0, ps, strlen(ps));
+//     int nread = tty->ops->read(tty, 0, cmd, sizeof(cmd) - 1);
+//     cmd[nread] = '\0';
+//     sprintf(resp, "tty reader task: got %d character(s).\n", strlen(cmd));
+//     tty->ops->write(tty, 0, resp, strlen(resp));
+//   }
+// }
 #endif
 #ifdef VFS_DEBUG
 static void vfs_test(void* args){
@@ -74,8 +74,8 @@ static void os_test(){
   void uproc_test();
   kmt->create(task_alloc(), "uproc test", uproc_test, NULL);
 #else
-  kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
-  kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");
+  // kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
+  // kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");
 #endif
 }
 
