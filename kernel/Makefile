@@ -1,6 +1,6 @@
 NAME           := kernel
-SRCS           := framework/main.c $(shell find -L ./src/ ./test/ -name "*.c")
-INC_PATH       := include/ framework/ ../include
+SRCS           := framework/main.c $(shell find -L ./src/ ./test/ ./klib/ ./am/ -name "*.[c|S]")
+INC_PATH       := include/ framework/ ../include klib/include
 PWD := $(shell pwd)
 
 # export AM_HOME := $(PWD)/../abstract-machine
