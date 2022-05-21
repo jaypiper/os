@@ -10,7 +10,7 @@ export ARCH    := riscv64-mycpu
 endif
 AM_HOME = $(PWD)/..
 include $(AM_HOME)/Makefile
-include ../Makefile.lab
+
 # image:
 
 mkfs:
