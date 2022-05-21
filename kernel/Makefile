@@ -1,13 +1,14 @@
 NAME           := kernel
 SRCS           := framework/main.c $(shell find -L ./src/ ./test/ -name "*.c")
 INC_PATH       := include/ framework/
+PWD := $(shell pwd)
 
 # export AM_HOME := $(PWD)/../abstract-machine
 ifeq ($(ARCH),)
 export ARCH    := riscv64-mycpu
 # export ARCH    := x86_64-qemu
 endif
-
+AM_HOME = $(PWD)/../abstract-machine
 include $(AM_HOME)/Makefile
 include ../Makefile.lab
 # image:
