@@ -9,24 +9,24 @@ CFLAGS        += $(COMMON_FLAGS) -static
 ASFLAGS       += $(COMMON_FLAGS) -O0
 LDFLAGS       += -melf64lriscv
 
-AM_SRCS := mycpu/start.S \
-           mycpu/trm.c \
-           mycpu/libgcc/muldi3.S \
-           mycpu/libgcc/div.S \
-           mycpu/ioe.c \
-           mycpu/timer.c \
-           mycpu/input.c \
-           mycpu/cte.c \
-           mycpu/trap.S \
-           mycpu/vme.c \
-           mycpu/mpe.c \
-           mycpu/uart.c \
-					 mycpu/disk.c \
-					 mycpu/gpu.c
+AM_SRCS := start.S \
+           trm.c \
+           libgcc/muldi3.S \
+           libgcc/div.S \
+           ioe.c \
+           timer.c \
+           input.c \
+           cte.c \
+           trap.S \
+           vme.c \
+           mpe.c \
+           uart.c \
+					 disk.c \
+					 gpu.c
 
 CFLAGS    += -fdata-sections -ffunction-sections
-CFLAGS += -I$(AM_HOME)/am/src/mycpu/include
-LDFLAGS   += -T $(AM_HOME)/scripts/mycpu.ld --defsym=_stack_pointer=0x80100000 --defsym=_pmem_start=0x80000000
+CFLAGS += -I$(AM_HOME)/am/src/include
+LDFLAGS   += -T $(AM_HOME)/mycpu.ld --defsym=_stack_pointer=0x80100000 --defsym=_pmem_start=0x80000000
 ifdef FLASH
   LDFLAGS += --defsym=_addr_start=0x30000000
 else

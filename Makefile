@@ -25,7 +25,7 @@ ifeq ($(wildcard $(AM_HOME)/am/include/am.h),)
 endif
 
 ### Check: environment variable `$ARCH` must be in the supported list
-ARCHS = $(basename $(notdir $(shell ls $(AM_HOME)/scripts/*.mk)))
+ARCHS = $(basename $(notdir $(shell ls $(AM_HOME)/*.mk)))
 ifeq ($(filter $(ARCHS), $(ARCH)), )
   $(error Expected $$ARCH in {$(ARCHS)}, Got "$(ARCH)")
 endif
@@ -95,7 +95,7 @@ ASFLAGS  += -MMD $(INCFLAGS)
 ## 4. Arch-Specific Configurations
 
 ### Paste in arch-specific configurations (e.g., from `scripts/x86_64-qemu.mk`)
--include $(AM_HOME)/scripts/$(ARCH).mk
+-include $(AM_HOME)/$(ARCH).mk
 
 ### Fall back to native gcc/binutils if there is no cross compiler
 ifeq ($(wildcard $(shell which $(CC))),)
