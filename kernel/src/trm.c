@@ -2,7 +2,7 @@
 #include <klib-macros.h>
 #include <uart.h>
 #include <riscv64.h>
-
+#include <device.h>
 extern char _heap_start;
 int main(const char *args);
 
@@ -17,7 +17,7 @@ Area heap = RANGE(&_heap_start, PMEM_END);
 static const char mainargs[] = MAINARGS;
 
 void putch(char ch) {
-  drv_uart_putc(ch);
+  uarths_putchar(ch);
 }
 
 void halt(int code) {

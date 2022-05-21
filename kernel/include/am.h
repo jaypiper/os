@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <sys/mman.h>
+#include <device.h>
+
 #include ARCH_H // this macro is defined in $CFLAGS
                 // examples: "arch/x86-qemu.h", "arch/native.h", ...
 
