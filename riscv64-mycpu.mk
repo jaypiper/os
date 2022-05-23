@@ -24,13 +24,16 @@ AM_SRCS := start.S \
 					 disk.c \
 					 gpu.c
 
+RUSTSBI_SIZE = 128k
+RUSTSBI = ./bootloader/rustsbi-k210.bin
+
 CFLAGS    += -fdata-sections -ffunction-sections
 CFLAGS += -I$(AM_HOME)/am/src/include
 LDFLAGS   += -T $(AM_HOME)/mycpu.ld --defsym=_pmem_start=0x80000000
 ifdef FLASH
   LDFLAGS += --defsym=_addr_start=0x30000000
 else
-  LDFLAGS += --defsym=_addr_start=0x80000000
+  LDFLAGS += --defsym=_addr_start=0x80020000
 endif
 LDFLAGS   += --gc-sections -e _start
 CFLAGS += -DMAINARGS=\"$(mainargs)\" -DNCPU=1
@@ -46,4 +49,6 @@ image: $(IMAGE).elf
 	@( cat $(IMAGE).bin; head -c 1024 /dev/zero) > $(IMAGE)
 
 all: image
-	cp $(IMAGE).bin os.bin
+	cp $(RUSTSBI) os.bin
+	dd if=$(IMAGE).bin of=os.bin bs=$(RUSTSBI_SIZE) seek=1
+	$(OBJDUMP) -D -b binary -m riscv os.bin > build/os.asm
