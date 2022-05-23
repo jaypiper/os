@@ -6,7 +6,7 @@
 typedef struct mm_area {
   uintptr_t start, end;
   int fd, prot, flags;
-  off_t offset;
+  size_t offset;
 }mm_area_t;
 
 struct page {

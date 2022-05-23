@@ -83,7 +83,7 @@ int sys_link(Context* ctx){ // const char *oldpath, const char *newpath
   return vfs->link((char*)oldpath, (char*)newpath);
 }
 
-int sys_lseek(Context* ctx){ // int fd, off_t offset, int whence
+int sys_lseek(Context* ctx){ // int fd, size_t offset, int whence
   int fd = argraw(0, ctx, ARG_NUM);
   int offset = argraw(1, ctx, ARG_NUM);
   int whence = argraw(2, ctx, ARG_NUM);
@@ -95,7 +95,7 @@ int sys_mkdir(Context* ctx){ // const char *pathname, mode_t mode
   return vfs->mkdir((char*)pathname);
 }
 
-int sys_mmap(Context* ctx){ // void *addr, size_t length, int prot, int flags, int fd, off_t offset
+int sys_mmap(Context* ctx){ // void *addr, size_t length, int prot, int flags, int fd, size_t offset
   uintptr_t addr = argraw(0, ctx, ARG_NUM);
   uintptr_t size = argraw(1, ctx, ARG_NUM);
   int prot = argraw(2, ctx, ARG_NUM);

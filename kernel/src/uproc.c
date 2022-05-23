@@ -2,7 +2,6 @@
 #include <kmt.h>
 #include <uproc.h>
 #include <elf.h>
-#include <sys/mman.h>
 #include <user.h>
 
 void *pgalloc(int size) {
@@ -31,7 +30,7 @@ Context* handle_pagefault(Event ev, Context* ctx){
       void* pa = pgalloc(PGSIZE);
       if(!(mm->flags & MAP_ANONYMOUS)){
         Assert(cur_task->ofiles[mm->fd], "handle_pagefault: fd %d is not open\n", mm->fd);
-        off_t start_offset = mm->offset + MAX(0, (uintptr_t)pg_addr - mm->start); // 
+        size_t start_offset = mm->offset + MAX(0, (uintptr_t)pg_addr - mm->start);
         uintptr_t start_pa = start_offset == mm->offset ? mm->start - (uintptr_t)pg_addr : 0;
         uintptr_t end_pa = (uintptr_t)pg_addr == ROUNDDOWN(mm->end, PGSIZE) ? mm->end - (uintptr_t)pg_addr : PGSIZE;
         Assert(start_pa >= 0 && start_pa < PGSIZE && end_pa >= 0 && end_pa <= PGSIZE, "handle_pagefault: start 0x%lx end 0x%lx\n", start_pa, end_pa);
@@ -53,7 +52,7 @@ static void uproc_init(){
   os->on_irq(0, EVENT_PAGEFAULT, handle_pagefault);
 }
 
-static int uproc_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset){
+static int uproc_mmap(void *addr, size_t len, int prot, int flags, int fd, size_t offset){
   task_t* task = kmt->gettask();
   for(int i = 0; i < MAX_MMAP_NUM; i++){
     if(!task->mmaps[i]){

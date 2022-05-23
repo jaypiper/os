@@ -3,7 +3,7 @@
 .DEFAULT_GOAL = build-arg
 
 RV_ARCH       = rv64gc
-CROSS_COMPILE := riscv64-linux-gnu-
+CROSS_COMPILE := riscv64-unknown-elf-
 COMMON_FLAGS  := -fno-pic -march=$(RV_ARCH) -mcmodel=medany
 CFLAGS        += $(COMMON_FLAGS) -static
 ASFLAGS       += $(COMMON_FLAGS) -O0
