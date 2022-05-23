@@ -45,3 +45,5 @@ image: $(IMAGE).elf
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 	@( cat $(IMAGE).bin; head -c 1024 /dev/zero) > $(IMAGE)
 
+all: image
+	cp $(IMAGE).bin os.bin
