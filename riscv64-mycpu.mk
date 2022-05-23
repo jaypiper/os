@@ -26,7 +26,7 @@ AM_SRCS := start.S \
 
 CFLAGS    += -fdata-sections -ffunction-sections
 CFLAGS += -I$(AM_HOME)/am/src/include
-LDFLAGS   += -T $(AM_HOME)/mycpu.ld --defsym=_stack_pointer=0x80100000 --defsym=_pmem_start=0x80000000
+LDFLAGS   += -T $(AM_HOME)/mycpu.ld --defsym=_pmem_start=0x80000000
 ifdef FLASH
   LDFLAGS += --defsym=_addr_start=0x30000000
 else
