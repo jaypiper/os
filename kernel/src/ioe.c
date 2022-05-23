@@ -42,7 +42,7 @@ bool ioe_init() {
     if (!lut[i]) lut[i] = fail;
   // __am_timer_init();
 
-  virt_uart_init();  // init timer in trm_init
+  // virt_uart_init();  // init timer in trm_init
 
   return true;
 }

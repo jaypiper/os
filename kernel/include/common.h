@@ -8,6 +8,7 @@
 #include <limits.h>
 #include <devices.h>
 #include <riscv.h>
+#include <device.h>
 
 // #define PMM_DEBUG
 // #define KMT_DEBUG
