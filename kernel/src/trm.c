@@ -91,8 +91,8 @@ void _trm_init() {
 
   // configure Physical Memory Protection to give supervisor mode
   // access to all of physical memory.
-  w_csr("pmpaddr0", 0x3fffffffffffffull);
-  w_csr("pmpcfg0", 0xf);
+  // w_csr("pmpaddr0", 0x3fffffffffffffull);
+  // w_csr("pmpcfg0", 0xf);
 
   // ask for clock interrupts.
   timerinit();
