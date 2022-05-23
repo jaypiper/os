@@ -8,7 +8,6 @@
 void *pgalloc(int size) {
   Assert((size % PGSIZE) == 0, "pgalloc: invalid size %ld\n", size);
   void* ret = pmm->alloc(size);
-  memset(ret, 0, size);
   return ret;
 }
 
