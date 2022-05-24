@@ -19,7 +19,8 @@ extern char _addr_start;
 static const struct vm_area vm_areas[] = {
   { RANGE(0x2000000000, 0x4000000000), 0 },
   // { RANGE(0x0000000000, 0x100000000), 1 },
-  {RANGE((uintptr_t)&_addr_start, (uintptr_t)&_addr_start + 6 * 1024 * 1024), 1},
+  {RANGE((uintptr_t)0x80000000, (uintptr_t)0x80000000 + 6 * 1024 * 1024), 1},
+  {RANGE((uintptr_t)0x38000000, (uintptr_t)0x38002000), 1}, // UARTUS
 };
 
 #define uvm_area (vm_areas[0].area)
