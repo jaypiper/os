@@ -19,8 +19,9 @@ Context* __am_irq_handle(Context *c) {
         ev.event = EVENT_IRQ_TIMER; break;
 
       case IRQ(S_SOFT): MSG("S-soft timer interrupt");
-        ev.event = EVENT_IRQ_TIMER;
+        c->epc += 4;
         r_csr("sip", sip); w_csr("sip", sip & ~2);
+        ev.event = EVENT_YIELD; break;
         break;
 
       case IRQ(S_EXT): MSG("S-mode ext interrupt");
@@ -112,7 +113,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
 }
 
 void yield() {
-  asm volatile("li a7, -1; ecall");
+  asm volatile("li a7, 0x12345678; ecall");
 }
 
 bool ienabled() {
