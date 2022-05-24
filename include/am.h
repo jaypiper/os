@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include ARCH_H // this macro is defined in $CFLAGS
                 // examples: "arch/x86-qemu.h", "arch/native.h", ...
+#include <sbi.h>
 
 // Memory protection flags
 #define MMAP_NONE  0x00000000 // no access

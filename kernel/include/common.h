@@ -9,6 +9,7 @@
 #include <devices.h>
 #include <riscv.h>
 #include <device.h>
+#include <riscv.h>
 
 // #define PMM_DEBUG
 // #define KMT_DEBUG

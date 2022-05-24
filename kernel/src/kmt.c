@@ -5,6 +5,8 @@
 
 static task_t* head = NULL;
 
+extern void set_timer();
+
 static task_t* running_task[MAX_CPU];
 static task_t* idle_task[MAX_CPU];
 static task_t* last_task[MAX_CPU];
@@ -33,6 +35,7 @@ static inline void set_current_task(task_t* task){
 
 static Context* kmt_context_save(Event ev, Context * ctx){
   Assert(ctx, "saved NULL context in event %d", ev.event);
+  if(ev.event == EVENT_IRQ_TIMER) set_timer();
   if(!CURRENT_TASK) set_current_task(CURRENT_IDLE);
 
   Assert(TASK_STATE_VALID(RUN_STATE(CURRENT_TASK)), "in context save, task %s state %d invalid", CURRENT_TASK->name, RUN_STATE(CURRENT_TASK));

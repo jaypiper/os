@@ -14,6 +14,8 @@ Context* __am_irq_handle(Context *c) {
     switch (c->cause) {
       case IRQ(M_TIMER): MSG("M-mode timer interrupt");
         ev.event = EVENT_IRQ_TIMER; break;
+      case IRQ(S_TIMER): MSG("S-mode timer interrupt");
+        ev.event = EVENT_IRQ_TIMER; break;
 
       case IRQ(S_SOFT): MSG("S-soft timer interrupt");
         ev.event = EVENT_IRQ_TIMER;
@@ -78,15 +80,17 @@ Context* __am_irq_handle(Context *c) {
 }
 
 extern void kernel_trap(void);
-
+extern void set_timer();
 
 bool cte_init(Context*(*handler)(Event, Context*)) {
   // initialize exception entry
   asm volatile("csrw stvec, %0" : : "r"(kernel_trap));
-
+  uintptr_t x;
+  r_csr("sie", x);
+  w_csr("sie", x | SIE_SEIE | SIE_STIE | SIE_SSIE);
   // register event handler
   if(handler) user_handler = handler;
-
+  set_timer();
   return true;
 }
 
