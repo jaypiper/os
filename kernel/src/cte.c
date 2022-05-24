@@ -15,6 +15,7 @@ Context* __am_irq_handle(Context *c) {
       case IRQ(M_TIMER): MSG("M-mode timer interrupt");
         ev.event = EVENT_IRQ_TIMER; break;
       case IRQ(S_TIMER): MSG("S-mode timer interrupt");
+        r_csr("sip", sip); w_csr("sip", sip & ~32);
         ev.event = EVENT_IRQ_TIMER; break;
 
       case IRQ(S_SOFT): MSG("S-soft timer interrupt");
