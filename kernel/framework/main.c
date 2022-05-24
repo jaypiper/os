@@ -8,7 +8,6 @@ volatile static int init_finish = 0;
 
 int main() {
   if(cpu_current() == 0){
-    uarths_init();
     printf("Hello OS!\n");
     ioe_init();
     cte_init(os->trap);

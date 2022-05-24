@@ -64,45 +64,11 @@ void timerinit() {
 }
 
 
-void _trm_init() {
+void _trm_init(int hartid) {
 
   // virt_uart_init();
 #ifdef OS
-  // set M Previous Privilege mode to Supervisor, for mret.
-  unsigned long x;
-  r_csr("mstatus", x);
-  x &= ~MSTATUS_MPP_MASK;
-  x |= MSTATUS_MPP_S;
-  w_csr("mstatus", x);
-
-  // set M Exception Program Counter to main, for mret.
-  // requires gcc -mcmodel=medany
-  w_csr("mepc", (uint64_t)main);
-
-  // disable paging for now.
-  w_csr("satp", 0);
-
-  // delegate all interrupts and exceptions to supervisor mode.
-  w_csr("medeleg", 0xffff);
-  w_csr("mideleg", 0xffff);
-
-  r_csr("sie", x);
-  w_csr("sie", x | SIE_SEIE | SIE_STIE | SIE_SSIE);
-
-  // configure Physical Memory Protection to give supervisor mode
-  // access to all of physical memory.
-  // w_csr("pmpaddr0", 0x3fffffffffffffull);
-  // w_csr("pmpcfg0", 0xf);
-
-  // ask for clock interrupts.
-  timerinit();
-
-  // keep each CPU's hartid in its tp register, for cpuid().
-  int id;
-  r_csr("mhartid", id);
-  w_gpr("tp", id);
-
-  asm volatile ("mret");
+  w_gpr("tp", hartid);
 #endif
 
   int ret = main(mainargs);

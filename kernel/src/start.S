@@ -4,14 +4,8 @@
 
 _start:
   mv s0, zero
-  csrr tp, mhartid
-  beqz tp, cpu0_init
-  j cpu1_init
-
-cpu0_init:
   la sp, _stack_pointer
+  slli t0, a0, 12
+  add sp, sp, t0
+
   jal _trm_init
-
-
-cpu1_init:
-  j cpu1_init
