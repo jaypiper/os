@@ -8,7 +8,7 @@ int main(const char *args);
 
 extern char _addr_start;
 #define PMEM_SIZE (6 * 1024 * 1024)
-#define PMEM_END  ((uintptr_t)&_addr_start + PMEM_SIZE)
+#define PMEM_END  ((uintptr_t)0x80000000 + PMEM_SIZE)
 
 Area heap = RANGE(&_heap_start, PMEM_END);
 #ifndef MAINARGS
