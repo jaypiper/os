@@ -51,4 +51,5 @@ image: $(IMAGE).elf
 all: image
 	cp $(RUSTSBI) os.bin
 	dd if=$(IMAGE).bin of=os.bin bs=$(RUSTSBI_SIZE) seek=1
+	mkdir -p build
 	$(OBJDUMP) -D -b binary -m riscv os.bin > build/os.asm
