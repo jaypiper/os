@@ -25,7 +25,7 @@ AM_SRCS := start.S \
 					 gpu.c
 
 RUSTSBI_SIZE = 128k
-RUSTSBI = ./bootloader/rustsbi-k210.bin
+RUSTSBI = ./bootloader/rustsbi-k210
 
 CFLAGS    += -fdata-sections -ffunction-sections
 CFLAGS += -I$(AM_HOME)/am/src/include
@@ -49,7 +49,7 @@ image: $(IMAGE).elf
 	@( cat $(IMAGE).bin; head -c 1024 /dev/zero) > $(IMAGE)
 
 all: image
-	cp $(RUSTSBI) os.bin
+	$(OBJCOPY) $(RUSTSBI) --strip-all -O binary os.bin
 	dd if=$(IMAGE).bin of=os.bin bs=$(RUSTSBI_SIZE) seek=1
 	mkdir -p build
 	$(OBJDUMP) -D -b binary -m riscv os.bin > build/os.asm
