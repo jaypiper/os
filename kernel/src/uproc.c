@@ -214,6 +214,7 @@ void uproc_test(){
     "/a.txt",
     0
   };
+  printf("execve %s %s %s %s\n", path, args[0], args[1], args[2]);
   do_syscall3(SYS_EXECVE, (uintptr_t)path, (uintptr_t)args, 0);
 
   Assert(0, "should not reach here\n");

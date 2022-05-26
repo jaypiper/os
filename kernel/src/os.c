@@ -47,10 +47,14 @@ static void os_init() {
   handlers_sorted = NULL;
   spin_init(&handler_lock, "handler lock");
   pmm->init();
+  printf("pmm init finished\n");
   kmt->init();
+  printf("kmt init finished\n");
   dev->init();
   vfs->init();
+  printf("vfs init finished\n");
   uproc->init();
+  printf("uproc init finished\n");
 }
 
 static void os_test(){
