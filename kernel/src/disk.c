@@ -1,4 +1,5 @@
 #include <am.h>
+#include <sdcard.h>
 
 #define BLKSZ  512
 #define DISKSZ (64 << 20)
@@ -15,19 +16,15 @@ void disk_status(AM_DISK_STATUS_T *status) {
 }
 
 void disk_blkio(AM_DISK_BLKIO_T *bio) {
-  uint32_t blkno = bio->blkno, remain = bio->blkcnt;
-  uint64_t *ptr = bio->buf;
-  uint64_t *db = (uint64_t *)DISK_START;
-  for (remain = bio->blkcnt; remain; remain--, blkno++) {
-    int start = blkno * BLKSZ / 8;
+  uint32_t blkno = bio->blkno, blkcnt = bio->blkcnt;
+  uint8_t *ptr = bio->buf;
+  while(blkcnt --){
     if (bio->write) {
-      for (int i = 0; i < BLKSZ / 8; i ++){
-        db[start + i] = *ptr++;
-      }
-    } else {
-      for (int i = 0; i < BLKSZ / 8; i ++){
-        *ptr++ = db[start + i];
-      }
+      sdcard_write_sector(ptr, blkno);
+    } else{
+      sdcard_read_sector(ptr, blkno);
     }
+    ptr += BLKSZ;
   }
+
 }

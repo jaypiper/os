@@ -3,8 +3,8 @@
 
 #ifndef __ISA_NATIVE__
 
-void __dso_handle() {
-}
+// void __dso_handle() {
+// }
 
 void __cxa_guard_acquire() {
 }

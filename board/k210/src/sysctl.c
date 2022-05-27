@@ -16,6 +16,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+
 #include "bsp.h"
 #include "encoding.h"
 #include "string.h"
@@ -1792,7 +1794,7 @@ uint32_t sysctl_pll_set_freq(sysctl_pll_t pll, uint32_t pll_freq)
     if(pll == SYSCTL_PLL0)
     {
         sysctl_clock_set_clock_select(SYSCTL_CLOCK_SELECT_ACLK, SYSCTL_SOURCE_PLL0);
-        uart_debug_init(-1);
+        // uart_debug_init(-1);
     }
     return result;
 }

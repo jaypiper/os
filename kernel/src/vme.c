@@ -16,11 +16,43 @@ const struct mmu_config mmu = {
 
 extern char _addr_start;
 
+// k210 peripherals
+// (0x0200_0000, 0x1000),      /* CLINT     */
+// (0x0C20_0000, 0x1000),      /* PLIC      */
+// (0x3800_0000, 0x1000),      /* UARTHS    */
+// (0x3800_1000, 0x1000),      /* GPIOHS    */
+// (0x5020_0000, 0x1000),      /* GPIO      */
+// (0x5024_0000, 0x1000),      /* SPI_SLAVE */
+// (0x502B_0000, 0x1000),      /* FPIOA     */
+// (0x502D_0000, 0x1000),      /* TIMER0    */
+// (0x502E_0000, 0x1000),      /* TIMER1    */
+// (0x502F_0000, 0x1000),      /* TIMER2    */
+// (0x5044_0000, 0x1000),      /* SYSCTL    */
+// (0x5200_0000, 0x1000),      /* SPI0      */
+// (0x5300_0000, 0x1000),      /* SPI1      */
+// (0x5400_0000, 0x1000),      /* SPI2      */
+// (0x8000_0000, 0x600000),    /* Memory    */
+
 static const struct vm_area vm_areas[] = {
   { RANGE(0x2000000000, 0x4000000000), 0 },
   // { RANGE(0x0000000000, 0x100000000), 1 },
   {RANGE((uintptr_t)0x80000000, (uintptr_t)0x80000000 + 6 * 1024 * 1024), 1},
-  {RANGE((uintptr_t)0x38000000, (uintptr_t)0x38002000), 1}, // UARTUS
+  {RANGE((uintptr_t)0x02000000, (uintptr_t)0x02000000 + 0x1000), 1},  // CLINT
+  {RANGE((uintptr_t)0x0C200000, (uintptr_t)0x0C200000 + 0x1000), 1},  // PLIC
+  {RANGE((uintptr_t)0x38000000, (uintptr_t)0x38001000), 1},           // UARTHS
+  {RANGE((uintptr_t)0x38001000, (uintptr_t)0x38001000 + 0x1000), 1},  // GPIOHS
+  {RANGE((uintptr_t)0x50000000, (uintptr_t)0x50000000 + 0x1000), 1},  // DMAC
+  {RANGE((uintptr_t)0x50200000, (uintptr_t)0x50200000 + 0x1000), 1},  // GPIO
+  {RANGE((uintptr_t)0x50240000, (uintptr_t)0x50240000 + 0x1000), 1},  // SPI-slave
+  {RANGE((uintptr_t)0x502B0000, (uintptr_t)0x502B0000 + 0x1000), 1},  // FPIOA
+  {RANGE((uintptr_t)0x502D0000, (uintptr_t)0x502D0000 + 0x1000), 1},  // TIMER0
+  {RANGE((uintptr_t)0x502E0000, (uintptr_t)0x502E0000 + 0x1000), 1},  // TIMER1
+  {RANGE((uintptr_t)0x502F0000, (uintptr_t)0x502F0000 + 0x1000), 1},  // TIMER2
+  {RANGE((uintptr_t)0x50440000, (uintptr_t)0x50440000 + 0x1000), 1},  // SYSCTL
+  {RANGE((uintptr_t)0x52000000, (uintptr_t)0x52000000 + 0x1000), 1},  // SPI0
+  {RANGE((uintptr_t)0x53000000, (uintptr_t)0x53000000 + 0x1000), 1},  // SPI1
+  {RANGE((uintptr_t)0x54000000, (uintptr_t)0x54000000 + 0x1000), 1},  // SPI2
+
 };
 
 #define uvm_area (vm_areas[0].area)
