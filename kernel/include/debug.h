@@ -21,12 +21,10 @@ void assert_dummy_func();
 #define Assert(cond, ...) \
   do { \
     if (!(cond)) { \
-      iset(false); \
+      iset(0); \
       printf("\33[1;31m [%d]", cpu_current()); \
       printf(__VA_ARGS__); \
       printf("\33[0m\n"); \
-      assert_dummy_func(); \
-      assert(cond); \
       halt(-1); \
     } \
   } while (0)
