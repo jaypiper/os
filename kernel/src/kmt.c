@@ -117,8 +117,6 @@ void kmt_init(){
     idle_task[i]->pid = 0;
     spin_init(&idle_task[i]->lock, "idle");
   }
-  extern void vfs_proc_init();
-  vfs_proc_init();
 }
 
 static inline int get_empty_pid(){
@@ -143,8 +141,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->as = NULL;
   memset(task->ofiles, 0, sizeof(task->ofiles));
   memset(task->mmaps, 0, sizeof(task->mmaps));
-  task->cwd_inode_no = ROOT_INODE_NO;
-  task->cwd_type = CWD_UFS;
+  init_task_cwd(task);
   spin_init(&task->lock, name);
   SET_TASK(task);
 
@@ -153,7 +150,6 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->pid = pid;
   all_task[pid] = task;
   fill_standard_fd(task);
-  new_proc_init(pid, name);
   spin_unlock(&task_lock);
   return 0;
 }
@@ -207,7 +203,7 @@ void kmt_teardown(task_t *task){
   spin_lock(&task_lock);
   Assert(!task->blocked, "blocked task should not be teardown");
   int pid = task->pid;
-  delete_proc(pid);
+
   Assert(all_task[pid] == task, "teardown: task with pid %d mismatched", pid);
   all_task[pid] = NULL;
   Context* free_context = fork_context[pid];
@@ -249,7 +245,6 @@ void kmt_inserttask(task_t* newtask){
   newtask->pid = pid;
   all_task[pid] = newtask;
 
-  new_proc_init(pid, newtask->name);
   spin_unlock(&task_lock);
 }
 

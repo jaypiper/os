@@ -7,10 +7,11 @@
 #define SEEK_SET  1
 #define SEEK_END  2
 
-#define O_RDONLY  00000000
-#define O_WRONLY  00000001
-#define O_RDWR    00000002
-#define O_CREAT   00000100
+#define O_RDONLY  0x000
+#define O_WRONLY  0x001
+#define O_RDWR    0x002
+#define O_APPEND  0x004
+#define O_CREAT   0x200
 
 #define PROT_READ        0x1                /* Page can be read.  */
 #define PROT_WRITE        0x2                /* Page can be written.  */

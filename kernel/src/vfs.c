@@ -3,6 +3,7 @@
 #include <vfs.h>
 #include <user.h>
 #include <dev_sim.h>
+#ifndef FS_FAT32
 static superblock_t* sb;
 static fslog_t* log;
 static device_t* dev_sd;
@@ -1138,5 +1139,7 @@ void vfs_readFileList(int root_idx, int depth){
 	}
 }
 
+
+#endif
 
 #endif

@@ -93,7 +93,7 @@ static int uproc_fork(){
 
   new_task->kstack = pmm->alloc(STACK_SIZE);
   memcpy(new_task->kstack, cur_task->kstack, STACK_SIZE);
-  new_task->cwd_inode_no = cur_task->cwd_inode_no;
+  new_task->cwd = dup_dirent(cur_task->cwd);
   new_task->cwd_type = cur_task->cwd_type;
   new_task->max_brk = cur_task->max_brk;
   // copy pagetable
@@ -178,7 +178,6 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
 
   TOP_CONTEXT(task)->gpr[NO_A0] = (uintptr_t)(as->area.end - STACK_SIZE + STACK_START(task->stack) - task->stack);
 
-  modify_proc_info(task->pid, "name", (void*)task->name, strlen(task->name));
 
   free_pages(oldas);
   return 0;

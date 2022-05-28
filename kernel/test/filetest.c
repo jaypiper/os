@@ -4,6 +4,8 @@
 
 /* based on xv6 usertest.c */
 
+#define BLK_SIZE 512
+
 int bigfile(char *s){
   char buf[BLK_SIZE];
 

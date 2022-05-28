@@ -1,6 +1,8 @@
 #ifndef OS_VFS_H
 #define OS_VFS_H
 
+#ifndef FS_FAT32
+
 #define MB << 20
 #define KB << 10
 
@@ -151,5 +153,7 @@ int invalid_lseek(ofile_info_t* ofile, int fd, int offset, int whence);
 
 ofile_info_t* filedup(ofile_info_t* ofile);
 void fileclose(ofile_info_t* ofile);
+
+#endif
 
 #endif

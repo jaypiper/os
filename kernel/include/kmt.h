@@ -2,7 +2,7 @@
 #define OS_KMT_H
 #include <sem.h>
 #include <common.h>
-#include <vfs.h>
+#include <fat32.h>
 #include <uproc.h>
 
 enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUNNABLE, TASK_DEAD};
@@ -25,9 +25,9 @@ typedef struct task{
   void* stack;
   void* kstack;
   void* max_brk;
-  ofile_info_t* ofiles[MAX_OPEN_FILE];
+  ofile_t* ofiles[MAX_OPEN_FILE];
   mm_area_t* mmaps[MAX_MMAP_NUM];
-  int cwd_inode_no;
+  dirent_t* cwd;
   int cwd_type;
   AddrSpace* as;
 }task_t;

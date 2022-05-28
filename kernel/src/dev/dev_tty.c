@@ -319,7 +319,7 @@ void dev_tty_task(void *arg) {
   }
 }
 
-int dev_output_write(ofile_info_t* ofile, int fd, void *buf, int count){
+int dev_output_write(ofile_t* ofile, int fd, void *buf, int count){
   char* str = buf;
   for(int i = 0; i < count; i++){
     putch(str[i]);
@@ -329,7 +329,7 @@ int dev_output_write(ofile_info_t* ofile, int fd, void *buf, int count){
   return count;
 }
 
-int dev_error_write(ofile_info_t* ofile, int fd, void *buf, int count){
+int dev_error_write(ofile_t* ofile, int fd, void *buf, int count){
   char* error_prefix = "\33[1;31m";
   char* error_suffix = "\33[0m";
   char* str = buf;
