@@ -72,7 +72,7 @@ static inline int fat_sec_of_clus(uint32_t clus, uint32_t fatid){
 }
 
 static inline uint32_t fat_offfset_of_clus(uint32_t clus, uint32_t fatid){
-  return fat32_bs.RsvByte + clus * sizeof(uint32_t) + (fatid-1) * fat32_bs.BPB_FATSz32 * fat32_bs.BPB_BytsPerSec;
+  return fat32_bs.RsvByte + clus * sizeof(uint32_t) + fatid * fat32_bs.BPB_FATSz32 * fat32_bs.BPB_BytsPerSec;
 }
 
 static inline uint32_t get_clus_start(uint32_t clus){
