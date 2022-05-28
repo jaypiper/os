@@ -29,7 +29,7 @@ RUSTSBI = ./bootloader/rustsbi-k210
 
 CFLAGS    += -fdata-sections -ffunction-sections -fstrict-volatile-bitfields
 CFLAGS += -I$(AM_HOME)/am/src/include
-LDFLAGS   += -Wl,-T$(AM_HOME)/mycpu.ld -Wl,--defsym=_pmem_start=0x80000000
+LDFLAGS   += -Wl,-T$(AM_HOME)/mycpu.ld -Wl,--defsym=_pmem_start=0x80000000 -nostartfiles
 ifdef FLASH
   LDFLAGS += -Wl,--defsym=_addr_start=0x30000000
 else

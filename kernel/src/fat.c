@@ -265,6 +265,7 @@ static dirent_t* search_in_dir(dirent_t* dir, char* name){
       }
       get_dirent_info(dirent, &fentry);
       dirent->parent = dir;
+      printf("name: (%s)\n", dirent->name);
       if(strcmp(dirent->name, name) == 0) return dirent;
       pre_is_ld = 0;
     }
@@ -656,5 +657,9 @@ void init_task_cwd(task_t* task){
   task->cwd = &root;
 }
 
+void vfs_disp(void* args){
+  search_in_dir(&root, "abcd");
+  while(1) ;
+}
 
 #endif
