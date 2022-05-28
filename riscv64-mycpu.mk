@@ -7,7 +7,7 @@ CROSS_COMPILE := riscv64-unknown-elf-
 COMMON_FLAGS  := -fno-pic -march=$(RV_ARCH) -mcmodel=medany
 CFLAGS        += $(COMMON_FLAGS) -static
 ASFLAGS       += $(COMMON_FLAGS) -O0
-LDFLAGS       += -melf64lriscv
+#LDFLAGS       += -melf64lriscv
 
 AM_SRCS := start.S \
            trm.c \
@@ -27,20 +27,23 @@ AM_SRCS := start.S \
 RUSTSBI_SIZE = 128k
 RUSTSBI = ./bootloader/rustsbi-k210
 
-CFLAGS    += -fdata-sections -ffunction-sections
+CFLAGS    += -fdata-sections -ffunction-sections -fstrict-volatile-bitfields
 CFLAGS += -I$(AM_HOME)/am/src/include
-LDFLAGS   += -T $(AM_HOME)/mycpu.ld --defsym=_pmem_start=0x80000000
+LDFLAGS   += -Wl,-T$(AM_HOME)/mycpu.ld -Wl,--defsym=_pmem_start=0x80000000
 ifdef FLASH
-  LDFLAGS += --defsym=_addr_start=0x30000000
+  LDFLAGS += -Wl,--defsym=_addr_start=0x30000000
 else
-  LDFLAGS += --defsym=_addr_start=0x80020000
+  LDFLAGS += -Wl,--defsym=_addr_start=0x80020000
 endif
-LDFLAGS   += --gc-sections -e _start
+LDFLAGS   += -Wl,--gc-sections -Wl,-e_start
 CFLAGS += -DMAINARGS=\"$(mainargs)\" -DNCPU=1
 
 build-arg: image
 	( echo -n $(mainargs); ) | dd if=/dev/stdin of=$(IMAGE) bs=512 count=2 seek=1 conv=notrunc status=none
 	make mkfs
+
+$(IMAGE).elf: $(OBJS) $(LIBS)
+	echo fjksdjflks
 
 image: $(IMAGE).elf
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
