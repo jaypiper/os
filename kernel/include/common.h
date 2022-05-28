@@ -13,7 +13,7 @@
 
 // #define PMM_DEBUG
 // #define KMT_DEBUG
-#define VFS_DEBUG
+// #define VFS_DEBUG
 // #define UPROC_DEBUG
 
 #define FS_FAT32
