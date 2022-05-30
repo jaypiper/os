@@ -60,7 +60,7 @@ int sys_dup(Context* ctx){ // int oldfd
 int sys_execve(Context* ctx){ // const char *pathname, char *const argv[], char *const envp[]
   uintptr_t pathname = argraw(0, ctx, ARG_BUF);
   uintptr_t argv = argraw(1, ctx, ARG_BUF);
-  uintptr_t envp = argraw(2, ctx, ARG_BUF);
+  uintptr_t envp = 0; //argraw(2, ctx, ARG_BUF);
   return uproc->execve((char*)pathname, (char**)argv, (char**)envp);
 }
 
