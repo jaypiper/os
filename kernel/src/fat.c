@@ -6,7 +6,14 @@
 #include <fs.h>
 #include <fpioa.h>
 #include <sysctl.h>
+#include <dev_sim.h>
 #ifdef FS_FAT32
+
+
+int dev_input_read(ofile_t* ofile, int fd, void *buf, int count);
+int dev_output_write(ofile_t* ofile, int fd, void *buf, int count);
+int dev_error_write(ofile_t* ofile, int fd, void *buf, int count);
+
 
 static int file_read(ofile_t* ofile, int fd, void *buf, int count);
 static int file_lseek(ofile_t* ofile, int fd, int offset, int whence);
@@ -22,6 +29,37 @@ static dirent_t root;
 static uint8_t fat_buf[512];
 
 static sem_t fs_lock;
+
+static ofile_t* stdin_info;
+static ofile_t* stdout_info;
+static ofile_t* stderr_info;
+
+int invalid_write(ofile_t* ofile, int fd, void *buf, int count);
+int invalid_read(ofile_t* ofile, int fd, void *buf, int count);
+int invalid_lseek(ofile_t* ofile, int fd, int offset, int whence);
+
+void init_stdfd(){
+  stdin_info = pmm->alloc(sizeof(ofile_t));
+	stdin_info->write = invalid_write;
+	stdin_info->read = dev_input_read;
+	stdin_info->lseek = invalid_lseek;
+	stdin_info->count = 1;
+	kmt->sem_init(&stdin_info->lock, "stdin_info lock", 1);
+
+	stdout_info = pmm->alloc(sizeof(ofile_t));
+	stdout_info->write = dev_output_write;
+	stdout_info->read = invalid_read;
+	stdout_info->lseek = invalid_lseek;
+	stdout_info->count = 1;
+	kmt->sem_init(&stdout_info->lock, "stdout_info lock", 1);
+
+	stderr_info = pmm->alloc(sizeof(ofile_t));
+	stderr_info->write = dev_error_write;
+	stderr_info->read = invalid_read;
+	stderr_info->lseek = invalid_lseek;
+	stderr_info->count = 1;
+	kmt->sem_init(&stderr_info->lock, "stderr_info lock", 1);
+}
 
 static void fat_init(){
 
@@ -50,7 +88,7 @@ static void fat_init(){
   root.FstClus = fat32_bs.BPB_RootClus;
   root.parent = &root;
   strcpy(root.name, "/");
-
+  init_stdfd();
   kmt->sem_init(&fs_lock, "fs lock", 1);
   return;
 }
