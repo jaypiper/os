@@ -138,22 +138,22 @@ int sys_brk(Context* ctx){ // void *addr
 
 
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
-[SYS_CHDIR]     = sys_chdir,
-[SYS_CLOSE]     = sys_close,
-[SYS_DUP]       = sys_dup,
-[SYS_EXECVE]    = sys_execve,
-[SYS_EXIT]      = sys_exit,
-[SYS_FORK]      = sys_fork,
-[SYS_FSTAT]     = sys_fstat,
-[SYS_LINK]      = sys_link,
-[SYS_LSEEK]     = sys_lseek,
-[SYS_MKDIR]     = sys_mkdir,
-[SYS_MMAP]      = sys_mmap,
-[SYS_OPEN]      = sys_open,
-[SYS_READ]      = sys_read,
-[SYS_UNLINK]    = sys_unlink,
-[SYS_WRITE]     = sys_write,
-[SYS_BRK]       = sys_brk,
+[SYS_chdir]     = sys_chdir,
+[SYS_close]     = sys_close,
+[SYS_dup]       = sys_dup,
+[SYS_execve]    = sys_execve,
+[SYS_exit]      = sys_exit,
+// [SYS_fork]      = sys_fork,
+[SYS_fstat]     = sys_fstat,
+// [SYS_link]      = sys_link,
+[SYS_lseek]     = sys_lseek,
+// [SYS_mkdirat]     = sys_mkdir,
+[SYS_mmap]      = sys_mmap,
+[SYS_openat]      = sys_openat,
+[SYS_read]      = sys_read,
+// [SYS_unlink]    = sys_unlink,
+[SYS_write]     = sys_write,
+[SYS_brk]       = sys_brk,
 };
 
 Context* do_syscall(Event ev, Context* context){
