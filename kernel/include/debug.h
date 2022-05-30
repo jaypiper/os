@@ -11,7 +11,7 @@ void assert_dummy_func();
 #define Assert(cond, ...) \
   do { \
     if (!(cond)) { \
-      printf("\33[1;31m"); \
+      printf("\33[1;31m[%s:%d]", __LINE__, __func__); \
       printf(__VA_ARGS__); \
       printf("\33[0m\n"); \
       assert(cond); \
@@ -23,6 +23,7 @@ void assert_dummy_func();
     if (!(cond)) { \
       iset(0); \
       printf("\33[1;31m [%d]", cpu_current()); \
+      printf("[%d:%s]", __LINE__, __func__); \
       printf(__VA_ARGS__); \
       printf("\33[0m\n"); \
       halt(-1); \
