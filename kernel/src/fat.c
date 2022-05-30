@@ -703,9 +703,4 @@ void init_task_cwd(task_t* task){
   task->cwd = &root;
 }
 
-void vfs_disp(void* args){
-  search_in_dir(&root, "abcd");
-  while(1) ;
-}
-
 #endif

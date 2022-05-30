@@ -71,8 +71,6 @@ static void os_test(){
 
 #endif
 
-  void vfs_disp(void* args);
-  kmt->create(task_alloc(), "vfs_test", vfs_disp, 0);
 #ifdef UPROC_DEBUG
   void uproc_test();
   kmt->create(task_alloc(), "uproc test", uproc_test, NULL);
