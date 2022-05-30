@@ -672,7 +672,13 @@ ofile_t* filedup(ofile_t* ofile){
 }
 
 void fileclose(ofile_t* ofile){
-	TODO();
+	kmt->sem_wait(&ofile->lock);
+	Assert(ofile->count > 0, "invalid ofile count %d\n", ofile->count);
+	if(--ofile->count > 0){
+		kmt->sem_signal(&ofile->lock);
+		return;
+	}
+	pmm->free(ofile); // no need to unlock ofile lock
 }
 
 
