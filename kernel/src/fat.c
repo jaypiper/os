@@ -503,9 +503,9 @@ static int fat_open(const char *pathname, int flags){
 /* read file from disk */
   dirent_t* file;
   if(flags & O_CREAT){
-    file = fat_create(baseDir, pathname, 0);
+    file = fat_create(baseDir, string_buf, 0);
   } else{
-    file = fat_search(baseDir, pathname);
+    file = fat_search(baseDir, string_buf);
   }
   if(!file){
     kmt->sem_signal(&fs_lock);
