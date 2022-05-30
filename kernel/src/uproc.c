@@ -42,7 +42,7 @@ Context* handle_pagefault(Event ev, Context* ctx){
       return NULL;
     }
   }
-  Assert(0, "pagefault: invalid addr %lx\n", ev.ref);
+  Assert(0, "pagefault: invalid addr 0x%lx pc=0x%lx\n", ev.ref, ctx->epc);
 }
 
 
