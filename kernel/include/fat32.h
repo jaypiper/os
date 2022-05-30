@@ -20,6 +20,7 @@
 #define LAST_LONG_ENTRY 0x40
 #define ENTRY_EMPTY_LAST 0
 #define ENTRY_EMPTY 0xe5
+#define AT_FDCWD (-100)
 
 #define FAT32_MAX_PATH_LENGTH 256
 #define MAX_OPEN_FILE 32
