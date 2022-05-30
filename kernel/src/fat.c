@@ -61,6 +61,12 @@ void init_stdfd(){
 	kmt->sem_init(&stderr_info->lock, "stderr_info lock", 1);
 }
 
+void fill_standard_fd(task_t* task){
+	task->ofiles[0] = stdin_info;
+	task->ofiles[1] = stdout_info;
+	task->ofiles[2] = stderr_info;
+}
+
 static void fat_init(){
 
   fpioa_pin_init();
@@ -669,11 +675,6 @@ void fileclose(ofile_t* ofile){
 	TODO();
 }
 
-void fill_standard_fd(task_t* task){
-	task->ofiles[0] = NULL;
-	task->ofiles[1] = NULL;
-	task->ofiles[2] = NULL;
-}
 
 
 MODULE_DEF(vfs) = {
