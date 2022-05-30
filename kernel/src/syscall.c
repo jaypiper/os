@@ -18,9 +18,10 @@ static inline void copy_from_user(Context* ctx, void* dst, uintptr_t user_addr, 
     uintptr_t start_size = user_addr + copied_size;
     uintptr_t pg_offset = start_size & (PGSIZE - 1);
     uintptr_t pa = user_addr_translate(ctx->satp, start_size - pg_offset) + pg_offset;
-    size_t cpy_size = MIN(ROUNDUP(start_size, PGSIZE) - start_size, count - copied_size);
-    memcpy(dst, (void*)pa, cpy_size);
+    size_t cpy_size = MIN(ROUNDUP(start_size + 1, PGSIZE) - start_size, count - copied_size);
+    memcpy(dst + copied_size, (void*)pa, cpy_size);
     copied_size += cpy_size;
+
   }
 }
 
