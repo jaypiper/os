@@ -213,25 +213,26 @@ static int split_base_name(char* name){
 
 void wc2c(uint8_t* dst, uint8_t* src, int len){
 
-  while(len-- > 0 && (*src || *(src + 1))){
+  for(; len > 0 && (*src || *(src + 1)); len--){
     *dst ++ = *src;
     src += 2;
   }
 
-  while(len-- > 0) *dst ++ = 0;
+  for(; len > 0; len--) *dst ++ = 0;
 
 }
 
 void c2wc(uint8_t* dst, uint8_t* src, int len){
-  while(len-- > 0 && *src){  // avoid miaslign store
+  for(;len > 0 && *src; len--){  // avoid miaslign store
     *dst ++ = (*src ++);
     *dst ++ = 0;
   }
-  if(len-- > 0){
+  if(len > 0){
     *dst ++ = 0;
     *dst ++ = 0;
+    len --;
   }
-  while(len-- > 0){
+  for(;len > 0; len--){
     *dst ++ = 0xff;
     *dst ++ = 0xff;
   }
@@ -583,11 +584,11 @@ static int file_write(ofile_t* ofile, int fd, void *buf, int count){
   dirent_t* file = ofile->dirent;
   uint32_t clus = file->FstClus;
   uint32_t prev_clus = 0;
-  while(clus_depth-- > 0 && clus < FAT32_EOF) {
+  for(; clus_depth > 0 && clus < FAT32_EOF; clus_depth--) {
     prev_clus = clus;
     clus = next_clus(clus);
   }
-  while(clus_depth-- > 0) {
+  for(; clus_depth > 0; clus_depth--) {
     Assert(prev_clus != 0, "prev_clus == 0");
     clus = alloc_clus();
     link_clus(prev_clus, clus);
