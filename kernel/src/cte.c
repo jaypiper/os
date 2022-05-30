@@ -31,7 +31,7 @@ Context* __am_irq_handle(Context *c) {
         ev.event = EVENT_ERROR; break;
 
       case CAUSE_FETCH_ACCESS: MSG("fetch access");
-        ev.event = EVENT_ERROR; break;
+        ev.event = EVENT_PAGEFAULT; break;
 
       case CAUSE_ILLEGAL_INSTRUCTION: MSG("illegal instruction");
         ev.event = EVENT_ERROR; break;
@@ -42,8 +42,11 @@ Context* __am_irq_handle(Context *c) {
       case CAUSE_MISALIGNED_LOAD: MSG("misaligned load");
         ev.event = EVENT_ERROR; break;
 
+      case CAUSE_LOAD_ACCESS: MSG("store access");
+        ev.event = EVENT_PAGEFAULT; break;
+
       case CAUSE_STORE_ACCESS: MSG("store access");
-        ev.event = EVENT_ERROR; break;
+        ev.event = EVENT_PAGEFAULT; break;
 
       case CAUSE_VIRTUAL_SUPERVISOR_ECALL: MSG("virtual supervisor ecall");
         ev.event = EVENT_ERROR; break;
