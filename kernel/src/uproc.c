@@ -143,11 +143,13 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   void fill_standard_fd(task_t* task);
   fill_standard_fd(task);
 
-  int fd = vfs->open(path, O_RDONLY);
+  int fd = vfs->openat(AT_FDCWD, path, O_RDONLY);
+  task->cwd = kmt->gettask()->ofiles[fd]->dirent->parent;
   if(fd < 0){
-    printf("execve: open %s fail\n");
+    printf("execve: open %s fail\n", path);
     return -1;
   }
+
 // #if defined(__ISA_X86_64__)
   Elf64_Ehdr _Eheader;
   vfs->read(fd, &_Eheader, sizeof(_Eheader));
@@ -177,7 +179,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   task->name = path;
 
   TOP_CONTEXT(task)->gpr[NO_A0] = (uintptr_t)(as->area.end - STACK_SIZE + STACK_START(task->stack) - task->stack);
-
+  TOP_CONTEXT(task)->gpr[NO_SP] -= 8;
 
   free_pages(oldas);
   return 0;
