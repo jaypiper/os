@@ -105,10 +105,11 @@ int sys_mmap(Context* ctx){ // void *addr, size_t length, int prot, int flags, i
   return uproc->mmap((char*)addr, size, prot, flags, fd, offset);
 }
 
-int sys_open(Context* ctx){ // const char *pathname, int flags
-  uintptr_t pathname = argraw(0, ctx, ARG_BUF);
-  int flags = argraw(1, ctx, ARG_NUM);
-  return vfs->open((char*)pathname, flags);
+int sys_openat(Context* ctx){ // int dirfd, const char *pathname, int flags
+  int dirfd = argraw(0, ctx, ARG_NUM);
+  uintptr_t pathname = argraw(1, ctx, ARG_BUF);
+  int flags = argraw(2, ctx, ARG_NUM);
+  return vfs->openat(dirfd, (char*)pathname, flags);
 }
 
 int sys_read(Context* ctx){ // int fd, void *buf, size_t count

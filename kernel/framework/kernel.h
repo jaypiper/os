@@ -64,7 +64,7 @@ MODULE(vfs) {
   int (*write)(int fd, void *buf, int count);
   int (*read)(int fd, void *buf, int count);
   int (*close)(int fd);
-  int (*open)(const char *pathname, int flags);
+  int (*openat)(int dirfd, const char *pathname, int flags);
   int (*lseek)(int fd, int offset, int whence);
   int (*link)(const char *oldpath, const char *newpath);
   int (*unlink)(const char *pathname);

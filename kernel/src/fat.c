@@ -492,10 +492,10 @@ static dirent_t* fat_create(dirent_t* baseDir, char* path, int flags){
   return create_in_dir(baseDir, filename, flags);
 }
 
-static int fat_open(const char *pathname, int flags){
+static int fat_openat(int dirfd, const char *pathname, int flags){
   Assert(strlen(pathname) < FAT32_MAX_PATH_LENGTH, "pathname %s is too long\n", pathname);
   kmt->sem_wait(&fs_lock);
-  dirent_t* baseDir = pathname[0] == '/' ? &root : kmt->gettask()->cwd;
+  dirent_t* baseDir = pathname[0] == '/' ? &root : dirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[dirfd];
   if(pathname[0] == '/') pathname ++;
 	char string_buf[FAT32_MAX_PATH_LENGTH];
 	strcpy(string_buf, pathname);
@@ -681,7 +681,7 @@ MODULE_DEF(vfs) = {
 	.write  = fat_write,
 	.read   = fat_read,
 	.close  = fat_close,
-	.open   = fat_open,
+	.openat   = fat_openat,
 	.lseek  = fat_lseek,
 	.link   = fat_link,
 	.unlink = fat_unlink,
