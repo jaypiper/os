@@ -324,8 +324,8 @@ int dev_output_write(ofile_t* ofile, int fd, void *buf, int count){
   for(int i = 0; i < count; i++){
     putch(str[i]);
   }
-  device_t *ttydev = dev->lookup("tty1");
-  ttydev->ops->write(ttydev, 0, buf, count);
+  // device_t *ttydev = dev->lookup("tty1");
+  // ttydev->ops->write(ttydev, 0, buf, count);
   return count;
 }
 
@@ -342,7 +342,7 @@ int dev_error_write(ofile_t* ofile, int fd, void *buf, int count){
   for(int i = 0; i < strlen(error_suffix); i++){
     putch(error_suffix[i]);
   }
-  device_t *ttydev = dev->lookup("tty1");
-  ttydev->ops->write(ttydev, 0, buf, count);
+  // device_t *ttydev = dev->lookup("tty1");
+  // ttydev->ops->write(ttydev, 0, buf, count);
   return count;
 }
