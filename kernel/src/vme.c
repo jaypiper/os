@@ -34,7 +34,8 @@ extern char _addr_start;
 // (0x8000_0000, 0x600000),    /* Memory    */
 
 static const struct vm_area vm_areas[] = {
-  { RANGE(0x2000000000, 0x4000000000), 0 },
+  // { RANGE(0x2000000000, 0x4000000000), 0 },
+  { RANGE(0x0, 0x01000000), 0 },
   // { RANGE(0x0000000000, 0x100000000), 1 },
   {RANGE((uintptr_t)0x80000000, (uintptr_t)0x80000000 + 6 * 1024 * 1024), 1},
   {RANGE((uintptr_t)0x02000000, (uintptr_t)0x02000000 + 0x1000), 1},  // CLINT
@@ -162,23 +163,20 @@ void init_satp(){
 }
 
 void protect(AddrSpace *as) {
-  uintptr_t *upt = pgallocz();
 
+  as->ptr = pgallocz();
   for (int i = 0; i < LENGTH(vm_areas); i++) {
     const struct vm_area *vma = &vm_areas[i];
     if (vma->kernel) {
-      const struct ptinfo *info = &mmu.pgtables[0]; // level-1 page table
       for (uintptr_t cur = (uintptr_t)vma->area.start;
            cur != (uintptr_t)vma->area.end;
-           cur += (1L << info->shift)) {
-        int index = indexof(cur, info);
-        upt[index] = kpt[index];
+           cur += mmu.pgsize) {
+        *ptwalk(as, cur, PTE_W | PTE_R) = (cur >> 2) | PTE_V | PTE_W | PTE_R | PTE_X;
       }
     }
   }
   as->pgsize = mmu.pgsize;
   as->area   = uvm_area;
-  as->ptr    = upt;
 }
 
 void unprotect(AddrSpace *as) {
