@@ -1,5 +1,5 @@
 #include <common.h>
-#include <vfs.h>
+#include <fat32.h>
 #include <user.h>
 
 /* based on xv6 usertest.c */
@@ -13,7 +13,7 @@ int bigfile(char *s){
   int fd, i, total, cc;
 
   // unlink("bigfile.dat");
-  fd = vfs->open("bigfile.dat", O_CREAT | O_RDWR);
+  fd = vfs->openat(AT_FDCWD, "bigfile.dat", O_CREAT | O_RDWR);
   if(fd < 0){
     printf("%s: cannot create bigfile\n", s);
     return -1;
@@ -31,7 +31,7 @@ int bigfile(char *s){
 
   vfs->close(fd);
 
-  fd = vfs->open("bigfile.dat", O_RDONLY);
+  fd = vfs->openat(AT_FDCWD, "bigfile.dat", O_RDONLY);
   if(fd < 0){
     printf("%s: cannot open bigfile\n", s);
     return -1;
@@ -71,7 +71,7 @@ int bigdir(char *s) {
 
   vfs->unlink("bd");
 
-  fd = vfs->open("bd", O_CREAT);
+  fd = vfs->openat(AT_FDCWD, "bd", O_CREAT);
   if(fd < 0){
     printf("%s: bigdir create failed\n", s);
     return -1;
@@ -106,7 +106,7 @@ int bigdir(char *s) {
 int dirfile(char *s){
   int fd;
 
-  fd = vfs->open("dirfile", O_CREAT);
+  fd = vfs->openat(AT_FDCWD, "dirfile", O_CREAT);
   if(fd < 0){
     printf("%s: create dirfile failed\n", s);
     return -1;
@@ -116,12 +116,12 @@ int dirfile(char *s){
     printf("%s: chdir dirfile succeeded!\n", s);
     return -1;
   }
-  fd = vfs->open("dirfile/xx", 0);
+  fd = vfs->openat(AT_FDCWD, "dirfile/xx", 0);
   if(fd >= 0){
     printf("%s: create dirfile/xx succeeded!\n", s);
     return -1;
   }
-  fd = vfs->open("dirfile/xx", O_CREAT);
+  fd = vfs->openat(AT_FDCWD, "dirfile/xx", O_CREAT);
   if(fd >= 0){
     printf("%s: create dirfile/xx succeeded!\n", s);
     return -1;
@@ -150,26 +150,26 @@ int dirfile(char *s){
 int unlinkopen(char *s) {
   char buf[BLK_SIZE];
   int SZ = 5;
-  int fd = vfs->open("unlinkopen", O_CREAT | O_RDWR);
+  int fd = vfs->openat(AT_FDCWD, "unlinkopen", O_CREAT | O_RDWR);
   vfs->write(fd, "hello", SZ);
   vfs->close(fd);
   vfs->unlink("unlinkopen");
-  if(vfs->open("unlinkopen", O_RDWR) >= 0){
+  if(vfs->openat(AT_FDCWD, "unlinkopen", O_RDWR) >= 0){
     printf("unlinkopen fail1\n");
     return -1;
   }
-  fd = vfs->open("unlinkopen", O_CREAT | O_RDWR);
+  fd = vfs->openat(AT_FDCWD, "unlinkopen", O_CREAT | O_RDWR);
   vfs->write(fd, "aaaaa", SZ);
   vfs->close(fd);
-  fd = vfs->open("unlinkopen2", O_CREAT | O_RDWR);
+  fd = vfs->openat(AT_FDCWD, "unlinkopen2", O_CREAT | O_RDWR);
   vfs->write(fd, "bbbbb", SZ);
   vfs->close(fd);
   vfs->unlink("unlinkopen");
-  if(vfs->open("unlinkopen", O_RDWR) >= 0){
+  if(vfs->openat(AT_FDCWD, "unlinkopen", O_RDWR) >= 0){
     printf("unlinkopen fail2\n");
     return -1;
   }
-  fd = vfs->open("unlinkopen2", O_RDWR);
+  fd = vfs->openat(AT_FDCWD, "unlinkopen2", O_RDWR);
   if(fd < 0){
     printf("unlinkopen fail3\n");
     return -1;
@@ -192,7 +192,7 @@ int linktest(char *s) {
   vfs->unlink("lf1");
   vfs->unlink("lf2");
 
-  fd = vfs->open("lf1", O_CREAT|O_RDWR);
+  fd = vfs->openat(AT_FDCWD, "lf1", O_CREAT|O_RDWR);
   if(fd < 0){
     printf("%s: create lf1 failed\n", s);
     return -1;
@@ -209,12 +209,12 @@ int linktest(char *s) {
   }
   vfs->unlink("lf1");
 
-  if(vfs->open("lf1", 0) >= 0){
+  if(vfs->openat(AT_FDCWD, "lf1", 0) >= 0){
     printf("%s: unlinked lf1 but it is still there!\n", s);
     return -1;
   }
 
-  fd = vfs->open("lf2", 0);
+  fd = vfs->openat(AT_FDCWD, "lf2", 0);
   if(fd < 0){
     printf("%s: open lf2 failed\n", s);
     return -1;
@@ -254,7 +254,7 @@ int subdir(char *s) {
     return -1;
   }
 
-  fd = vfs->open("dd/ff", O_CREAT | O_RDWR);
+  fd = vfs->openat(AT_FDCWD, "dd/ff", O_CREAT | O_RDWR);
   if(fd < 0){
     printf("%s: create dd/ff failed\n", s);
     return -1;
@@ -272,7 +272,7 @@ int subdir(char *s) {
     return -1;
   }
 
-  fd = vfs->open("dd/dd/ff", O_CREAT | O_RDWR);
+  fd = vfs->openat(AT_FDCWD, "dd/dd/ff", O_CREAT | O_RDWR);
   if(fd < 0){
     printf("%s: create dd/dd/ff failed\n", s);
     return -1;
@@ -280,7 +280,7 @@ int subdir(char *s) {
   vfs->write(fd, "FF", 2);
   vfs->close(fd);
 
-  fd = vfs->open("dd/dd/../ff", 0);
+  fd = vfs->openat(AT_FDCWD, "dd/dd/../ff", 0);
   if(fd < 0){
     printf("%s: open dd/dd/../ff failed\n", s);
     return -1;
@@ -301,7 +301,7 @@ int subdir(char *s) {
     printf("%s: unlink dd/dd/ff failed\n", s);
     return -1;
   }
-  if(vfs->open("dd/dd/ff", O_RDONLY) >= 0){
+  if(vfs->openat(AT_FDCWD, "dd/dd/ff", O_RDONLY) >= 0){
     printf("%s: open (unlinked) dd/dd/ff succeeded\n", s);
     return -1;
   }
@@ -323,7 +323,7 @@ int subdir(char *s) {
     return -1;
   }
 
-  fd = vfs->open("dd/dd/ffff", 0);
+  fd = vfs->openat(AT_FDCWD, "dd/dd/ffff", 0);
   if(fd < 0){
     printf("%s: open dd/dd/ffff failed\n", s);
     return -1;
@@ -334,24 +334,24 @@ int subdir(char *s) {
   }
   vfs->close(fd);
 
-  if(vfs->open("dd/dd/ff", O_RDONLY) >= 0){
+  if(vfs->openat(AT_FDCWD, "dd/dd/ff", O_RDONLY) >= 0){
     printf("%s: open (unlinked) dd/dd/ff succeeded!\n", s);
     return -1;
   }
 
-  if(vfs->open("dd/ff/ff", O_CREAT|O_RDWR) >= 0){
+  if(vfs->openat(AT_FDCWD, "dd/ff/ff", O_CREAT|O_RDWR) >= 0){
     printf("%s: create dd/ff/ff succeeded!\n", s);
     return -1;
   }
-  if(vfs->open("dd/xx/ff", O_CREAT|O_RDWR) >= 0){
+  if(vfs->openat(AT_FDCWD, "dd/xx/ff", O_CREAT|O_RDWR) >= 0){
     printf("%s: create dd/xx/ff succeeded!\n", s);
     return -1;
   }
-  if(vfs->open("dd", O_RDWR) >= 0){
+  if(vfs->openat(AT_FDCWD, "dd", O_RDWR) >= 0){
     printf("%s: open dd rdwr succeeded!\n", s);
     return -1;
   }
-  if(vfs->open("dd", O_WRONLY) >= 0){
+  if(vfs->openat(AT_FDCWD, "dd", O_WRONLY) >= 0){
     printf("%s: open dd wronly succeeded!\n", s);
     return -1;
   }
@@ -475,10 +475,10 @@ int iref(char *s) {
 
     vfs->mkdir("");
     vfs->link("README", "");
-    fd = vfs->open("", O_CREAT);
+    fd = vfs->openat(AT_FDCWD, "", O_CREAT);
     if(fd >= 0)
       vfs->close(fd);
-    fd = vfs->open("xx", O_CREAT);
+    fd = vfs->openat(AT_FDCWD, "xx", O_CREAT);
     if(fd >= 0)
       vfs->close(fd);
     vfs->unlink("xx");
@@ -497,7 +497,7 @@ int iref(char *s) {
 
 int duptest(char* s){
   char buf[BLK_SIZE];
-  int fd = vfs->open("file", O_CREAT | O_RDWR);
+  int fd = vfs->openat(AT_FDCWD, "file", O_CREAT | O_RDWR);
   int fd2 = vfs->dup(fd);
   if(fd2 < 0){
     printf("%s: dup fail\n", s);
@@ -530,7 +530,7 @@ int devtest(char* s){
   char buf[BLK_SIZE];
   int SZ = 12;
   // zero
-  int fd = vfs->open("/dev/zero", O_RDONLY);
+  int fd = vfs->openat(AT_FDCWD, "/dev/zero", O_RDONLY);
   if(fd < 0){
     printf("%s: open zero fail\n", s);
     return -1;
@@ -551,7 +551,7 @@ int devtest(char* s){
     return -1;
   }
   // random
-  fd = vfs->open("/dev/random", O_RDONLY);
+  fd = vfs->openat(AT_FDCWD, "/dev/random", O_RDONLY);
   if(fd < 0){
     printf("%s: open random fail\n", s);
     return -1;
@@ -565,7 +565,7 @@ int devtest(char* s){
     return -1;
   }
   // null
-  fd = vfs->open("/dev/null", O_RDWR);
+  fd = vfs->openat(AT_FDCWD, "/dev/null", O_RDWR);
   if(fd < 0){
     printf("%s: open null fail\n", s);
     return -1;
@@ -588,7 +588,7 @@ int proctest(char* s){
   int SZ = 20;
   // cpuinfo
   memset(buf, 0, SZ);
-  int fd = vfs->open("/proc/cpuinfo", O_RDONLY);
+  int fd = vfs->openat(AT_FDCWD, "/proc/cpuinfo", O_RDONLY);
   if(fd < 0){
     printf("%s: open cpuinfo fail\n", s);
     return -1;
@@ -597,7 +597,7 @@ int proctest(char* s){
   vfs->close(fd);
   // meminfo
   memset(buf, 0, SZ);
-  fd = vfs->open("/proc/meminfo", O_RDONLY);
+  fd = vfs->openat(AT_FDCWD, "/proc/meminfo", O_RDONLY);
   if(fd < 0){
     printf("%s: open meminfo fail\n", s);
     return -1;
@@ -606,7 +606,7 @@ int proctest(char* s){
   vfs->close(fd);
   // proc 1
   memset(buf, 0, SZ);
-  vfs->open("/proc/1/name", O_RDONLY);
+  vfs->openat(AT_FDCWD, "/proc/1/name", O_RDONLY);
   vfs->read(fd, buf, SZ);
   vfs->close(fd);
   return 0;
