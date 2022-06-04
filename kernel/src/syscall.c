@@ -1,6 +1,7 @@
 #include <common.h>
 #include <syscall.h>
 #include <vfs.h>
+#include <kmt.h>
 
 /*  syscall #: rax
     return val: rax
@@ -139,6 +140,9 @@ int sys_brk(Context* ctx){ // void *addr
   return uproc->brk((void*)addr);
 }
 
+int sys_getpid(Context* ctx){
+  return kmt->gettask()->pid;
+}
 
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
@@ -157,6 +161,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 // [SYS_unlink]    = sys_unlink,
 [SYS_write]     = sys_write,
 [SYS_brk]       = sys_brk,
+[SYS_getpid]    = sys_getpid,
 };
 
 Context* do_syscall(Event ev, Context* context){
