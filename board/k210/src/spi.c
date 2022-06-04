@@ -215,7 +215,7 @@ void spi_send_data_standard(spi_device_num_t spi_num, spi_chip_select_t chip_sel
 
     spi_send_data_normal(spi_num, chip_select, v_buf, cmd_len + tx_len);
     // free((void *)v_buf);
-    pmm->alloc((void *)v_buf);
+    pmm->free((void *)v_buf);
 }
 
 void spi_receive_data_standard(spi_device_num_t spi_num, spi_chip_select_t chip_select, const uint8 *cmd_buff,
@@ -406,7 +406,7 @@ void spi_send_data_normal_dma(dmac_channel_number_t channel_num, spi_device_num_
     spi_handle->ser = 1U << chip_select;
     dmac_wait_done(channel_num);
     if(spi_transfer_width != SPI_TRANS_INT)
-        pmm->alloc((void *)buf);
+        pmm->free((void *)buf);
 
     while((spi_handle->sr & 0x05) != 0x04)
         ;
@@ -492,7 +492,7 @@ void spi_receive_data_standard_dma(dmac_channel_number_t dma_send_channel_num,
             break;
     }
 
-    pmm->alloc(write_cmd);
+    pmm->free(write_cmd);
 }
 
 void spi_send_data_standard_dma(dmac_channel_number_t channel_num, spi_device_num_t spi_num,
@@ -554,5 +554,5 @@ void spi_send_data_standard_dma(dmac_channel_number_t channel_num, spi_device_nu
 
     spi_send_data_normal_dma(channel_num, spi_num, chip_select, buf, v_send_len, SPI_TRANS_INT);
 
-    pmm->alloc((void *)buf);
+    pmm->free((void *)buf);
 }
