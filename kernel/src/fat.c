@@ -676,6 +676,7 @@ void fileclose(ofile_t* ofile){
 		kmt->sem_signal(&ofile->lock);
 		return;
 	}
+  kmt->sem_signal(&ofile->lock);
 	pmm->free(ofile); // no need to unlock ofile lock
 }
 
