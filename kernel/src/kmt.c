@@ -237,11 +237,11 @@ int kmt_initforktask(task_t* newtask, const char* name){
   return 0;
 }
 
-void kmt_inserttask(task_t* newtask){
+void kmt_inserttask(task_t* newtask, int is_fork){
   spin_lock(&task_lock);
 
   int pid = get_empty_pid();
-  fork_context[pid] = newtask->contexts[0];
+  if(is_fork)fork_context[pid] = newtask->contexts[0];
   newtask->pid = pid;
   all_task[pid] = newtask;
 

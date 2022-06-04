@@ -64,7 +64,7 @@ void mark_not_runable(sem_t* sem, int cpu_id);
 void wakeup_task(sem_t* sem);
 void* task_alloc();
 int kmt_initforktask(task_t* newtask, const char* name);
-void kmt_inserttask(task_t* newtask);
+void kmt_inserttask(task_t* newtask, int is_fork);
 void clear_current_task();
 void release_resources(task_t* task);
 void execve_release_resources(task_t* task);
