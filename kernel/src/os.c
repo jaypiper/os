@@ -72,8 +72,12 @@ static void os_test(){
 #endif
 
 #ifdef UPROC_DEBUG
-  void uproc_test();
-  kmt->create(task_alloc(), "uproc test", uproc_test, NULL);
+  void uproc_test(void* args);
+  static char ids[20];
+  for(int i = 0; i < 20; i ++) ids[i] = i;
+  for(int i = 0; i < 5; i++){
+    kmt->create(task_alloc(), "uproc test", uproc_test, &ids[i]);
+  }
 #else
   // kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
   // kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");

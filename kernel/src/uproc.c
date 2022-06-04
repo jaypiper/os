@@ -204,19 +204,33 @@ static int uproc_brk(void* addr){
   return 0;
 }
 
+
+
+char* programs[] = {"open", "close", "execve", "getpid", "chdir", "read", "write"};
+static int id = 0;
 #include <syscall.h>
 
-void uproc_test(){
-  char* path = "/busybox_unstripped";
-  void do_syscall3(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3);
+void next_id(){
+  id ++;
+}
+
+void exec_program(){
+  char* path = "/open";
+  int do_syscall3(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3);
   char* args[] = {
-    "busybox",
-    "cat",
-    "/a.txt",
     0
   };
-  do_syscall3(SYS_EXECVE, (uintptr_t)path, (uintptr_t)args, 0);
 
+  do_syscall3(SYS_execve, (uintptr_t)programs[id], (uintptr_t)args, 0);
+
+  Assert(0, "should not reach here\n");
+}
+
+
+void uproc_test(void* args){
+  while(id < ((uint8_t*)args)[0]) ;
+  w_csr("sepc", (uintptr_t)exec_program);
+  asm volatile("sret");
   Assert(0, "should not reach here\n");
 }
 

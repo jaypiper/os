@@ -65,6 +65,8 @@ int sys_execve(Context* ctx){ // const char *pathname, char *const argv[], char 
 }
 
 int sys_exit(Context* ctx){ // int status
+  void next_id();
+  next_id();
   return uproc->exit();
 }
 
