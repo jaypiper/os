@@ -124,6 +124,8 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   }
 
   uintptr_t* args_ptr = (uintptr_t*)(STACK_END(task->stack)) - 1;
+#if 0
+  TODO(); // argv in user space
   if(argv){
     int argc = 0;
     for(argc = 0; argv[argc]; argc ++) printf("0x%lx, 0x%lx\n", argv, argv[argc]); // count the number of arg
@@ -139,7 +141,9 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
     }
     *(uintptr_t*)(STACK_START(task->stack) + offset) = 0;
   }
-
+#else
+  *args_ptr = 0;
+#endif
   task->int_depth = 1;
   SET_TASK(task);
 
@@ -152,7 +156,6 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
     return -1;
   }
 
-// #if defined(__ISA_X86_64__)
   Elf64_Ehdr _Eheader;
   vfs->read(fd, &_Eheader, sizeof(_Eheader));
   if(*(uint32_t *)(&_Eheader.e_ident) != 0x464c457f){
