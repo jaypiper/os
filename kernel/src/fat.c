@@ -293,7 +293,7 @@ static dirent_t* search_in_dir(dirent_t* dir, char* name){
 
   while(clus < FAT32_EOF){
     sd_read(get_clus_start(clus) + clusOffset, &fentry, 32);  // TODO: check offset
-    if(fentry.ld.Ord == ENTRY_EMPTY){
+    if(fentry.ld.Ord == ENTRY_EMPTY || fentry.ld.Ord == ENTRY_EMPTY_LAST){
 
     } else if(fentry.ld.attr == ATTR_LONG_NAME){
       int ord = fentry.ld.Ord & ~LAST_LONG_ENTRY;
@@ -436,7 +436,7 @@ static uint32_t search_empty_dirent(dirent_t *dirent, uint32_t num){
   uint32_t ret = 0;
   while(clus < FAT32_EOF){
     sd_read(get_clus_start(clus) + clusOffset, &fentry, 32);  // TODO: check offset
-    if(fentry.ld.Ord == ENTRY_EMPTY){
+    if(fentry.ld.Ord == ENTRY_EMPTY || fentry.ld.Ord == ENTRY_EMPTY_LAST){
       empty_num ++;
       if(empty_num >= num) return ret;
     } else{  // point to next entry
