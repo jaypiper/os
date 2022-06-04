@@ -207,7 +207,7 @@ static void free_dirent(dirent_t* dirent){
 }
 
 static int split_base_name(char* name){
-	int name_idx;
+	int name_idx = -1;
 	for(name_idx = strlen(name) - 1; name_idx >= 0; name_idx --){
 		if(name[name_idx] == '/'){
 			name[name_idx] = 0;
@@ -310,7 +310,6 @@ static dirent_t* search_in_dir(dirent_t* dir, char* name){
       }
       get_dirent_info(dirent, &fentry);
       dirent->parent = dir;
-      printf("name: (%s)\n", dirent->name);
       if(strcmp(dirent->name, name) == 0) return dirent;
       pre_is_ld = 0;
     }
@@ -489,10 +488,14 @@ static dirent_t* fat_search(dirent_t* baseDir, char* path){
 }
 
 static dirent_t* fat_create(dirent_t* baseDir, char* path, int flags){
+
   int name_idx = split_base_name(path);
-  baseDir = fat_search(baseDir, path);
+  char* filename = path;
+  if(name_idx != -1){
+    baseDir = fat_search(baseDir, path);
+    filename =  path + name_idx + 1;
+  }
   if(!baseDir) return NULL;
-  char* filename =  path + name_idx + 1;
   dirent_t* dirent = search_in_dir(baseDir,filename);
   if(dirent) return dirent;
   return create_in_dir(baseDir, filename, flags);
