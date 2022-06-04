@@ -69,7 +69,7 @@ MODULE(vfs) {
   int (*link)(const char *oldpath, const char *newpath);
   int (*unlink)(const char *pathname);
   int (*fstat)(int fd, struct ufs_stat *buf);
-  int (*mkdir)(const char *pathname);
+  int (*mkdirat)(int dirfd, const char *pathname);
   int (*chdir)(const char *path);
   int (*dup)(int fd);
 };

@@ -654,13 +654,20 @@ static int fat_fstat(int fd, struct ufs_stat *buf){
 	return 0;
 }
 
-static int fat_mkdir(const char *pathname){
-	TODO();
-	return 0;
+static int fat_mkdirat(int dirfd, const char *pathname){
+  kmt->sem_wait(&fs_lock);
+	dirent_t* baseDir = pathname[0] == '/' ? &root : kmt->gettask()->ofiles[dirfd];
+  dirent_t* file = fat_create(baseDir, pathname, ATTR_DIRECTORY);
+  kmt->sem_signal(&fs_lock);
+	return file ? 0: -1;
 }
 
 static int fat_chdir(const char *path){
-	TODO();
+  kmt->sem_wait(&fs_lock);
+  dirent_t* baseDir = path[0] == '/' ? &root : kmt->gettask()->cwd;
+	dirent_t* file = fat_search(baseDir, path);
+  kmt->gettask()->cwd = file;
+  kmt->sem_signal(&fs_lock);
 	return 0;
 }
 
@@ -693,12 +700,12 @@ MODULE_DEF(vfs) = {
 	.write  = fat_write,
 	.read   = fat_read,
 	.close  = fat_close,
-	.openat   = fat_openat,
+	.openat = fat_openat,
 	.lseek  = fat_lseek,
 	.link   = fat_link,
 	.unlink = fat_unlink,
 	.fstat  = fat_fstat,
-	.mkdir  = fat_mkdir,
+	.mkdirat= fat_mkdirat,
 	.chdir  = fat_chdir,
 	.dup    = fat_dup,
 };

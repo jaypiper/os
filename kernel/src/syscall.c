@@ -94,9 +94,10 @@ int sys_lseek(Context* ctx){ // int fd, size_t offset, int whence
   return vfs->lseek(fd, offset, whence);
 }
 
-int sys_mkdir(Context* ctx){ // const char *pathname, mode_t mode
-  uintptr_t pathname = argraw(0, ctx, ARG_BUF);
-  return vfs->mkdir((char*)pathname);
+int sys_mkdirat(Context* ctx){ // int dirfd, const char *pathname, mode_t mode
+int dirfd = argraw(0, ctx, ARG_NUM);
+  uintptr_t pathname = argraw(1, ctx, ARG_BUF);
+  return vfs->mkdirat(dirfd, (char*)pathname);
 }
 
 int sys_mmap(Context* ctx){ // void *addr, size_t length, int prot, int flags, int fd, size_t offset
@@ -154,7 +155,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_fstat]     = sys_fstat,
 // [SYS_link]      = sys_link,
 [SYS_lseek]     = sys_lseek,
-// [SYS_mkdirat]     = sys_mkdir,
+[SYS_mkdirat]     = sys_mkdirat,
 [SYS_mmap]      = sys_mmap,
 [SYS_openat]      = sys_openat,
 [SYS_read]      = sys_read,
