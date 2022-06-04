@@ -4,6 +4,8 @@
 #include <elf.h>
 #include <user.h>
 
+void fill_standard_fd(task_t* task);
+
 void *pgalloc(int size) {
   Assert((size % PGSIZE) == 0, "pgalloc: invalid size %ld\n", size);
   void* ret = pmm->alloc(size);
@@ -140,7 +142,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
 
   task->int_depth = 1;
   SET_TASK(task);
-  void fill_standard_fd(task_t* task);
+
   fill_standard_fd(task);
 
   int fd = vfs->openat(AT_FDCWD, path, O_RDONLY);
