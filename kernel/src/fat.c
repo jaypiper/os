@@ -669,11 +669,6 @@ static int fat_dup(int fd){
 	return -1;
 }
 
-ofile_t* filedup(ofile_t* ofile){
-	TODO();
-	return NULL;
-}
-
 void fileclose(ofile_t* ofile){
 	kmt->sem_wait(&ofile->lock);
 	Assert(ofile->count > 0, "invalid ofile count %d\n", ofile->count);
@@ -684,6 +679,12 @@ void fileclose(ofile_t* ofile){
 	pmm->free(ofile); // no need to unlock ofile lock
 }
 
+ofile_t* filedup(ofile_t* ofile){
+	kmt->sem_wait(&ofile->lock);
+	ofile->count ++;
+	kmt->sem_signal(&ofile->lock);
+	return ofile;
+}
 
 
 MODULE_DEF(vfs) = {
