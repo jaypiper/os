@@ -133,5 +133,8 @@ typedef struct ofile_info{
 
 void init_task_cwd(task_t* task);
 dirent_t* dup_dirent(dirent_t * dirent);
+ofile_t* filedup(ofile_t* ofile);
+void fileclose(ofile_t* ofile);
+
 
 #endif
