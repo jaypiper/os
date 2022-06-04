@@ -213,7 +213,7 @@ char* programs[] = {"open", "close", "execve", "getpid", "read", "write", "chdir
                     "dup2", "fork", "getdents", "gettimeofday", "uname", "waitpid"};
 
 spinlock_t id_lock;
-static int id = 0;
+static volatile int id = 0;
 #include <syscall.h>
 
 void next_id(){
