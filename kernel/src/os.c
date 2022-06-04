@@ -75,7 +75,7 @@ static void os_test(){
   void uproc_test(void* args);
   static char ids[20];
   for(int i = 0; i < 20; i ++) ids[i] = i;
-  for(int i = 0; i < 5; i++){
+  for(int i = 0; i < 6; i++){
     kmt->create(task_alloc(), "uproc test", uproc_test, &ids[i]);
   }
 #else
