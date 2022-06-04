@@ -107,7 +107,7 @@ static int uproc_fork(){
   TOP_CONTEXT(new_task)->gpr[NO_A0] = 0;
   TOP_CONTEXT(new_task)->satp = MAKE_SATP(as->ptr);
   TOP_CONTEXT(new_task)->kernel_sp = TOP_CONTEXT(cur_task)->kernel_sp - (uintptr_t)cur_task->kstack + (uintptr_t)new_task->kstack;
-  kmt_inserttask(new_task);
+  kmt_inserttask(new_task, 1);
   return new_task->pid;
 }
 
