@@ -207,17 +207,23 @@ static int uproc_brk(void* addr){
   return 0;
 }
 
+char* programs[] = {"open", "close", "execve", "getpid", "read", "write", "chdir", "brk", \
+                    "fstat", "mkdir_", "mount", "sleep", "times", "unlink", "dup", "exit", \
+                    "getcwd", "mmap", "munmap", "pipe", "umount", "wait", "yield", "clone",\
+                    "dup2", "fork", "getdents", "gettimeofday", "uname", "waitpid"};
 
-
-char* programs[] = {"open", "close", "execve", "getpid", "chdir", "read", "write"};
+spinlock_t id_lock;
 static int id = 0;
 #include <syscall.h>
 
 void next_id(){
+  kmt->spin_lock(&id_lock);
   id ++;
+  kmt->spin_unlock(&id_lock);
 }
 
 void exec_program(){
+  kmt->spin_init(&id_lock, "id_lock");
   char* path = "/open";
   int do_syscall3(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3);
   char* args[] = {
