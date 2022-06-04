@@ -11,7 +11,8 @@
 #define O_WRONLY  0x001
 #define O_RDWR    0x002
 #define O_APPEND  0x004
-#define O_CREAT   0x200
+// #define O_CREAT   0x200
+#define O_CREAT   0x40
 
 #define PROT_READ        0x1                /* Page can be read.  */
 #define PROT_WRITE        0x2                /* Page can be written.  */
