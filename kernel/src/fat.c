@@ -585,7 +585,7 @@ static int file_lseek(ofile_t* ofile, int fd, int offset, int whence){
 
 static int file_write(ofile_t* ofile, int fd, void *buf, int count){
   kmt->sem_wait(&fs_lock);
-  if(ofile->offset >= ofile->dirent->FileSz){
+  if(ofile->offset > ofile->dirent->FileSz){
     TODO();
   }
   int32_t clus_depth = ofile->offset / fat32_bs.BytePerClus;
