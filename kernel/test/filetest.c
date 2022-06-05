@@ -3,7 +3,7 @@
 #include <user.h>
 
 /* based on xv6 usertest.c */
-
+#ifdef VFS_DEBUG
 #define BLK_SIZE 512
 
 int bigfile(char *s){
@@ -649,3 +649,4 @@ void filetest(int idx){
     while(1) ;
   }
 }
+#endif
