@@ -175,6 +175,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
         uproc_mmap((void*)filesz_end, _Pheader.p_memsz + _Pheader.p_vaddr - filesz_end, PROT_READ| PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
       }
       task->max_brk = (void*)ROUNDUP(_Pheader.p_vaddr + _Pheader.p_memsz, PGSIZE);
+      task->brk = task->max_brk;
     }
   }
 // #endif
@@ -198,13 +199,17 @@ static int uproc_exit(){
 
 static int uproc_brk(void* addr){
   task_t* cur_task = kmt->gettask();
-  if(cur_task->max_brk >= addr) return 0;
+  if(cur_task->max_brk >= addr) {
+    cur_task->brk = MAX(cur_task->brk, addr);
+    return cur_task->brk;
+  }
   while(cur_task->max_brk < addr){
     void* pa = pgalloc(PGSIZE);
     map(cur_task->as, cur_task->max_brk, pa, PROT_READ|PROT_WRITE);
     cur_task->max_brk += PGSIZE;
   }
-  return 0;
+  cur_task->brk = addr;
+  return cur_task->brk;
 }
 
 char* programs[] = {"open", "close", "execve", "getpid", "read", "write", "chdir", "brk", \
