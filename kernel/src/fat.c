@@ -702,10 +702,18 @@ ofile_t* filedup(ofile_t* ofile){
 	return ofile;
 }
 
+static void* absolute_path(void* buf, dirent_t* dir){
+  if(dir != &root){
+    buf = absolute_path(buf, dir->parent);
+  }
+  strcpy(buf, dir->name);
+  return buf + strlen(buf);
+}
+
 int fat_getcwd(void* buf, int size){
   dirent_t* cwd = kmt->gettask()->cwd;
   if(!cwd) return -1;
-  strcpy(buf, cwd->name);
+  absolute_path(buf, cwd);
   return 0;
 }
 
