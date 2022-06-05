@@ -656,8 +656,9 @@ static int fat_fstat(int fd, struct ufs_stat *buf){
 
 static int fat_mkdirat(int dirfd, const char *pathname){
   kmt->sem_wait(&fs_lock);
-	dirent_t* baseDir = pathname[0] == '/' ? &root : kmt->gettask()->ofiles[dirfd];
+  dirent_t* baseDir = pathname[0] == '/' ? &root : dirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[dirfd];
   dirent_t* file = fat_create(baseDir, pathname, ATTR_DIRECTORY);
+
   kmt->sem_signal(&fs_lock);
 	return file ? 0: -1;
 }
