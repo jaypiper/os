@@ -405,15 +405,15 @@ static void insert_dirent_to_dirent(dirent_t *parent, dirent_t* child, uint32_t 
     get_sname(sname, child->name);
     fentry.ld.Chksum = checksum(sname);
     fentry.ld.attr = ATTR_LONG_NAME;
-    for(int i = entryNum; i > 0; i--){  // long name
-      fentry.ld.Ord = i | (i == entryNum ? LAST_LONG_ENTRY : 0);
+    for(int i = entryNum - 1; i > 0; i--){  // long name
+      fentry.ld.Ord = i | (i == (entryNum-1) ? LAST_LONG_ENTRY : 0);
       uint8_t* str = child->name + (i - 1) * LONG_NAME_LENGTH;
       uint8_t wc[LONG_NAME_LENGTH * 2];
       c2wc(wc, str, LONG_NAME_LENGTH);
       memmove(fentry.ld.name1, wc, 10);
       memmove(fentry.ld.name2, wc + 10, 12);
       memmove(fentry.ld.name3, wc + 22, 4);
-      sd_write(addr_for_dirent_offset(parent, offset + (entryNum - i) * 32), &fentry, 32);
+      sd_write(addr_for_dirent_offset(parent, offset + (entryNum - 1 - i) * 32), &fentry, 32);
     }
     memset(&fentry, 0, sizeof(fentry));
     memmove(&fentry.sd.name, sname, SHORT_NAME_LANGTH);
