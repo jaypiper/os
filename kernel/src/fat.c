@@ -429,7 +429,7 @@ static uint32_t search_empty_dirent(dirent_t *dirent, uint32_t num){
   if(!(dirent->attr & ATTR_DIRECTORY)) return NULL;
   
 
-  uint32_t sec = 0, clus = dirent->FstClus, clusOffset = 0;
+  uint32_t prev_clus = dirent->FstClus, clus = dirent->FstClus, clusOffset = 0;
   fat32_dirent_t fentry;
 
   int empty_num = 0;
@@ -445,7 +445,13 @@ static uint32_t search_empty_dirent(dirent_t *dirent, uint32_t num){
     clusOffset += 32;
     if(clusOffset >= fat32_bs.BytePerClus){
       clusOffset -= fat32_bs.BytePerClus;
+      prev_clus = clus;
       clus = next_clus(clus);
+    }
+    if(clus >= FAT32_EOF){
+      uint32_t new_clus = alloc_clus();
+      link_clus(prev_clus, clus);
+      clus = new_clus;
     }
   }
   Assert(0, "no empty %d dirent", num);
