@@ -667,6 +667,7 @@ static int fat_chdir(const char *path){
   kmt->sem_wait(&fs_lock);
   dirent_t* baseDir = path[0] == '/' ? &root : kmt->gettask()->cwd;
 	dirent_t* file = fat_search(baseDir, path);
+  if(!file) return -1;
   kmt->gettask()->cwd = file;
   kmt->sem_signal(&fs_lock);
 	return 0;
