@@ -145,6 +145,12 @@ int sys_getpid(Context* ctx){
   return kmt->gettask()->pid;
 }
 
+int sys_getcwd(Context* ctx){ // char *buf, size_t size
+  uintptr_t buf = argraw(0, ctx, ARG_BUF);
+  uintptr_t size = argraw(1, ctx, ARG_NUM);
+  return vfs->getcwd(buf, size);
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -163,6 +169,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_write]     = sys_write,
 [SYS_brk]       = sys_brk,
 [SYS_getpid]    = sys_getpid,
+[SYS_getcwd]    = sys_getcwd,
 };
 
 Context* do_syscall(Event ev, Context* context){

@@ -72,6 +72,7 @@ MODULE(vfs) {
   int (*mkdirat)(int dirfd, const char *pathname);
   int (*chdir)(const char *path);
   int (*dup)(int fd);
+  int (*getcwd)(void* buf, int size);
 };
 
 MODULE(uproc) {

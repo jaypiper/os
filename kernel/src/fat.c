@@ -696,6 +696,12 @@ ofile_t* filedup(ofile_t* ofile){
 	return ofile;
 }
 
+int fat_getcwd(void* buf, int size){
+  dirent_t* cwd = kmt->gettask()->cwd;
+  if(!cwd) return -1;
+  strcpy(buf, cwd->name);
+  return 0;
+}
 
 MODULE_DEF(vfs) = {
 	.init   = fat_init,
@@ -710,6 +716,7 @@ MODULE_DEF(vfs) = {
 	.mkdirat= fat_mkdirat,
 	.chdir  = fat_chdir,
 	.dup    = fat_dup,
+  .getcwd = fat_getcwd,
 };
 
 
