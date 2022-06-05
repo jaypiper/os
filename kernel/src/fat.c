@@ -450,7 +450,7 @@ static uint32_t search_empty_dirent(dirent_t *dirent, uint32_t num){
     }
     if(clus >= FAT32_EOF){
       uint32_t new_clus = alloc_clus();
-      link_clus(prev_clus, clus);
+      link_clus(prev_clus, new_clus);
       clus = new_clus;
     }
   }
