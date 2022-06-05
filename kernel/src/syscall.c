@@ -146,7 +146,7 @@ int sys_getpid(Context* ctx){
 }
 
 int sys_getcwd(Context* ctx){ // char *buf, size_t size
-  uintptr_t buf = argraw(0, ctx, ARG_BUF);
+  uintptr_t buf = argraw(0, ctx, ARG_PTR);
   uintptr_t size = argraw(1, ctx, ARG_NUM);
   return vfs->getcwd(buf, size);
 }
