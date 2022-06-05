@@ -58,7 +58,8 @@ typedef struct cpu_state{
 
 cpu_t* get_cpu();
 
-struct ufs_stat;
+typedef struct kstat kstat_t;
+
 MODULE(vfs) {
   void (*init)();
   int (*write)(int fd, void *buf, int count);
@@ -68,7 +69,7 @@ MODULE(vfs) {
   int (*lseek)(int fd, int offset, int whence);
   int (*link)(const char *oldpath, const char *newpath);
   int (*unlink)(const char *pathname);
-  int (*fstat)(int fd, struct ufs_stat *buf);
+  int (*fstat)(int fd, kstat_t *buf);
   int (*mkdirat)(int dirfd, const char *pathname);
   int (*chdir)(const char *path);
   int (*dup)(int fd);

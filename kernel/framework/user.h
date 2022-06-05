@@ -28,6 +28,33 @@ struct ufs_stat {
   uint32_t id, type, size;
 };
 
+typedef unsigned int mode_t;
+typedef long int off_t;
+
+typedef struct kstat {
+  uint64_t st_dev;
+  uint64_t st_ino;
+  mode_t st_mode;
+  uint32_t st_nlink;
+  uint32_t st_uid;
+  uint32_t st_gid;
+  uint64_t st_rdev;
+  unsigned long __pad;
+  off_t st_size;
+  uint32_t st_blksize;
+  int __pad2;
+  uint64_t st_blocks;
+  long st_atime_sec;
+  long st_atime_nsec;
+  long st_mtime_sec;
+  long st_mtime_nsec;
+  long st_ctime_sec;
+  long st_ctime_nsec;
+  unsigned unused[2];
+}kstat_t;
+
+#define S_IFREG 0x0100000
+
 struct ufs_dirent {
   uint32_t inode;
   char name[28];

@@ -655,8 +655,16 @@ static int fat_unlink(const char *pathname){
 	return 0;
 }
 
-static int fat_fstat(int fd, struct ufs_stat *buf){
-  TODO();
+static int fat_fstat(int fd, kstat_t *buf){
+  dirent_t* dirent = kmt->gettask()->ofiles[fd]->dirent;
+  buf->st_dev = 0;
+  buf->st_ino = dirent->FstClus;
+  buf->st_mode = S_IFREG;
+  buf->st_nlink = 1;
+  buf->st_size = dirent->FileSz;
+  buf->st_atime_sec = 0;
+  buf->st_mtime_sec = 0;
+  buf->st_ctime_sec = 0;
 	return 0;
 }
 
