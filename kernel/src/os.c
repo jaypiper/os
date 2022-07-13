@@ -73,9 +73,11 @@ static void os_test(){
 
 #ifdef UPROC_DEBUG
   void uproc_test(void* args);
-  static char ids[20];
-  for(int i = 0; i < 20; i ++) ids[i] = i;
-  for(int i = 0; i < 6; i++){
+  static char ids[30];
+  for(int i = 0; i < 30; i ++) ids[i] = i;
+  extern spinlock_t id_lock;
+  kmt->spin_init(&id_lock, "id_lock");
+  for(int i = 0; i < 15; i++){
     kmt->create(task_alloc(), "uproc test", uproc_test, &ids[i]);
   }
 #else

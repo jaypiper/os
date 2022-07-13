@@ -145,7 +145,7 @@ bool vme_init(void *(*_pgalloc)(int size), void (*_pgfree)(void *)) {
       for (uintptr_t cur = (uintptr_t)vma->area.start;
            cur != (uintptr_t)vma->area.end;
            cur += mmu.pgsize) {
-        *ptwalk(&as, cur, PTE_W | PTE_R) = (cur >> 2) | PTE_V | PTE_W | PTE_R | PTE_X | PTE_U;
+        *ptwalk(&as, cur, PTE_W | PTE_R) = (cur >> 2) | PTE_V | PTE_W | PTE_R | PTE_X; // | PTE_U;
       }
     }
   }

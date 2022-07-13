@@ -212,9 +212,9 @@ static int uproc_brk(void* addr){
   return cur_task->brk;
 }
 
-char* programs[] = {"open", "close", "execve", "getpid", "read", "write", "chdir", "brk", \
-                    "fstat", "mkdir_", "mount", "sleep", "times", "unlink", "dup", "exit", \
-                    "getcwd", "mmap", "munmap", "pipe", "umount", "wait", "yield", "clone",\
+char* programs[] = {"open", "close", "execve", "getpid", "read", "write", "brk", /*"chdir",*/ \
+                    "fstat", /*"mkdir_",*/ "getcwd", "yield", "exit", "times", "unlink", "dup", \
+                    "mmap", "munmap", "pipe", "umount", "wait", "clone","mount", "sleep", \
                     "dup2", "fork", "getdents", "gettimeofday", "uname", "waitpid"};
 
 spinlock_t id_lock;
@@ -227,8 +227,8 @@ void next_id(){
   kmt->spin_unlock(&id_lock);
 }
 
+#ifdef UPROC_DEBUG
 void exec_program(){
-  kmt->spin_init(&id_lock, "id_lock");
   char* path = "/open";
   int do_syscall3(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3);
   char* args[] = {
@@ -240,13 +240,14 @@ void exec_program(){
   Assert(0, "should not reach here\n");
 }
 
-
 void uproc_test(void* args){
-  while(id < ((uint8_t*)args)[0]) ;
+  while(id < ((uint8_t*)args)[0]);
   w_csr("sepc", (uintptr_t)exec_program);
   asm volatile("sret");
   Assert(0, "should not reach here\n");
 }
+#endif UPROC_DEBUG
+
 
 MODULE_DEF(uproc) = {
 	.init   = uproc_init,
