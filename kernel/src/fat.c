@@ -722,7 +722,7 @@ int fat_getcwd(void* buf, int size){
   dirent_t* cwd = kmt->gettask()->cwd;
   if(!cwd) return -1;
   absolute_path(buf, cwd);
-  return 0;
+  return buf;
 }
 
 MODULE_DEF(vfs) = {
