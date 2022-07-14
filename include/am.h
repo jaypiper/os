@@ -83,6 +83,7 @@ void     unprotect   (AddrSpace *as);
 void     map         (AddrSpace *as, void *vaddr, void *paddr, int prot);
 Context *ucontext    (AddrSpace *as, Area kstack, void *entry);
 
+void init_kernel_as(AddrSpace *as);
 void pgtable_ucopy(uintptr_t* oldpt, uintptr_t* newpt);
 void init_satp();
 uintptr_t user_addr_translate(uintptr_t satp, uintptr_t user_addr);

@@ -253,8 +253,7 @@ extern char  _initcode_start, _initcode_end;
 void start_initcode(void* args){
   task_t* cur_task = kmt->gettask();
   for(int i = 0; i < (uintptr_t)(&_initcode_end - &_initcode_start); i += PGSIZE){
-    printf("map i=0x%lx [0x%lx, 0x%lx) \n", i, &_initcode_start, &_initcode_end);
-    map(cur_task->as, (void*)i, &_initcode_start + i, 0);
+    map(cur_task->as, (void*)i, &_initcode_start + i, PROT_READ|PROT_WRITE);
   }
   printf("start initcode...\n");
   w_csr("sepc", 0);

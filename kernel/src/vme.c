@@ -2,6 +2,7 @@
 #include <klib-macros.h>
 #include <klib.h>
 #include <riscv64.h>
+#include <common.h>
 
 const struct mmu_config mmu = {
   .pgsize = 4096,
@@ -243,4 +244,9 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
   ctx->status |= SSTATUS_SPIE;
 
   return ctx;
+}
+
+void init_kernel_as(AddrSpace *as){
+  as->pgsize = PGSIZE;
+  as->ptr = kpt;
 }

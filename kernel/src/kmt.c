@@ -138,7 +138,8 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->int_depth = 1;
   task->wait_next = NULL;
   task->blocked = 0;
-  task->as = NULL;
+  task->as = pmm->alloc(sizeof(AddrSpace));
+  init_kernel_as(task->as);
   memset(task->ofiles, 0, sizeof(task->ofiles));
   memset(task->mmaps, 0, sizeof(task->mmaps));
   init_task_cwd(task);
