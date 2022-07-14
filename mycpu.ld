@@ -7,6 +7,16 @@ SECTIONS {
     *(entry)
     *(.text*)
   }
+
+  _initcode_start = ALIGN(0x1000);
+  . = _initcode_start;
+  .initcode : {
+    KEEP(*(initcode_entry))
+    KEEP(*(initcode_text))
+    KEEP(*(initcode_data))
+  }
+  _initcode_end = .;
+
 /*  . = _ram_start; */
   .rodata : {
     *(.rodata*)

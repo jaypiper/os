@@ -83,6 +83,8 @@ static void os_test(){
 #else
   // kmt->create(task_alloc(), "tty_reader", tty_reader, "tty1");
   // kmt->create(task_alloc(), "tty_reader", tty_reader, "tty2");
+  void start_initcode(void* args);
+  kmt->create(task_alloc(), "uproc test", start_initcode, 0);
 #endif
 }
 

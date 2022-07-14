@@ -246,7 +246,21 @@ void uproc_test(void* args){
   asm volatile("sret");
   Assert(0, "should not reach here\n");
 }
-#endif UPROC_DEBUG
+#endif
+
+extern char  _initcode_start, _initcode_end;
+
+void start_initcode(void* args){
+  task_t* cur_task = kmt->gettask();
+  for(int i = 0; i < (uintptr_t)(&_initcode_end - &_initcode_start); i += PGSIZE){
+    printf("map i=0x%lx [0x%lx, 0x%lx) \n", i, &_initcode_start, &_initcode_end);
+    map(cur_task->as, (void*)i, &_initcode_start + i, 0);
+  }
+  printf("start initcode...\n");
+  w_csr("sepc", 0);
+  asm volatile("sret");
+  Assert(0, "should not reach here\n");
+}
 
 
 MODULE_DEF(uproc) = {
