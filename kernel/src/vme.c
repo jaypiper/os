@@ -152,8 +152,6 @@ bool vme_init(void *(*_pgalloc)(int size), void (*_pgfree)(void *)) {
   }
   kpt = as.ptr;
 
-  // w_csr("satp", kpt);
-  // sfence_vma();
   return true;
 }
 
