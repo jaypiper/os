@@ -265,7 +265,6 @@ void get_dirent_name(uint8_t* buf, fat32_dirent_t* fentry){
       *buf ++ = fentry->sd.name[i];
     }
   }
-  *buf ++ = 0;
 }
 
 static void get_dirent_info(dirent_t *dirent, fat32_dirent_t* fentry){
