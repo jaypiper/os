@@ -263,9 +263,15 @@ extern char  _initcode_start, _initcode_end;
 
 void start_initcode(void* args){
   task_t* cur_task = kmt->gettask();
+  AddrSpace* as = cur_task->as;
   for(int i = 0; i < (uintptr_t)(&_initcode_end - &_initcode_start); i += PGSIZE){
-    map(cur_task->as, (void*)i, &_initcode_start + i, PROT_READ|PROT_WRITE);
+    map(as, (void*)i, &_initcode_start + i, PROT_READ|PROT_WRITE);
   }
+  cur_task->stack = pmm->alloc(STACK_SIZE);
+  for(int i = 0; i < STACK_SIZE / PGSIZE; i++){
+    map(as, as->area.end - STACK_SIZE + i * PGSIZE, cur_task->stack + i * PGSIZE, PROT_READ|PROT_WRITE);
+  }
+  w_gpr("sp", as->area.end);
   printf("start initcode...\n");
   w_csr("sepc", 0);
   asm volatile("sret");

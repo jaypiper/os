@@ -246,5 +246,6 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
 
 void init_kernel_as(AddrSpace *as){
   as->pgsize = PGSIZE;
+  as->area = uvm_area;
   as->ptr = kpt;
 }
