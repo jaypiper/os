@@ -134,27 +134,26 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
     map(as, as->area.end - STACK_SIZE + i * PGSIZE, task->stack + i * PGSIZE, PROT_READ|PROT_WRITE);
   }
 
-  uintptr_t* args_ptr = (uintptr_t*)(STACK_END(task->stack)) - 1;
-#if 0
-  TODO(); // argv in user space
+  uint64_t args_ptr = STACK_END(task->stack);
+  uintptr_t saved_argv[12] = {0};
+  memset(saved_argv, 0, sizeof(saved_argv));
+  int argc = 0;
   if(argv){
-    int argc = 0;
-    for(argc = 0; argv[argc]; argc ++) printf("0x%lx, 0x%lx\n", argv, argv[argc]); // count the number of arg
-    *args_ptr = argc;
-    uintptr_t str_start = (uintptr_t)STACK_END(task->stack) - (argc + 2) * sizeof(uintptr_t);  // argc; args; NULL;
-    int offset = sizeof(uintptr_t);
-    for(int i = 0; i < argc; i++){
-      *(args_ptr-i-1) = as->area.end - STACK_SIZE + str_start - task->stack;
-      int str_len = strlen(argv[i]);
-      strcpy((void*)str_start, argv[i]);
-      str_start += str_len + 1; // string follewed by 0
-      offset += sizeof(uintptr_t);
+    for(argc = 0; argv[argc]; argc ++){
+      args_ptr -= strlen(argv[argc]);
+      args_ptr &= ~((uint64_t)0xf);  // aligned to 16
+      strcpy((char*)args_ptr, argv[argc]);
+      saved_argv[argc] = args_ptr;
     }
-    *(uintptr_t*)(STACK_START(task->stack) + offset) = 0;
   }
-#else
-  *args_ptr = 0;
-#endif
+  Assert(argc < 10, "argc %d > 10\n", argc);
+  saved_argv[argc] = saved_argv[argc+1] = 0;
+  args_ptr -= (argc + 3) * sizeof(uintptr_t);
+  args_ptr &= ~((uint64_t)0xf);
+  memcpy((char*)args_ptr, saved_argv, (argc + 3) * sizeof(uintptr_t));
+  args_ptr -= sizeof(uintptr_t);
+  *(uintptr_t*)args_ptr = argc;
+
   task->int_depth = 1;
   SET_TASK(task);
 
@@ -195,9 +194,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   task->as = as;
   task->name = path;
 
-  TOP_CONTEXT(task)->gpr[NO_A0] = (uintptr_t)(as->area.end - STACK_SIZE + STACK_START(task->stack) - task->stack);
-  TOP_CONTEXT(task)->gpr[NO_SP] -= 8;
-
+  TOP_CONTEXT(task)->gpr[NO_SP] = as->area.end - (STACK_END(task->stack) - args_ptr);
   free_pages(oldas);
   return 0;
 }
