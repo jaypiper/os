@@ -134,26 +134,6 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
     map(as, as->area.end - STACK_SIZE + i * PGSIZE, task->stack + i * PGSIZE, PROT_READ|PROT_WRITE);
   }
 
-  uint64_t args_ptr = STACK_END(task->stack);
-  uintptr_t saved_argv[12] = {0};
-  memset(saved_argv, 0, sizeof(saved_argv));
-  int argc = 0;
-  if(argv){
-    for(argc = 0; argv[argc]; argc ++){
-      args_ptr -= strlen(argv[argc]);
-      args_ptr &= ~((uint64_t)0xf);  // aligned to 16
-      strcpy((char*)args_ptr, argv[argc]);
-      saved_argv[argc] = args_ptr;
-    }
-  }
-  Assert(argc < 10, "argc %d > 10\n", argc);
-  saved_argv[argc] = saved_argv[argc+1] = 0;
-  args_ptr -= (argc + 3) * sizeof(uintptr_t);
-  args_ptr &= ~((uint64_t)0xf);
-  memcpy((char*)args_ptr, saved_argv, (argc + 3) * sizeof(uintptr_t));
-  args_ptr -= sizeof(uintptr_t);
-  *(uintptr_t*)args_ptr = argc;
-
   task->int_depth = 1;
   SET_TASK(task);
 
@@ -193,6 +173,28 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   task->blocked = 0;
   task->as = as;
   task->name = path;
+
+  uint64_t args_ptr = STACK_END(task->stack);
+  args_ptr -= 16;
+  *(uintptr_t*)args_ptr = 0;
+  uintptr_t saved_argv[12] = {0};
+  memset(saved_argv, 0, sizeof(saved_argv));
+  int argc = 0;
+  if(argv){
+    for(argc = 0; argv[argc]; argc ++){
+      args_ptr -= strlen(argv[argc]);
+      args_ptr &= ~((uint64_t)0xf);  // aligned to 16
+      strcpy((char*)args_ptr, argv[argc]);
+      saved_argv[argc] = as->area.end - (STACK_END(task->stack) - (uintptr_t)args_ptr);
+    }
+  }
+  Assert(argc < 10, "argc %d > 10\n", argc);
+  saved_argv[argc] = saved_argv[argc+1] = 0;
+  args_ptr -= (argc + 3) * sizeof(uintptr_t);
+  args_ptr &= ~((uint64_t)0xf);
+  memcpy((char*)args_ptr, saved_argv, (argc + 3) * sizeof(uintptr_t));
+  args_ptr -= sizeof(uintptr_t);
+  *(uintptr_t*)args_ptr = argc;
 
   TOP_CONTEXT(task)->gpr[NO_SP] = as->area.end - (STACK_END(task->stack) - args_ptr);
   free_pages(oldas);
