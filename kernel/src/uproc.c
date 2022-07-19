@@ -40,6 +40,7 @@ Context* handle_pagefault(Event ev, Context* ctx){
     mm_area_t* mm = cur_task->mmaps[i];
     if(mmap_contains(mm, pg_addr)){
       void* pa = pgalloc(PGSIZE);
+      memset(pa, 0, PGSIZE);
       if(!(mm->flags & MAP_ANONYMOUS)){
         Assert(cur_task->ofiles[mm->fd], "handle_pagefault: fd %d is not open\n", mm->fd);
         size_t start_offset = mm->offset + MAX(0, (uintptr_t)pg_addr - mm->start);
