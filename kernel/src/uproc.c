@@ -153,10 +153,12 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
     return -1;
   }
 
+  uintptr_t first_program_seg = 0;
   for(int i = 0; i < _Eheader.e_phnum; i++){
     Elf64_Phdr _Pheader;
     vfs->lseek(fd,  _Eheader.e_phoff + i * _Eheader.e_phentsize, SEEK_SET);
     int rdsize = vfs->read(fd, &_Pheader, sizeof(_Pheader));
+    if(i == 0) first_program_seg = _Pheader.p_vaddr;
     Assert(rdsize == sizeof(_Pheader), "execve: rdsize 0x%x, expect 0x%x\n", rdsize, sizeof(_Pheader));
     if(_Pheader.p_type == PT_LOAD){
       uproc_mmap((void*)_Pheader.p_vaddr, _Pheader.p_filesz, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, _Pheader.p_offset);
@@ -175,6 +177,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   task->name = path;
 
   uint64_t args_ptr = STACK_END(task->stack);
+  // argv
   args_ptr -= 16;
   *(uintptr_t*)args_ptr = 0;
   uintptr_t saved_argv[12] = {0};
@@ -182,17 +185,25 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   int argc = 0;
   if(argv){
     for(argc = 0; argv[argc]; argc ++){
-      args_ptr -= strlen(argv[argc]);
+      args_ptr -= strlen(argv[argc]) + 1;
       args_ptr &= ~((uint64_t)0xf);  // aligned to 16
       strcpy((char*)args_ptr, argv[argc]);
       saved_argv[argc] = as->area.end - (STACK_END(task->stack) - (uintptr_t)args_ptr);
     }
   }
   Assert(argc < 10, "argc %d > 10\n", argc);
-  saved_argv[argc] = saved_argv[argc+1] = 0;
-  args_ptr -= (argc + 3) * sizeof(uintptr_t);
-  args_ptr &= ~((uint64_t)0xf);
-  memcpy((char*)args_ptr, saved_argv, (argc + 3) * sizeof(uintptr_t));
+  // aux
+  auxv_t aux;
+  ADD_AUX(args_ptr, AT_PHDR, first_program_seg + _Eheader.e_phoff)
+  ADD_AUX(args_ptr, AT_PHENT, _Eheader.e_phentsize)
+  ADD_AUX(args_ptr, AT_PHNUM, _Eheader.e_phnum)
+  ADD_AUX(args_ptr, AT_PAGESZ, PGSIZE)
+  ADD_AUX(args_ptr, AT_BASE, 0)
+  ADD_AUX(args_ptr, AT_ENTRY, _Eheader.e_entry)
+
+  // env & argv
+  args_ptr -= (argc + 1) * sizeof(uintptr_t);
+  memcpy((char*)args_ptr, saved_argv, (argc + 1) * sizeof(uintptr_t));
   args_ptr -= sizeof(uintptr_t);
   *(uintptr_t*)args_ptr = argc;
 
