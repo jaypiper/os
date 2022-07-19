@@ -6,7 +6,7 @@
 
 void fill_standard_fd(task_t* task);
 
-void inline disp_ctx(Event* ev, Context* ctx){
+void disp_ctx(Event* ev, Context* ctx){
   uintptr_t status;
   r_csr("sstatus", status);
   printf("pagefault: %s invalid addr 0x%lx pc=0x%lx sstatus 0x%lx\n", kmt->gettask()->name, ev->ref, ctx->epc,  status);
