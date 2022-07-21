@@ -203,12 +203,11 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
 
 void pgtable_ucopy_level(int level, uintptr_t* oldpt, uintptr_t* newpt, uintptr_t vaddr){
   if(level >= mmu.ptlevels) return;
-
   for(int idx = 0; idx < (1 << mmu.pgtables[level].bits); idx++){
-    if ((oldpt[idx] & PTE_V) && (oldpt[idx] & PTE_U)){
+    if ((oldpt[idx] & PTE_V) && ((level != mmu.ptlevels - 1) || (oldpt[idx] & PTE_U))){
       if(!(newpt[idx] & PTE_V)){
         uintptr_t newpage = (uintptr_t)pgallocz();
-        uintptr_t newpte = newpage | flagsof(oldpt[idx]);
+        uintptr_t newpte = (newpage >> 2) | flagsof(oldpt[idx]);
         newpt[idx] = newpte;
         // uintptr_t oldpage = baseof(oldpt[idx]);
         if(level == mmu.ptlevels - 1){
@@ -222,7 +221,7 @@ void pgtable_ucopy_level(int level, uintptr_t* oldpt, uintptr_t* newpt, uintptr_
 }
 
 void pgtable_ucopy(uintptr_t* oldpt, uintptr_t* newpt){
-  pgtable_ucopy_level(0, (void*)&oldpt, (void*)&newpt, 0);
+  pgtable_ucopy_level(0, oldpt, newpt, 0);
 }
 
 extern void user_trap(void);
