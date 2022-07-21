@@ -14,6 +14,7 @@ int cpu_count() {
 }
 
 int cpu_current() {
+  return 0;
   uint32_t x;
   r_gpr("tp", x);
   return x;
