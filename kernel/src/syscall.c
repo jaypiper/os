@@ -151,6 +151,67 @@ int sys_getcwd(Context* ctx){ // char *buf, size_t size
   return vfs->getcwd(buf, size);
 }
 
+/*  check user's permissions of a file relative to a directory file descriptor*/
+int sys_facessat(Context* ctx){ // int dirfd, const char *pathname, int mode, int flags
+  uintptr_t dirfd = argraw(0, ctx, ARG_NUM);
+  uintptr_t pathname = argraw(1, ctx, ARG_BUF);
+  printf("facessat fd=%d pathname=%s\n", dirfd, pathname);
+  return 0;
+}
+
+int sys_set_tid_address(Context* ctx){ // int* tidptr
+  // uintptr_t tidptr = ;
+  return kmt->gettask()->pid;
+}
+
+int sys_rt_sigprocmask(Context* ctx){ //int how, const kernel_sigset_t *set, kernel_sigset_t *oldset, size_t sigsetsize
+  printf("TODO: sys_rt_sigprocmask\n");
+  return 0;
+}
+
+int sys_rt_sigaction(Context* ctx){
+  printf("TODO: sys_rt_sigaction\n");
+  return 0;
+}
+
+int sys_rt_sigtimedwait(Context* ctx){
+  printf("TODO: sys_rt_sigtimedwait\n");
+  return 0;
+}
+
+int sys_clone(Context* ctx){
+  uintptr_t fn = argraw(0, ctx, ARG_NUM);
+  uintptr_t stack = argraw(1, ctx, ARG_NUM);
+  uintptr_t flags = argraw(2, ctx, ARG_NUM);
+  uintptr_t args = argraw(3, ctx, ARG_NUM);
+  Assert(fn==17, "fn 0x%lx!= sig_chld\n", fn);
+  printf("clone fn=0x%lx stack=0x%lx flags = 0x%lx args=0x%lx\n", fn, stack, flags, args);
+  return uproc->fork();
+}
+
+int sys_wait4(Context* ctx){ // pid_t pid, int *wstatus, int options, struct rusage *rusage
+  uintptr_t pid = argraw(0, ctx, ARG_NUM);
+  uintptr_t wstatus = argraw(1, ctx, ARG_NUM);
+  uintptr_t options = argraw(2, ctx, ARG_NUM);
+  uintptr_t rusage = argraw(3, ctx, ARG_NUM);
+  printf("TODO: wait4 pid=0x%lx wstatus=0x%lx options= 0x%lx rusage=0x%lx\n", pid, wstatus, options, rusage);
+  while(1);
+  return pid;
+}
+
+int sys_prlimit64(Context* ctx){ // pid_t pid, int resource, const struct rlimit *new_limit, struct rlimit *old_limit
+  uintptr_t pid = argraw(0, ctx, ARG_NUM);
+  uintptr_t resource = argraw(1, ctx, ARG_NUM);
+  uintptr_t new_limit = argraw(2, ctx, ARG_NUM);
+  uintptr_t old_limit = argraw(3, ctx, ARG_NUM);
+  printf("TODO: pid=0x%lx resource=0x%lx new_limit=0x%lx old_limit=0x%lx\n", pid, resource, new_limit, old_limit);
+  return 0;
+}
+
+int sys_exit_group(Context* ctx){ // int status
+  return uproc->exit(0);
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -170,6 +231,16 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_brk]       = sys_brk,
 [SYS_getpid]    = sys_getpid,
 [SYS_getcwd]    = sys_getcwd,
+[SYS_set_tid_address] = sys_set_tid_address,
+[SYS_rt_sigprocmask] = sys_rt_sigprocmask,
+[SYS_rt_sigaction] = sys_rt_sigaction,
+[SYS_rt_sigtimedwait] = sys_rt_sigtimedwait,
+[SYS_clone] = sys_clone,
+[SYS_wait4] = sys_wait4,
+[SYS_gettid] = sys_getpid,
+[SYS_prlimit64] = sys_prlimit64,
+[SYS_exit_group] = sys_exit_group,
+// [SYS_faccessat] = sys_facessat,
 };
 
 Context* do_syscall(Event ev, Context* context){
