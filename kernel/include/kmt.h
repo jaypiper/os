@@ -8,7 +8,7 @@
 enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUNNABLE, TASK_DEAD, TASK_WAIT};
 
 #define MAX_INT_DEPTH 5
-
+#define MAX_TASKNAME_LEN 32
 #define TOP_CONTEXT(task) task->contexts[task->int_depth-1]
 #define RUN_STATE(task) task->states[task->int_depth]
 #define NEXT_STATE(task) task->states[task->int_depth+1]
@@ -18,7 +18,7 @@ typedef struct task{
   int pid;
   int ppid;
   int tgid;
-  const char* name;
+  char name[MAX_TASKNAME_LEN];
   Context* contexts[MAX_INT_DEPTH];
   int int_depth;
   struct task* wait_next;

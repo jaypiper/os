@@ -105,7 +105,7 @@ void kmt_init(){
   os->on_irq(INT_MAX, EVENT_NULL, kmt_schedule);
   for(int i = 0; i < cpu_count(); i++){
     idle_task[i] = pmm->alloc(sizeof(task_t));
-    idle_task[i]->name = "idle";
+    strcpy(idle_task[i]->name, "idle");
     idle_task[i]->states[0] = TASK_RUNNING;
     idle_task[i]->stack = NULL;
     idle_task[i]->kstack = idle_task[i]->stack;
@@ -137,7 +137,8 @@ task_t* task_by_pid(int pid){
 }
 
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *arg){
-  task->name = name;
+  Assert(strlen(name) < MAX_TASKNAME_LEN, "name %s is too long", name);
+  strcpy(task->name, name);
   task->states[0] = TASK_RUNNING;
   task->states[1] = TASK_RUNNABLE;
   task->stack = pmm->alloc(STACK_SIZE);
@@ -241,7 +242,8 @@ task_t* kmt_gettask(){
 
 int kmt_initforktask(task_t* newtask, const char* name){
   spin_init(&newtask->lock, name);
-  newtask->name = name;
+  Assert(strlen(name) < MAX_TASKNAME_LEN, "name %s is too long", name);
+  strcpy(newtask->name, name);
   newtask->states[0] = TASK_RUNNING;
   newtask->states[1] = TASK_RUNNABLE;
   newtask->stack = pmm->alloc(STACK_SIZE);

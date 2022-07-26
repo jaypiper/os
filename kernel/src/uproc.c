@@ -186,7 +186,8 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   TOP_CONTEXT(task) = ucontext(as, (Area){.start = (void*)STACK_START(task->kstack), .end = (void*)STACK_END(task->kstack)}, (void*)_Eheader.e_entry);
   task->blocked = 0;
   task->as = as;
-  task->name = path;
+  Assert(strlen(path) < MAX_TASKNAME_LEN, "path %s is too long", path);
+  strcpy(task->name, path);
 
   uint64_t args_ptr = STACK_END(task->stack);
   // argv
