@@ -85,7 +85,7 @@ static int uproc_mmap(void *addr, size_t len, int prot, int flags, int fd, size_
   return -1;
 }
 
-static int uproc_fork(){
+static int uproc_fork(uintptr_t flags){
   task_t* cur_task = kmt->gettask();
   task_t* new_task = pmm->alloc(sizeof(task_t));
   kmt_initforktask(new_task, cur_task->name);
@@ -104,6 +104,17 @@ static int uproc_fork(){
       memcpy(new_task->mmaps[i], cur_task->mmaps[i], sizeof(mm_area_t));
     }
   }
+
+  if(flags & CLONE_THREAD) { // same thread group
+    new_task->ppid = cur_task->ppid;
+    new_task->tgid = cur_task->tgid;
+    new_task->pid = get_empty_pid();
+  } else{
+    new_task->ppid = cur_task->pid;
+    new_task->pid = get_empty_pid();
+    new_task->tgid = new_task->pid;
+  }
+  printf("fork flags %d cur %s %d new %s %d\n", flags, cur_task->name, cur_task->pid, new_task->name, new_task->pid);
 
   new_task->kstack = pmm->alloc(STACK_SIZE);
   memcpy(new_task->kstack, cur_task->kstack, STACK_SIZE);
@@ -216,6 +227,15 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
 static int uproc_exit(){
   task_t* cur_task = kmt->gettask();
   RUN_STATE(cur_task) = TASK_DEAD;
+  notify_parent(cur_task->ppid);
+  return 0;
+}
+
+static int uproc_exit_group(){
+  task_t* cur_task = kmt->gettask();
+  RUN_STATE(cur_task) = TASK_DEAD;
+  notify_parent(cur_task->ppid);
+  kmt->teardown_group(cur_task->pid);
   return 0;
 }
 
@@ -296,6 +316,7 @@ MODULE_DEF(uproc) = {
 	.fork   = uproc_fork,
 	.execve = uproc_execve,
   .brk    = uproc_brk,
-	.exit   = uproc_exit
+	.exit   = uproc_exit,
+  .exit_group = uproc_exit_group,
 };
 

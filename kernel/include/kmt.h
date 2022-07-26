@@ -5,7 +5,7 @@
 #include <fat32.h>
 #include <uproc.h>
 
-enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUNNABLE, TASK_DEAD};
+enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUNNABLE, TASK_DEAD, TASK_WAIT};
 
 #define MAX_INT_DEPTH 5
 
@@ -16,6 +16,8 @@ enum {TASK_UNUSED = 0, TASK_RUNNING, TASK_RUNNABLE, TASK_BLOCKED, TASK_TO_BE_RUN
 typedef struct task{
   int states[MAX_INT_DEPTH];
   int pid;
+  int ppid;
+  int tgid;
   const char* name;
   Context* contexts[MAX_INT_DEPTH];
   int int_depth;
@@ -70,8 +72,10 @@ void clear_current_task();
 void release_resources(task_t* task);
 void execve_release_resources(task_t* task);
 void free_pages(AddrSpace* as);
+int get_empty_pid();
+task_t* task_by_pid(int pid);
 
-#define TASK_STATE_VALID(state) ((state >= TASK_UNUSED) && (state <= TASK_DEAD))
+#define TASK_STATE_VALID(state) ((state >= TASK_UNUSED) && (state <= TASK_WAIT))
 #define IN_STACK(addr, task) ((uintptr_t)(addr) >= (uintptr_t)task->stack && (uintptr_t)(addr) < ((uintptr_t)task->stack + STACK_SIZE))
 
 #define IS_IRQ(event) (event == EVENT_IRQ_TIMER || event == EVENT_IRQ_IODEV)

@@ -64,7 +64,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   iset(false);
   task_t* cur_task = CURRENT_TASK;
   task_t* select = cur_task && !cur_task->blocked && (RUN_STATE(cur_task) == TASK_TO_BE_RUNNABLE) ? cur_task : CURRENT_IDLE;
-  if(RUN_STATE(cur_task) == TASK_DEAD || IS_SCHED(ev.event)){ // select a random task
+  if(RUN_STATE(cur_task) == TASK_DEAD || RUN_STATE(cur_task) == TASK_WAIT || IS_SCHED(ev.event)){ // select a random task
     spin_lock(&task_lock);
     // for(int i = 0; i < 8 * MAX_TASK; i++){
     for(int idx = 0; idx < MAX_TASK; idx ++){
@@ -114,17 +114,26 @@ void kmt_init(){
     idle_task[i]->int_depth = 0;
     idle_task[i]->wait_next = NULL;
     idle_task[i]->blocked = 0;
-    idle_task[i]->pid = 0;
+    idle_task[i]->pid = idle_task[i]->tgid = idle_task[i]->ppid = 0;
     spin_init(&idle_task[i]->lock, "idle");
   }
 }
 
-static inline int get_empty_pid(){
-  for(int i = 0; i < MAX_TASK; i++){
-    if(!all_task[i]) return i;
+int get_empty_pid(){
+  spin_lock(&task_lock);
+  for(int i = 1; i < MAX_TASK; i++){
+    if(!all_task[i]) {
+      spin_unlock(&task_lock);
+      return i;
+    }
   }
+  spin_unlock(&task_lock);
   Assert(0, "task full\n");
   return -1;
+}
+
+task_t* task_by_pid(int pid){
+  return all_task[pid];
 }
 
 int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *arg){
@@ -146,10 +155,10 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   spin_init(&task->lock, name);
   SET_TASK(task);
 
+  task->pid = get_empty_pid();
   spin_lock(&task_lock);
-  int pid = get_empty_pid();
-  task->pid = pid;
-  all_task[pid] = task;
+  all_task[task->pid] = task;
+
   fill_standard_fd(task);
   spin_unlock(&task_lock);
   return 0;
@@ -204,16 +213,26 @@ void kmt_teardown(task_t *task){
   spin_lock(&task_lock);
   Assert(!task->blocked, "blocked task should not be teardown");
   int pid = task->pid;
-
   Assert(all_task[pid] == task, "teardown: task with pid %d mismatched", pid);
   all_task[pid] = NULL;
   Context* free_context = fork_context[pid];
   fork_context[pid] = NULL;
   release_resources(task);
-
   if(free_context) pmm->free(free_context);
   spin_unlock(&task_lock);
+}
 
+void kmt_teardown_group(int tgid){
+  spin_lock(&task_lock);
+  for(int i = 0; i < MAX_TASK; i++){
+    task_t* select = all_task[i];
+    if(select->tgid == tgid){
+      if(RUN_STATE(select) == TASK_DEAD) continue;
+      if(fork_context[i]) pmm->free(fork_context[i]);
+      release_resources(select);
+    }
+  }
+  spin_unlock(&task_lock);
 }
 
 task_t* kmt_gettask(){
@@ -240,11 +259,8 @@ int kmt_initforktask(task_t* newtask, const char* name){
 
 void kmt_inserttask(task_t* newtask, int is_fork){
   spin_lock(&task_lock);
-
-  int pid = get_empty_pid();
-  if(is_fork)fork_context[pid] = newtask->contexts[0];
-  newtask->pid = pid;
-  all_task[pid] = newtask;
+  all_task[newtask->pid] = newtask;
+  if(is_fork) fork_context[newtask->pid] = newtask->contexts[0];
 
   spin_unlock(&task_lock);
 }
@@ -253,6 +269,7 @@ MODULE_DEF(kmt) = {
   .init = kmt_init,
   .create = kmt_create,
   .teardown = kmt_teardown,
+  .teardown_group = kmt_teardown_group,
   .gettask = kmt_gettask,
   .spin_init  = spin_init,
   .spin_lock  = spin_lock,
@@ -287,6 +304,12 @@ void wakeup_task(sem_t* sem){
   sem->wait_list = select->wait_next;
   select->blocked = 0;
   select->wait_next = NULL;
+}
+
+void notify_parent(int pid){
+  mutex_lock(&all_task[pid]->lock);
+  if(RUN_STATE(all_task[pid]) == TASK_WAIT) RUN_STATE(all_task[pid]) = TASK_RUNNABLE;
+  mutex_unlock(&all_task[pid]->lock);
 }
 
 void clear_current_task(){

@@ -179,13 +179,13 @@ int sys_rt_sigtimedwait(Context* ctx){
   return 0;
 }
 
-int sys_clone(Context* ctx){
-  uintptr_t fn = argraw(0, ctx, ARG_NUM);
-  uintptr_t stack = argraw(1, ctx, ARG_NUM);
-  uintptr_t flags = argraw(2, ctx, ARG_NUM);
-  uintptr_t args = argraw(3, ctx, ARG_NUM);
-  Assert(fn==17, "fn 0x%lx!= sig_chld\n", fn);
-  printf("clone fn=0x%lx stack=0x%lx flags = 0x%lx args=0x%lx\n", fn, stack, flags, args);
+int sys_clone(Context* ctx){ // unsigned long flags, void *child_stack, void *ptid, void *ctid, struct pt_regs *regs
+  uintptr_t flags = argraw(0, ctx, ARG_NUM);
+  uintptr_t child_stack = argraw(1, ctx, ARG_NUM);
+  uintptr_t ptid = argraw(2, ctx, ARG_NUM);
+  uintptr_t ctid = argraw(3, ctx, ARG_NUM);
+  Assert(flags==17, "flags 0x%lx!= sig_chld\n", flags);
+  printf("clone flags=0x%lx child_stack=0x%lx ptid=0x%lx ctid=0x%lx\n", flags, child_stack, ptid, ctid);
   return uproc->fork();
 }
 
@@ -195,7 +195,8 @@ int sys_wait4(Context* ctx){ // pid_t pid, int *wstatus, int options, struct rus
   uintptr_t options = argraw(2, ctx, ARG_NUM);
   uintptr_t rusage = argraw(3, ctx, ARG_NUM);
   printf("TODO: wait4 pid=0x%lx wstatus=0x%lx options= 0x%lx rusage=0x%lx\n", pid, wstatus, options, rusage);
-  while(1);
+  task_t* cur_task = kmt->gettask();
+  RUN_STATE(cur_task) = TASK_WAIT;
   return pid;
 }
 
@@ -204,12 +205,12 @@ int sys_prlimit64(Context* ctx){ // pid_t pid, int resource, const struct rlimit
   uintptr_t resource = argraw(1, ctx, ARG_NUM);
   uintptr_t new_limit = argraw(2, ctx, ARG_NUM);
   uintptr_t old_limit = argraw(3, ctx, ARG_NUM);
-  printf("TODO: pid=0x%lx resource=0x%lx new_limit=0x%lx old_limit=0x%lx\n", pid, resource, new_limit, old_limit);
+  printf("TODO: prlimit64 pid=0x%lx resource=0x%lx new_limit=0x%lx old_limit=0x%lx\n", pid, resource, new_limit, old_limit);
   return 0;
 }
 
 int sys_exit_group(Context* ctx){ // int status
-  return uproc->exit(0);
+  return uproc->exit_group();
 }
 
 static int (*syscalls[MAX_SYSCALL_IDX])() = {

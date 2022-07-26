@@ -1,6 +1,8 @@
 #ifndef OS_UPROC_H
 #define OS_UPROC_H
 
+#include <clone.h>
+
 #define MAX_MMAP_NUM 16
 
 typedef struct mm_area {
