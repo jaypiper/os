@@ -121,7 +121,7 @@ void kmt_init(){
 
 int get_empty_pid(){
   spin_lock(&task_lock);
-  for(int i = 1; i < MAX_TASK; i++){
+  for(int i = 0; i < MAX_TASK; i++){
     if(!all_task[i]) {
       spin_unlock(&task_lock);
       return i;
@@ -156,7 +156,8 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   spin_init(&task->lock, name);
   SET_TASK(task);
 
-  task->pid = get_empty_pid();
+  task->pid = task->tgid = get_empty_pid();
+  task->ppid = -1;
   spin_lock(&task_lock);
   all_task[task->pid] = task;
 
@@ -309,6 +310,7 @@ void wakeup_task(sem_t* sem){
 }
 
 void notify_parent(int pid, int wstatus){
+  if(pid < 0) return;
   mutex_lock(&all_task[pid]->lock);
   all_task[pid]->wstatus = wstatus;
   if(RUN_STATE(all_task[pid]) == TASK_WAIT) RUN_STATE(all_task[pid]) = TASK_RUNNABLE;
