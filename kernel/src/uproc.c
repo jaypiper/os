@@ -9,7 +9,7 @@ void fill_standard_fd(task_t* task);
 void disp_ctx(Event* ev, Context* ctx){
   uintptr_t status;
   r_csr("sstatus", status);
-  printf("pagefault: %s invalid addr 0x%lx pc=0x%lx sstatus 0x%lx\n", kmt->gettask()->name, ev->ref, ctx->epc,  status);
+  printf("(%s) invalid addr 0x%lx pc=0x%lx sstatus 0x%lx\n", kmt->gettask()->name, ev->ref, ctx->epc,  status);
 
   for(int i = 0; i < 32; i++) printf("gpr[%d]=0x%lx\n", i, ctx->gpr[i]);
   printf("cause=%d status=0x%lx\n", ctx->cause, ctx->status);
@@ -115,8 +115,6 @@ static int uproc_fork(uintptr_t flags){
     new_task->pid = get_empty_pid();
     new_task->tgid = new_task->pid;
   }
-  printf("fork flags %d cur %s %d new %s %d\n", flags, cur_task->name, cur_task->pid, new_task->name, new_task->pid);
-
   new_task->kstack = pmm->alloc(STACK_SIZE);
   memcpy(new_task->kstack, cur_task->kstack, STACK_SIZE);
   new_task->cwd = dup_dirent(cur_task->cwd);

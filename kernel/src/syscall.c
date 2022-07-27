@@ -186,7 +186,6 @@ int sys_clone(Context* ctx){ // unsigned long flags, void *child_stack, void *pt
   uintptr_t ptid = argraw(2, ctx, ARG_NUM);
   uintptr_t ctid = argraw(3, ctx, ARG_NUM);
   Assert(flags==17, "flags 0x%lx!= sig_chld\n", flags);
-  printf("clone flags=0x%lx child_stack=0x%lx ptid=0x%lx ctid=0x%lx\n", flags, child_stack, ptid, ctid);
   return uproc->fork();
 }
 
