@@ -42,7 +42,7 @@ static Context* kmt_context_save(Event ev, Context * ctx){
   Assert(CURRENT_TASK->int_depth >= 0 && CURRENT_TASK->int_depth < MAX_INT_DEPTH - 1, "context save: invalid depth %d", CURRENT_TASK->int_depth);
   CURRENT_TASK->contexts[CURRENT_TASK->int_depth] = ctx;
   if(RUN_STATE(CURRENT_TASK) == TASK_RUNNING) NEXT_STATE(CURRENT_TASK) = TASK_TO_BE_RUNNABLE;
-  else NEXT_STATE(CURRENT_TASK) = RUN_STATE(CURRENT_TASK);
+  // else NEXT_STATE(CURRENT_TASK) = RUN_STATE(CURRENT_TASK);
 
   if(LAST_TASK && LAST_TASK != CURRENT_TASK){
     if(LAST_TASK && RUN_STATE(LAST_TASK) == TASK_TO_BE_RUNNABLE){
