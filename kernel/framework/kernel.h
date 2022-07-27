@@ -83,8 +83,8 @@ MODULE(uproc) {
   int (*fork)();
   int (*execve)(const char *path, char *argv[], char *envp[]);
   int (*brk)(void* addr);
-  int (*exit)();
-  int (*exit_group)();
+  int (*exit)(int status);
+  int (*exit_group)(int status);
 };
 
 #endif

@@ -55,4 +55,10 @@ int    sscanf    (const char *str, const char *format, ...);
 }
 #endif
 
+#define WEXITSTATUS(s) (((s) & 0xff00) >> 8)
+#define WTERMSIG(s) ((s) & 0x7f)
+#define WIFEXITED(s) (!WTERMSIG(s))
+
+#define TO_WSTATUS(status, sig) (((status & 0xff) << 8) | (sig & 0x7f))
+
 #endif

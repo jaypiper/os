@@ -33,6 +33,7 @@ typedef struct task{
   dirent_t* cwd;
   int cwd_type;
   AddrSpace* as;
+  int wstatus;
 }task_t;
 
 #define MAX_TASK 64

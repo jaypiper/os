@@ -68,7 +68,8 @@ int sys_execve(Context* ctx){ // const char *pathname, char *const argv[], char 
 int sys_exit(Context* ctx){ // int status
   void next_id();
   next_id();
-  return uproc->exit();
+  int status = argraw(0, ctx, ARG_NUM);
+  return uproc->exit(status);
 }
 
 int sys_fork(Context* ctx){
@@ -191,12 +192,14 @@ int sys_clone(Context* ctx){ // unsigned long flags, void *child_stack, void *pt
 
 int sys_wait4(Context* ctx){ // pid_t pid, int *wstatus, int options, struct rusage *rusage
   uintptr_t pid = argraw(0, ctx, ARG_NUM);
-  uintptr_t wstatus = argraw(1, ctx, ARG_NUM);
+  uintptr_t wstatus = argraw(1, ctx, ARG_PTR);
   uintptr_t options = argraw(2, ctx, ARG_NUM);
   uintptr_t rusage = argraw(3, ctx, ARG_NUM);
   printf("TODO: wait4 pid=0x%lx wstatus=0x%lx options= 0x%lx rusage=0x%lx\n", pid, wstatus, options, rusage);
   task_t* cur_task = kmt->gettask();
-  RUN_STATE(cur_task) = TASK_WAIT;
+  cur_task->states[cur_task->int_depth + 1] = TASK_WAIT;
+  yield();
+  if(wstatus) *(int*)wstatus = cur_task->wstatus;
   return pid;
 }
 
@@ -210,7 +213,8 @@ int sys_prlimit64(Context* ctx){ // pid_t pid, int resource, const struct rlimit
 }
 
 int sys_exit_group(Context* ctx){ // int status
-  return uproc->exit_group();
+  int status = argraw(0, ctx, ARG_NUM);
+  return uproc->exit_group(status);
 }
 
 static int (*syscalls[MAX_SYSCALL_IDX])() = {

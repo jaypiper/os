@@ -225,17 +225,17 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   return 0;
 }
 
-static int uproc_exit(){
+static int uproc_exit(int status){
   task_t* cur_task = kmt->gettask();
   RUN_STATE(cur_task) = TASK_DEAD;
-  notify_parent(cur_task->ppid);
+  notify_parent(cur_task->ppid, TO_WSTATUS(status, 0));
   return 0;
 }
 
-static int uproc_exit_group(){
+static int uproc_exit_group(int status){
   task_t* cur_task = kmt->gettask();
   RUN_STATE(cur_task) = TASK_DEAD;
-  notify_parent(cur_task->ppid);
+  notify_parent(cur_task->ppid, TO_WSTATUS(status, 0));
   kmt->teardown_group(cur_task->pid);
   return 0;
 }

@@ -308,8 +308,9 @@ void wakeup_task(sem_t* sem){
   select->wait_next = NULL;
 }
 
-void notify_parent(int pid){
+void notify_parent(int pid, int wstatus){
   mutex_lock(&all_task[pid]->lock);
+  all_task[pid]->wstatus = wstatus;
   if(RUN_STATE(all_task[pid]) == TASK_WAIT) RUN_STATE(all_task[pid]) = TASK_RUNNABLE;
   mutex_unlock(&all_task[pid]->lock);
 }
