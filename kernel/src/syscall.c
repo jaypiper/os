@@ -82,10 +82,6 @@ int sys_exit(Context* ctx){ // int status
   return uproc->exit(status);
 }
 
-int sys_fork(Context* ctx){
-  return uproc->fork();
-}
-
 int sys_fstat(Context* ctx){ // int fd, struct stat *statbuf
   int fd = argraw(0, ctx, ARG_NUM);
   uintptr_t statbuf = argraw(1, ctx, ARG_PTR);
@@ -236,7 +232,6 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_dup]       = sys_dup,
 [SYS_execve]    = sys_execve,
 [SYS_exit]      = sys_exit,
-// [SYS_fork]      = sys_fork,
 [SYS_fstat]     = sys_fstat,
 // [SYS_link]      = sys_link,
 [SYS_lseek]     = sys_lseek,
