@@ -142,8 +142,12 @@ int sys_brk(Context* ctx){ // void *addr
   return uproc->brk((void*)addr);
 }
 
-int sys_getpid(Context* ctx){
+int sys_gettid(Context* ctx){
   return kmt->gettask()->pid;
+}
+
+int sys_getpid(Context* ctx){
+  return kmt->gettask()->tgid;
 }
 
 int sys_getcwd(Context* ctx){ // char *buf, size_t size
@@ -241,7 +245,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_rt_sigtimedwait] = sys_rt_sigtimedwait,
 [SYS_clone] = sys_clone,
 [SYS_wait4] = sys_wait4,
-[SYS_gettid] = sys_getpid,
+[SYS_gettid] = sys_gettid,
 [SYS_prlimit64] = sys_prlimit64,
 [SYS_exit_group] = sys_exit_group,
 // [SYS_faccessat] = sys_facessat,
