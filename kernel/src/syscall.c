@@ -8,9 +8,10 @@
     args: rdi   rsi   rdx   r10   r8    r9
 */
 #define BUF_LEN 64
+#define STR_LEN 32
 static uint8_t buf[6][BUF_LEN];
-
-enum{ARG_NUM = 1, ARG_BUF, ARG_PTR};
+static char strs[6][STR_LEN];
+enum{ARG_NUM = 1, ARG_BUF, ARG_PTR, ARG_ARGV};
 // TODO: add function for every arg type
 
 static inline void copy_from_user(Context* ctx, void* dst, uintptr_t user_addr, size_t count){
@@ -38,6 +39,15 @@ static inline uintptr_t argraw(int n, Context* ctx, int type){
     } else if(type == ARG_PTR){
       uintptr_t pg_offset = ctx->gpr[NO_A0 + n] & (PGSIZE - 1);
       return user_addr_translate(ctx->satp, ctx->gpr[NO_A0 + n] - pg_offset) + pg_offset;
+    } else if(type == ARG_ARGV){
+      copy_from_user(ctx, buf[n], ctx->gpr[NO_A0 + n], BUF_LEN);
+      uintptr_t** argv = (uintptr_t**)buf[n];
+      int i = 0;
+      for(i = 0; argv[i]; i ++){
+        copy_from_user(ctx, strs[i], argv[i], STR_LEN);
+        argv[i] = strs[i];
+      }
+      return (uintptr_t)buf[n];
     }
   }
   return ctx->gpr[NO_A0 + n];  // a0-a5
@@ -60,7 +70,7 @@ int sys_dup(Context* ctx){ // int oldfd
 
 int sys_execve(Context* ctx){ // const char *pathname, char *const argv[], char *const envp[]
   uintptr_t pathname = argraw(0, ctx, ARG_BUF);
-  uintptr_t argv = argraw(1, ctx, ARG_BUF);
+  uintptr_t argv = argraw(1, ctx, ARG_ARGV);
   uintptr_t envp = 0; //argraw(2, ctx, ARG_BUF);
   return uproc->execve((char*)pathname, (char**)argv, (char**)envp);
 }
