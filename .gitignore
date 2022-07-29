@@ -8,3 +8,4 @@ a.out-*
 *-64*
 build/
 os.bin
+fs-img/
