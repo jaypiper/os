@@ -129,7 +129,7 @@ static int uproc_fork(uintptr_t flags){
   TOP_CONTEXT(new_task)->satp = MAKE_SATP(as->ptr);
   TOP_CONTEXT(new_task)->kernel_sp = TOP_CONTEXT(cur_task)->kernel_sp - (uintptr_t)cur_task->kstack + (uintptr_t)new_task->kstack;
   kmt_inserttask(new_task, 1);
-  return new_task->pid;
+  return new_task->tgid;
 }
 
 static int uproc_execve(const char *path, char *argv[], char *envp[]){
