@@ -2,7 +2,7 @@
 #define RISCV_H
 
 #define w_gpr(r, val) asm volatile("mv " r ",%0" : : "r"(val))
-#define r_gpr(r, dst) asm volatile("mv %0, " r : : "r"(dst))
+#define r_gpr(r, dst) asm volatile("mv %0, " r : "=r"(dst) : )
 #define w_csr(r, val) asm volatile("csrw " r ", %0" : : "r" (val));
 #define r_csr(r, dst) asm volatile("csrr %0, " r : "=r"(dst))
 
