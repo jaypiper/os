@@ -121,7 +121,7 @@ void kmt_init(){
 
 int get_empty_pid(){
   spin_lock(&task_lock);
-  for(int i = 0; i < MAX_TASK; i++){
+  for(int i = 1; i < MAX_TASK; i++){
     if(!all_task[i]) {
       spin_unlock(&task_lock);
       return i;
