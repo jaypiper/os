@@ -89,9 +89,8 @@ static int uproc_fork(uintptr_t flags){
   task_t* cur_task = kmt->gettask();
   task_t* new_task = pmm->alloc(sizeof(task_t));
   kmt_initforktask(new_task, cur_task->name);
-  memcpy(new_task->contexts[0], cur_task->contexts[0], sizeof(Context));
   // copy context
-  memcpy(TOP_CONTEXT(new_task), TOP_CONTEXT(cur_task), sizeof(Context));
+  memcpy(new_task->contexts[0], cur_task->contexts[0], sizeof(Context));
   // child share the same ofile with parent
   fill_standard_fd(new_task);
   for(int i = STDERR_FILENO + 1; i < MAX_OPEN_FILE; i++){
