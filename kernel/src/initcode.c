@@ -141,11 +141,11 @@ char* __attribute__((section("initcode_data")))initcode_args[] = {
 };
 
 void __attribute__((section("initcode_text")))oscmp_test_static(int i){
-  int pid = 0; //do_syscall3(SYS_fork, 0, 0, 0);
+  int pid = initcode_syscall(SYS_clone, 17, 0, 0);
   if(pid == 0){
     initcode_syscall(SYS_execve, initcode_str[1], initcode_args, 0);
-  }else{
-    while(1) ;
+  } else{
+
   }
 
 }

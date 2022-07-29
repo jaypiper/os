@@ -290,20 +290,39 @@ void uproc_test(void* args){
 #endif
 
 extern char  _initcode_start, _initcode_end;
+extern void user_trap(void);
 
 void start_initcode(void* args){
   task_t* cur_task = kmt->gettask();
-  AddrSpace* as = cur_task->as;
+  // AddrSpace* as = cur_task->as;
+  AddrSpace* as = pmm->alloc(sizeof(AddrSpace));
+  cur_task->as = as;
+  protect(as);
   for(int i = 0; i < (uintptr_t)(&_initcode_end - &_initcode_start); i += PGSIZE){
     map(as, (void*)i, &_initcode_start + i, PROT_READ|PROT_WRITE);
   }
   cur_task->stack = pmm->alloc(STACK_SIZE);
+  cur_task->kstack = pmm->alloc(STACK_SIZE);
   for(int i = 0; i < STACK_SIZE / PGSIZE; i++){
     map(as, as->area.end - STACK_SIZE + i * PGSIZE, cur_task->stack + i * PGSIZE, PROT_READ|PROT_WRITE);
   }
-  w_gpr("sp", as->area.end);
+
+  cur_task->contexts[0] = pmm->alloc(sizeof(Context));
+  cur_task->contexts[0]->kernel_sp = cur_task->kstack + STACK_SIZE - sizeof(Context);
+  cur_task->contexts[0]->kernel_trap = user_trap;
+  r_csr("satp", cur_task->contexts[0]->kernel_satp);
+
   printf("start initcode...\n");
+
+  w_csr("satp", MAKE_SATP(as->ptr));
+  w_csr("stvec", user_trap);
+  w_csr("sscratch", (uintptr_t)cur_task->contexts[0]);
   w_csr("sepc", 0);
+  r_csr("sstatus", cur_task->contexts[0]->status);
+  cur_task->contexts[0]->status &= ~SSTATUS_SPP;
+  w_csr("sstatus", cur_task->contexts[0]->status);
+  w_gpr("sp", as->area.end);
+
   asm volatile("sret");
   Assert(0, "should not reach here\n");
 }
