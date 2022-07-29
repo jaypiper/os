@@ -196,7 +196,7 @@ int sys_clone(Context* ctx){ // unsigned long flags, void *child_stack, void *pt
   uintptr_t ptid = argraw(2, ctx, ARG_NUM);
   uintptr_t ctid = argraw(3, ctx, ARG_NUM);
   Assert(flags==17, "flags 0x%lx!= sig_chld\n", flags);
-  return uproc->fork();
+  return uproc->fork(flags);
 }
 
 int sys_wait4(Context* ctx){ // pid_t pid, int *wstatus, int options, struct rusage *rusage
