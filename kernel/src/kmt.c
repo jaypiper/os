@@ -228,6 +228,7 @@ void kmt_teardown_group(int tgid){
   spin_lock(&task_lock);
   for(int i = 0; i < MAX_TASK; i++){
     task_t* select = all_task[i];
+    if(!select) continue;
     if(select->tgid == tgid){
       if(RUN_STATE(select) == TASK_DEAD) continue;
       if(fork_context[i]) pmm->free(fork_context[i]);
