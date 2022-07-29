@@ -125,14 +125,14 @@ char __attribute__((section("initcode_data")))initcode_str[][25] = {
 };
 
 
-void __attribute__((section("initcode_text")))initcode_syscall(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3){
+int __attribute__((section("initcode_text")))initcode_syscall(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3){
   int ret;
   asm volatile("mv a0, %1; \
                 mv a1, %2; \
                 mv a2, %3; \
                 mv a7, %4; \
                 ecall; \
-                mv a0, %0" : "=r"(ret) : "r"(val1), "r"(val2), "r"(val3), "r"((unsigned long long)syscall) : "%a0", "%a1", "%a2", "%a7");
+                mv %0, a0" : "=r"(ret) : "r"(val1), "r"(val2), "r"(val3), "r"((unsigned long long)syscall) : "%a0", "%a1", "%a2", "%a7");
   return ret;
 }
 
