@@ -289,7 +289,7 @@ void uproc_test(void* args){
 }
 #endif
 
-extern char  _initcode_start, _initcode_end;
+extern char   initcode_start, initcode_end;
 extern void user_trap(void);
 
 void start_initcode(void* args){
@@ -298,8 +298,10 @@ void start_initcode(void* args){
   AddrSpace* as = pmm->alloc(sizeof(AddrSpace));
   cur_task->as = as;
   protect(as);
-  for(int i = 0; i < (uintptr_t)(&_initcode_end - &_initcode_start); i += PGSIZE){
-    map(as, (void*)i, &_initcode_start + i, PROT_READ|PROT_WRITE);
+  for(int i = 0; i < (uintptr_t)(&initcode_end - &initcode_start); i += PGSIZE){
+    uintptr_t* pa = pmm->alloc(PGSIZE);
+    memcpy(pa, &initcode_start + i, PGSIZE);
+    map(as, (void*)i, pa, PROT_READ|PROT_WRITE);
   }
   cur_task->stack = pmm->alloc(STACK_SIZE);
   cur_task->kstack = pmm->alloc(STACK_SIZE);

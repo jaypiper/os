@@ -51,6 +51,9 @@ image: $(IMAGE).elf
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 	@( cat $(IMAGE).bin; head -c 1024 /dev/zero) > $(IMAGE)
 
+initcode:
+	make -C initcode
+
 all: image
 	$(OBJCOPY) $(RUSTSBI) --strip-all -O binary os.bin
 	dd if=$(IMAGE).bin of=os.bin bs=$(RUSTSBI_SIZE) seek=1

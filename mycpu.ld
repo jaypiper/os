@@ -1,5 +1,11 @@
 ENTRY(_start)
-
+/*
+PHDRS {
+  text PT_LOAD FILEHDR PHDRS;
+  initcode PT_LOAD;
+  data PT_LOAD;
+}
+*/
 SECTIONS {
   /* _pmem_start and _entry_offset are defined in LDFLAGS */
   . = _addr_start;
@@ -7,21 +13,20 @@ SECTIONS {
     *(entry)
     *(.text*)
   }
-
+/*
   _initcode_start = ALIGN(0x1000);
   . = _initcode_start;
   .initcode : {
-    KEEP(*(initcode_entry))
-    KEEP(*(initcode_text))
-    KEEP(*(initcode_data))
-  }
+    *(.initcode)
+  } : initcode
   _initcode_end = .;
-
+*/
 /*  . = _ram_start; */
   .rodata : {
     *(.rodata*)
   }
   .data : {
+    *(.initcode)
     *(.data)
   }
   edata = .;

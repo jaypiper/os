@@ -1,7 +1,7 @@
 #include <syscall.h>
 /* The first program in user mode */
 
-char __attribute__((section("initcode_data")))oscmp_static_str[][35] = {
+char oscmp_static_str[][35] = {
 "argv",
 "basename",
 "clocale_mbfuncs",
@@ -116,8 +116,8 @@ char __attribute__((section("initcode_data")))oscmp_static_str[][35] = {
 
 
 
-char __attribute__((section("initcode_data")))initcode_str[][25] = {
-  "in initcode\n", 
+char initcode_str[][25] = {
+  "in initcode\n",
   "./runtest.exe",
   "-w",
   "entry-static.exe",
@@ -125,7 +125,7 @@ char __attribute__((section("initcode_data")))initcode_str[][25] = {
 };
 
 
-int __attribute__((section("initcode_text")))initcode_syscall(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3){
+int initcode_syscall(int syscall, unsigned long long val1, unsigned long long val2, unsigned long long val3){
   int ret;
   asm volatile("mv a0, %1; \
                 mv a1, %2; \
@@ -136,16 +136,14 @@ int __attribute__((section("initcode_text")))initcode_syscall(int syscall, unsig
   return ret;
 }
 
-char* __attribute__((section("initcode_data")))initcode_args[] = {
+char* initcode_args[] = {
   initcode_str[1], initcode_str[2], initcode_str[3], oscmp_static_str[0], 0
 };
 
-void __attribute__((section("initcode_text")))oscmp_test_static(int i){
+void oscmp_test_static(int i){
   int pid = initcode_syscall(SYS_clone, 17, 0, 0);
   if(pid == 0){
     initcode_syscall(SYS_execve, initcode_str[1], initcode_args, 0);
-  } else{
-
   }
 
 }
