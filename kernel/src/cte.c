@@ -68,7 +68,7 @@ Context* __am_irq_handle(Context *c) {
 
       case CAUSE_SUPERVISOR_ECALL: MSG("supervisor ecall");
         c->epc += 4;
-        ev.event = EVENT_ERROR; break;
+        ev.event = c->gpr[17] == -1 ? EVENT_YIELD : EVENT_SYSCALL; break; break;
 
       case CAUSE_USER_ECALL: MSG("user ecall");
         c->epc += 4;
