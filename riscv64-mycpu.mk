@@ -64,7 +64,7 @@ initcode:
 run-qemu: all
 	$(QEMU) $(QEMU-OPTS)
 
-all: image
+all: initcode image
 	cp bootloader/rustsbi-qemu sbi-qemu
 	cp build/kernel-riscv64-mycpu.elf kernel-qemu
 # all: image
