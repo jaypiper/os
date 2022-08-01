@@ -68,14 +68,11 @@ void fill_standard_fd(task_t* task){
 }
 
 static void fat_init(){
-
-  fpioa_pin_init();
-  dmac_init();
-  sdcard_init();
-
+  // fpioa_pin_init();
+  // dmac_init();
+  // sdcard_init();
   dev_sd = dev->lookup("sda");
 	sd_op->init(dev_sd);
-
 	sd_read(0, fat_buf, 512);
   printf("fat32 %s\n", (char*)&fat_buf[82]);
   memmove(&fat32_bs.BPB_BytsPerSec, fat_buf + 11, 2);  // misaligned

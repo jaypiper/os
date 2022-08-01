@@ -3,7 +3,8 @@
 
 #define BLKSZ  512
 #define DISKSZ (64 << 20)
-#define DISK_START 0x40000000
+#define DISK_START (uintptr_t)0x84200000
+
 
 void disk_config(AM_DISK_CONFIG_T *cfg) {
   cfg->present = true;
@@ -20,9 +21,11 @@ void disk_blkio(AM_DISK_BLKIO_T *bio) {
   uint8_t *ptr = bio->buf;
   while(blkcnt --){
     if (bio->write) {
-      sdcard_write_sector(ptr, blkno);
+      memcpy(DISK_START + blkno * BLKSZ, ptr, BLKSZ);
+      // sdcard_write_sector(ptr, blkno);
     } else{
-      sdcard_read_sector(ptr, blkno);
+      // sdcard_read_sector(ptr, blkno);
+      memcpy(ptr, DISK_START + blkno * BLKSZ, BLKSZ);
     }
     ptr += BLKSZ;
   }
