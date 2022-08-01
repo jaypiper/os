@@ -33,10 +33,16 @@ LDFLAGS   += -Wl,-T$(AM_HOME)/mycpu.ld -Wl,--defsym=_pmem_start=0x80000000 -nost
 ifdef FLASH
   LDFLAGS += -Wl,--defsym=_addr_start=0x30000000
 else
-  LDFLAGS += -Wl,--defsym=_addr_start=0x80020000
+  LDFLAGS += -Wl,--defsym=_addr_start=0x80200000
 endif
 LDFLAGS   += -Wl,--gc-sections -Wl,-e_start
 CFLAGS += -DMAINARGS=\"$(mainargs)\" -DNCPU=1
+
+QEMU = ../../qemu/build/riscv64-softmmu/qemu-system-riscv64
+QEMU-OPTS = -machine virt -kernel build/kernel-riscv64-mycpu.elf
+QEMU-OPTS += -m 128M -nographic -smp 2 -bios bootloader/rustsbi-qemu
+QEMU-OPTS += -drive file=disk.img,if=none,format=raw,id=x0
+QEMU-OPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 
 build-arg: image
 	( echo -n $(mainargs); ) | dd if=/dev/stdin of=$(IMAGE) bs=512 count=2 seek=1 conv=notrunc status=none
@@ -53,6 +59,9 @@ image: $(IMAGE).elf
 
 initcode:
 	make -C initcode
+
+run-qemu: image
+	$(QEMU) $(QEMU-OPTS)
 
 all: image
 	$(OBJCOPY) $(RUSTSBI) --strip-all -O binary os.bin
