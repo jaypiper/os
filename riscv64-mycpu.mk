@@ -39,11 +39,11 @@ LDFLAGS   += -Wl,--gc-sections -Wl,-e_start
 CFLAGS += -DMAINARGS=\"$(mainargs)\" -DNCPU=1
 
 QEMU = ../../qemu/build/riscv64-softmmu/qemu-system-riscv64
-QEMU-OPTS = -machine virt -kernel build/kernel-riscv64-mycpu.elf
-QEMU-OPTS += -m 128M -nographic -smp 2 -bios bootloader/rustsbi-qemu
-QEMU-OPTS += -drive file=disk.img,if=none,format=raw,id=x0
+QEMU-OPTS = -machine virt -kernel kernel-qemu
+QEMU-OPTS += -m 128M -nographic -smp 2 -bios sbi-qemu
+QEMU-OPTS += -drive file=sdcard.img,if=none,format=raw,id=x0
 QEMU-OPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
-QEMU-OPTS += -initrd disk.img
+QEMU-OPTS += -initrd initrd.img
 
 build-arg: image
 	( echo -n $(mainargs); ) | dd if=/dev/stdin of=$(IMAGE) bs=512 count=2 seek=1 conv=notrunc status=none
@@ -61,11 +61,14 @@ image: $(IMAGE).elf
 initcode:
 	make -C initcode
 
-run-qemu: image
+run-qemu: all
 	$(QEMU) $(QEMU-OPTS)
 
 all: image
-	$(OBJCOPY) $(RUSTSBI) --strip-all -O binary os.bin
-	dd if=$(IMAGE).bin of=os.bin bs=$(RUSTSBI_SIZE) seek=1
-	mkdir -p build
-	$(OBJDUMP) -D -b binary -m riscv os.bin > build/os.asm
+	cp bootloader/rustsbi-qemu sbi-qemu
+	cp build/kernel-riscv64-mycpu.elf kernel-qemu
+# all: image
+# 	$(OBJCOPY) $(RUSTSBI) --strip-all -O binary os.bin
+# 	dd if=$(IMAGE).bin of=os.bin bs=$(RUSTSBI_SIZE) seek=1
+# 	mkdir -p build
+# 	$(OBJDUMP) -D -b binary -m riscv os.bin > build/os.asm

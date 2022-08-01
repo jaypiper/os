@@ -9,3 +9,6 @@ a.out-*
 build/
 os.bin
 fs-img/
+*.img
+kernel-qemu
+sbi-qemu
