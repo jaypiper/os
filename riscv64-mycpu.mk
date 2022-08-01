@@ -43,6 +43,7 @@ QEMU-OPTS = -machine virt -kernel build/kernel-riscv64-mycpu.elf
 QEMU-OPTS += -m 128M -nographic -smp 2 -bios bootloader/rustsbi-qemu
 QEMU-OPTS += -drive file=disk.img,if=none,format=raw,id=x0
 QEMU-OPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+QEMU-OPTS += -initrd disk.img
 
 build-arg: image
 	( echo -n $(mainargs); ) | dd if=/dev/stdin of=$(IMAGE) bs=512 count=2 seek=1 conv=notrunc status=none
