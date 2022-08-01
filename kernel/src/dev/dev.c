@@ -12,9 +12,10 @@
 device_t *devices[0 DEVICES(DEV_CNT)];
 
 static device_t *dev_lookup(const char *name) {
-  for (int i = 0; i < LENGTH(devices); i++) 
-    if (strcmp(devices[i]->name, name) == 0)
+  for (int i = 0; i < LENGTH(devices); i++)
+    if (devices[i] && strcmp(devices[i]->name, name) == 0)
       return devices[i];
+
   panic("lookup device failed.");
   return NULL;
 }
@@ -34,6 +35,7 @@ void dev_input_task();
 void dev_tty_task();
 
 static void dev_init() {
+  memset(devices, 0, sizeof(devices));
 #define INIT(id, device_type, dev_name, dev_id, dev_ops) \
   devices[id] = dev_create(sizeof(device_type), dev_name, dev_id, dev_ops); \
   devices[id]->ops->init(devices[id]);
