@@ -1,4 +1,4 @@
-.PHONY: build-arg
+.PHONY: build-arg initcode
 
 .DEFAULT_GOAL = build-arg
 
@@ -59,7 +59,7 @@ image: $(IMAGE).elf
 	@( cat $(IMAGE).bin; head -c 1024 /dev/zero) > $(IMAGE)
 
 initcode:
-	make -C initcode
+	make -C initcode build
 
 run-qemu: all
 	$(QEMU) $(QEMU-OPTS)
