@@ -194,13 +194,17 @@ void free_pages(AddrSpace* as){
 }
 
 void release_resources(task_t* task){
+  if(task->stack != task->kstack) pmm->free(task->kstack);
+  pmm->free(task->stack);
+  for(int i = 0; i < STACK_SIZE / PGSIZE; i++){
+    map(task->as, task->as->area.end - STACK_SIZE + i * PGSIZE, 0, MMAP_NONE);
+  }
+
   free_ofiles(task);
   free_mmaps(task);
   free_pages(task->as);
 
   task->wait_next = NULL;
-  if(task->stack != task->kstack) pmm->free(task->kstack);
-  pmm->free(task->stack);
   pmm->free((void*)task);
 }
 

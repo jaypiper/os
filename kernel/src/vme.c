@@ -119,15 +119,15 @@ uintptr_t user_addr_translate(uintptr_t satp, uintptr_t user_addr){
 }
 
 static void teardown(int level, uintptr_t *pt) {
-  if (level >= mmu.ptlevels) return;
+  if(level == mmu.ptlevels) return;
+
   for (int index = 0; index < (1 << mmu.pgtables[level].bits); index++) {
-    if ((pt[index] & PTE_V) && (pt[index] & PTE_U)) {
+    if ((pt[index] & PTE_V) && ((level != (mmu.ptlevels - 1)) || (pt[index] & PTE_U))) {
       teardown(level + 1, (void *)baseof(pt[index]));
+      pgfree((void *)baseof(pt[index]));
     }
   }
-  if (level >= 1) {
-    pgfree(pt);
-  }
+  if (level == 0) pgfree(pt);
 }
 
 static inline void sfence_vma() {
