@@ -226,6 +226,24 @@ int sys_exit_group(Context* ctx){ // int status
   return uproc->exit_group(status);
 }
 
+uint64_t r_time();
+
+int sys_clock_gettime(Context* ctx){ // int clockid struct timespec* tp
+  uintptr_t tp = argraw(1, ctx, ARG_PTR);
+  uintptr_t time = r_time();
+  *(uintptr_t*)tp = time / 1000;
+  *(uintptr_t*)(tp+8) = time % 1000;
+  return 0;
+}
+
+int sys_mprotect(Context* ctx){
+  return 0;
+}
+
+int sys_utimenstat(Context* ctx){
+  return 0;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -253,6 +271,9 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_gettid] = sys_gettid,
 [SYS_prlimit64] = sys_prlimit64,
 [SYS_exit_group] = sys_exit_group,
+[SYS_clock_gettime] = sys_clock_gettime,
+[SYS_mprotect] = sys_mprotect,
+[SYS_utimenstat] = sys_utimenstat,
 // [SYS_faccessat] = sys_facessat,
 };
 

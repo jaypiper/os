@@ -273,6 +273,7 @@ void *kalloc_safe(size_t size) {
   bool i = ienabled();
   iset(false);
   void *ret = kalloc(size);
+  Assert(ret != 0, "alloc size 0x%lx\n", size);
   if (i) iset(true);
   return ret;
 }
