@@ -199,6 +199,7 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
     *ptentry = pte;
   }
   ptwalk(as, (uintptr_t)va, PTE_R | PTE_W | PTE_U);
+  sfence_vma();
 }
 
 #include <string.h>
