@@ -50,7 +50,8 @@ build-arg: image
 	make mkfs
 
 $(IMAGE).elf: $(OBJS) $(LIBS)
-	echo fjksdjflks
+
+$(shell rm build/riscv64-mycpu/kernel/src/initcode.o)
 
 image: $(IMAGE).elf
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
