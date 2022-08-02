@@ -16,6 +16,8 @@ static inline void outl(uintptr_t addr, uint32_t data) { *(volatile uint32_t *)a
 #define PTE_W 0x04
 #define PTE_X 0x08
 #define PTE_U 0x10
+#define PTE_A 0x040U    /* Accessed */
+#define PTE_D 0x080U    /* Dirty */
 
 
 #define w_gpr(r, val) asm volatile("mv " r ",%0" : : "r"(val))
