@@ -119,12 +119,17 @@ typedef struct fat32_dirent{
   };
 }fat32_dirent_t;
 
+typedef struct builtin_dirent bdirent_t;
+
 typedef struct ofile_info{
     int (*write)(struct ofile_info* ofile, int fd, void *buf, int count);
     int (*read)(struct ofile_info* ofile, int fd, void *buf, int count);
     int (*lseek)(struct ofile_info* ofile, int fd, int offset, int whence);
     int offset;
-    dirent_t* dirent;
+    union{
+      dirent_t* dirent;
+      bdirent_t* bdirent;
+    };
     int type;       // ufs, proc, dev
     int flag;
     int count;

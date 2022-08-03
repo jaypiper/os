@@ -7,6 +7,7 @@
 #include <fpioa.h>
 #include <sysctl.h>
 #include <dev_sim.h>
+#include <builtin_fs.h>
 #ifdef FS_FAT32
 
 
@@ -26,6 +27,7 @@ static device_t* dev_sd;
 
 static FAT32_BS fat32_bs;
 static dirent_t root;
+static bdirent_t bfs;
 static uint8_t fat_buf[512];
 
 static sem_t fs_lock;
@@ -71,6 +73,7 @@ static void fat_init(){
   // fpioa_pin_init();
   // dmac_init();
   // sdcard_init();
+  bfs_init(&bfs);
   dev_sd = dev->lookup("sda");
 	sd_op->init(dev_sd);
 	sd_read(0, fat_buf, 512);
@@ -203,7 +206,7 @@ static void free_dirent(dirent_t* dirent){
   }
 }
 
-static int split_base_name(char* name){
+int split_base_name(char* name){
 	int name_idx = -1;
 	for(name_idx = strlen(name) - 1; name_idx >= 0; name_idx --){
 		if(name[name_idx] == '/'){
@@ -423,7 +426,6 @@ static void insert_dirent_to_dirent(dirent_t *parent, dirent_t* child, uint32_t 
 
 static uint32_t search_empty_dirent(dirent_t *dirent, uint32_t num){
   if(!(dirent->attr & ATTR_DIRECTORY)) return NULL;
-  
 
   uint32_t prev_clus = dirent->FstClus, clus = dirent->FstClus, clusOffset = 0;
   fat32_dirent_t fentry;
@@ -511,6 +513,31 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
 	char string_buf[FAT32_MAX_PATH_LENGTH];
 	strcpy(string_buf, pathname);
 
+  int writable = (flags & O_WRONLY) || (flags & O_RDWR);
+	int readable = !(flags & O_WRONLY);
+
+/* check bfs */
+  bdirent_t* bfile = NULL;
+  if(baseDir == &root){
+    bfile = (flags & O_CREAT) ? bfs_create(&bfs, string_buf, 0) : bfs_search(&bfs, string_buf);
+  }
+  if(bfile){
+    ofile_t* tmp_ofile = pmm->alloc(sizeof(ofile_t));
+    tmp_ofile->write = writable ? bfs_write : invalid_write;
+    tmp_ofile->read = readable ? bfs_read : invalid_read;
+    tmp_ofile->lseek = file_lseek;
+    tmp_ofile->offset = (flags & O_APPEND) ? bfile->size : 0;
+    tmp_ofile->count = 1;
+    tmp_ofile->bdirent = bfile;
+    tmp_ofile->type = 0;
+    tmp_ofile->flag = flags;
+    kmt->sem_init(&tmp_ofile->lock, pathname, 1);
+
+    kmt->sem_signal(&fs_lock);
+    return fill_task_ofile(tmp_ofile);
+  }
+
+  strcpy(string_buf, pathname);
 /* read file from disk */
   dirent_t* file;
   if(flags & O_CREAT){
@@ -523,10 +550,6 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
     printf("open: no such file or directory %s\n", pathname);
     return -1;
   }
-
-	int writable = (flags & O_WRONLY) || (flags & O_RDWR);
-	int readable = !(flags & O_WRONLY);
-
 
 	ofile_t* tmp_ofile = pmm->alloc(sizeof(ofile_t));
 	tmp_ofile->write = writable ? file_write : invalid_write;
@@ -627,7 +650,7 @@ static int file_write(ofile_t* ofile, int fd, void *buf, int count){
   uint32_t dirent_addr = get_clus_start(ofile->dirent->clus_in_parent) + ofile->dirent->offset % fat32_bs.BytePerClus;
 
   sd_write(dirent_addr + STRUCT_OFFSET(fat32_dirent_t, sd.FileSz), &(ofile->dirent->FileSz), 32);
-  
+
   kmt->sem_signal(&fs_lock);
   return count;
 }

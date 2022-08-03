@@ -9,7 +9,7 @@ void fill_standard_fd(task_t* task);
 void disp_ctx(Event* ev, Context* ctx){
   uintptr_t status;
   r_csr("sstatus", status);
-  printf("(%s) invalid addr 0x%lx pc=0x%lx sstatus 0x%lx\n", kmt->gettask()->name, ev->ref, ctx->epc,  status);
+  printf("(%s) ref=0x%lx pc=0x%lx sstatus=0x%lx\n", kmt->gettask()->name, ev->ref, ctx->epc, status);
 
   for(int i = 0; i < 32; i++) printf("gpr[%d]=0x%lx\n", i, ctx->gpr[i]);
   printf("cause=%d status=0x%lx\n", ctx->cause, ctx->status);
