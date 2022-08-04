@@ -669,7 +669,16 @@ static int fat_link(const char *oldpath, const char *newpath){
 	return 0;
 }
 
-static int fat_unlink(const char *pathname){
+static int fat_unlinkat(int dirfd, const char *pathname, int flags){
+  dirent_t* baseDir = pathname[0] == '/' ? &root : dirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[dirfd];
+  if(pathname[0] == '/') pathname ++;
+  char string_buf[FAT32_MAX_PATH_LENGTH];
+	/* check bfs */
+  strcpy(string_buf, pathname);
+  if((baseDir == &root) && (bfs_unlink(&bfs, string_buf, flags & AT_REMOVEDIR) == 0)) return 0;
+
+  strcpy(string_buf, pathname);
+  /* TODO: fat_unlink */
   TODO();
 	return 0;
 }
@@ -752,7 +761,7 @@ MODULE_DEF(vfs) = {
 	.openat = fat_openat,
 	.lseek  = fat_lseek,
 	.link   = fat_link,
-	.unlink = fat_unlink,
+	.unlinkat = fat_unlinkat,
 	.fstat  = fat_fstat,
 	.mkdirat= fat_mkdirat,
 	.chdir  = fat_chdir,

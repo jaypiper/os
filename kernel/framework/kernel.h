@@ -69,7 +69,7 @@ MODULE(vfs) {
   int (*openat)(int dirfd, const char *pathname, int flags);
   int (*lseek)(int fd, int offset, int whence);
   int (*link)(const char *oldpath, const char *newpath);
-  int (*unlink)(const char *pathname);
+  int (*unlinkat)(int dirfd, const char *pathname, int flags);
   int (*fstat)(int fd, kstat_t *buf);
   int (*mkdirat)(int dirfd, const char *pathname);
   int (*chdir)(const char *path);

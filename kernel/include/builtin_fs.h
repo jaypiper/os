@@ -15,7 +15,7 @@ typedef struct builtin_dirent{
     uint32_t offset;
     uintptr_t direct_addr[DIRECT_NUM];
     uintptr_t indirent_addr;
-    bdirent_t* parent;
+    uint8_t dummy[4];
 }bdirent_t;
 
 int bfs_read(ofile_t* ofile, int fd, void *buf, int count);

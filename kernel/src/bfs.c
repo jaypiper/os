@@ -12,22 +12,25 @@ uintptr_t get_bfs_pg(int pg_idx, bdirent_t* bdirent){
     for(int i = 0; i < depth; i++){
         addr = ((uintptr_t*)addr)[INDIRECT_PER_PAGE];
     }
-    return addr + offset * sizeof(uintptr_t);
+    return ((uintptr_t*)addr)[offset];
 }
 
 uintptr_t new_bfs_pg(bdirent_t* bdirent){
-    int num = bdirent->size / PGSIZE;
+    int num = ROUNDUP(bdirent->size, PGSIZE) / PGSIZE;
     if(num < 3){
         bdirent->direct_addr[num] = pgalloc(PGSIZE);
         return bdirent->direct_addr[num];
     }
     uintptr_t ret = pgalloc(PGSIZE);
     if(num == 3) bdirent->indirent_addr = pgalloc(PGSIZE);
-    uintptr_t* pg_ptr = get_bfs_pg(num, bdirent);
-
-    int tmp_idx = ((uintptr_t)pg_ptr - (uintptr_t)ROUNDDOWN(pg_ptr, PGSIZE)) / sizeof(uintptr_t);
-    uintptr_t* next_addr = pg_ptr + 1;
-    if(tmp_idx == (INDIRECT_PER_PAGE - 1)){
+    int depth = (num - DIRECT_NUM) / INDIRECT_PER_PAGE;
+    int offset = (num - DIRECT_NUM) % INDIRECT_PER_PAGE;
+    uintptr_t* addr = bdirent->indirent_addr;
+    for(int i = 0; i < depth; i++){
+        addr = addr[INDIRECT_PER_PAGE];
+    }
+    uintptr_t* next_addr = addr + 1;
+    if(offset == (INDIRECT_PER_PAGE - 1)){
         uintptr_t* next_indirect_page = pgalloc(PGSIZE);
         *next_addr = next_indirect_page;
         *next_indirect_page = ret;
@@ -41,8 +44,8 @@ bdirent_t* bfs_empty(bdirent_t* bfs){
     int num = bfs->size / sizeof(bdirent_t);
     int pg_idx = num / MAX_BNETRY_PER_PAGE;
     int idx = num % MAX_BNETRY_PER_PAGE;
-    uintptr_t* pg_addr = (uintptr_t*)get_bfs_pg(pg_idx, bfs);
-    bdirent_t* bdirent = pg_addr + idx;
+    uintptr_t pg_addr = get_bfs_pg(pg_idx, bfs);
+    bdirent_t* bdirent = (bdirent_t*)pg_addr + idx;
     bfs->size += sizeof(bdirent_t);
     if(idx == (MAX_BNETRY_PER_PAGE - 1)){
         new_bfs_pg(bfs);
@@ -58,7 +61,6 @@ void tmpfs_init(bdirent_t* root_bfs){
     bdirent->size = 0;
     bdirent->offset = 0;
     bdirent->direct_addr[0] = pgalloc(PGSIZE);
-    bdirent->parent = root_bfs;
 }
 
 void bfs_init(bdirent_t* root_bfs){
@@ -98,7 +100,6 @@ bdirent_t* create_in_bfs(bdirent_t* dir, char* filename, int flags){
     strcpy(bdirent->name, filename);
     bdirent->size = 0;
     bdirent->offset = 0;
-    bdirent->parent = dir;
     if(flags & ATTR_DIRECTORY){
         bdirent->type = BD_DIR;
         bdirent->direct_addr[0] = pgalloc(PGSIZE);
@@ -134,6 +135,34 @@ bdirent_t* bfs_create(bdirent_t* dir, char* path, int flags){
     bdirent_t* bdirent = search_in_bfs(dir,filename);
     if(bdirent) return bdirent;
     return create_in_bfs(dir, filename, flags);
+}
+
+int bfs_unlink(bdirent_t* dir, char* path, int is_dir){ // not in bfs(-1) in bfs(0)
+    char* token = path;
+    int delim_idx = find_replace(path, "/", 0);
+    bdirent_t* parent = dir;
+    while(token) {
+        if(!dir || (dir->type != BD_DIR)) return -1;
+        parent = dir;
+        dir = search_in_bfs(dir, token);
+
+        if(delim_idx == -1) break;
+        path += delim_idx + 1;
+        token = path;
+        delim_idx = find_replace(path, "/", 0);
+    }
+    if(!dir) return -1;
+
+    if(dir->type == BD_DIR && !is_dir) return 0;
+    if(dir->type == BD_FILE && is_dir) return 0;
+    int pg_num = (parent->size - sizeof(bdirent_t)) / PGSIZE;
+    int pg_offset = (parent->size - sizeof(bdirent_t)) % PGSIZE;
+    uintptr_t pg_addr = get_bfs_pg(pg_num, parent);
+    bdirent_t* last = (bdirent_t*)(pg_addr + pg_offset);
+    memcpy(dir, last, sizeof(bdirent_t));
+    last->type = BD_EMPTY;
+    dir->size -= sizeof(bdirent_t);
+    return 0;
 }
 
 int bfs_read(ofile_t* ofile, int fd, void *buf, int count){

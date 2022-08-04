@@ -34,6 +34,8 @@
 #define	STDOUT_FILENO	1	/* Standard output.  */
 #define	STDERR_FILENO	2	/* Standard error output.  */
 
+#define AT_REMOVEDIR 0x200
+
 
 // Boot Sector
 typedef struct BS_Structure{

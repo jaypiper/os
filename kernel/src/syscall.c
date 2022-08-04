@@ -131,11 +131,6 @@ int sys_read(Context* ctx){ // int fd, void *buf, size_t count
   return vfs->read(fd, (void*)buf, count);
 }
 
-int sys_unlink(Context* ctx){ // const char *pathname
-  uintptr_t pathname = argraw(0, ctx, ARG_BUF);
-  return vfs->unlink((char*)pathname);
-}
-
 int sys_write(Context* ctx){ // int fd, const void *buf, size_t count
   int fd = argraw(0, ctx, ARG_NUM);
   uintptr_t buf = argraw(1, ctx, ARG_BUF);
@@ -244,6 +239,13 @@ int sys_utimenstat(Context* ctx){
   return 0;
 }
 
+int sys_unlinkat(Context* ctx){ // int dirfd, char* pathname, int flags
+  uintptr_t dirfd = argraw(0, ctx, ARG_NUM);
+  uintptr_t pathname = argraw(1, ctx, ARG_BUF);
+  uintptr_t flags = argraw(2, ctx, ARG_NUM);
+  vfs->unlinkat(dirfd, pathname, flags);
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -257,7 +259,6 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_mmap]      = sys_mmap,
 [SYS_openat]      = sys_openat,
 [SYS_read]      = sys_read,
-// [SYS_unlink]    = sys_unlink,
 [SYS_write]     = sys_write,
 [SYS_brk]       = sys_brk,
 [SYS_getpid]    = sys_getpid,
@@ -274,6 +275,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_clock_gettime] = sys_clock_gettime,
 [SYS_mprotect] = sys_mprotect,
 [SYS_utimenstat] = sys_utimenstat,
+[SYS_unlinkat] = sys_unlinkat,
 // [SYS_faccessat] = sys_facessat,
 };
 
