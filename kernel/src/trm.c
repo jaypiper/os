@@ -17,7 +17,11 @@ Area heap = RANGE(&_heap_start, PMEM_END);
 static const char mainargs[] = MAINARGS;
 
 void putch(char ch) {
+#ifdef PLATFORM_QEMU
   drv_uart_putc(ch);
+#else
+  uarths_putchar(ch);
+#endif
 }
 
 void halt(int code) {

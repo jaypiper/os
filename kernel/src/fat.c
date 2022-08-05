@@ -70,9 +70,11 @@ void fill_standard_fd(task_t* task){
 }
 
 static void fat_init(){
-  // fpioa_pin_init();
-  // dmac_init();
-  // sdcard_init();
+#ifndef PLATFORM_QEMU
+  fpioa_pin_init();
+  dmac_init();
+  sdcard_init();
+#endif
   bfs_init(&bfs);
   dev_sd = dev->lookup("sda");
 	sd_op->init(dev_sd);

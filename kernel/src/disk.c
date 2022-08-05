@@ -21,11 +21,17 @@ void disk_blkio(AM_DISK_BLKIO_T *bio) {
   uint8_t *ptr = bio->buf;
   while(blkcnt --){
     if (bio->write) {
+#ifdef PLATFORM_QEMU
       memcpy(DISK_START + blkno * BLKSZ, ptr, BLKSZ);
-      // sdcard_write_sector(ptr, blkno);
+#else
+      sdcard_write_sector(ptr, blkno);
+#endif
     } else{
-      // sdcard_read_sector(ptr, blkno);
+#ifdef PLATFORM_QEMU
       memcpy(ptr, DISK_START + blkno * BLKSZ, BLKSZ);
+#else
+      sdcard_read_sector(ptr, blkno);
+#endif
     }
     ptr += BLKSZ;
   }

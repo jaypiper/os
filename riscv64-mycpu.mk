@@ -9,6 +9,8 @@ CFLAGS        += $(COMMON_FLAGS) -static
 ASFLAGS       += $(COMMON_FLAGS) -O0
 #LDFLAGS       += -melf64lriscv
 
+PLATFORM ?= k210
+
 AM_SRCS := start.S \
            trm.c \
            libgcc/muldi3.S \
@@ -30,10 +32,11 @@ RUSTSBI = ./bootloader/rustsbi-k210
 CFLAGS    += -fdata-sections -ffunction-sections -fstrict-volatile-bitfields
 CFLAGS += -I$(AM_HOME)/am/src/include
 LDFLAGS   += -Wl,-T$(AM_HOME)/mycpu.ld -Wl,--defsym=_pmem_start=0x80000000 -nostartfiles
-ifdef FLASH
-  LDFLAGS += -Wl,--defsym=_addr_start=0x30000000
+ifeq ($(PLATFORM), k210)
+  LDFLAGS += -Wl,--defsym=_addr_start=0x80020000
 else
   LDFLAGS += -Wl,--defsym=_addr_start=0x80200000
+  CFLAGS += -DPLATFORM_QEMU
 endif
 LDFLAGS   += -Wl,--gc-sections -Wl,-e_start
 CFLAGS += -DMAINARGS=\"$(mainargs)\" -DNCPU=1
@@ -66,10 +69,12 @@ run-qemu: all
 	$(QEMU) $(QEMU-OPTS)
 
 all: initcode image
+ifeq ($(PLATFORM), qemu)
 	cp bootloader/rustsbi-qemu sbi-qemu
 	cp build/kernel-riscv64-mycpu.elf kernel-qemu
-# all: image
-# 	$(OBJCOPY) $(RUSTSBI) --strip-all -O binary os.bin
-# 	dd if=$(IMAGE).bin of=os.bin bs=$(RUSTSBI_SIZE) seek=1
-# 	mkdir -p build
-# 	$(OBJDUMP) -D -b binary -m riscv os.bin > build/os.asm
+else
+	$(OBJCOPY) $(RUSTSBI) --strip-all -O binary os.bin
+	dd if=$(IMAGE).bin of=os.bin bs=$(RUSTSBI_SIZE) seek=1
+	mkdir -p build
+	$(OBJDUMP) -D -b binary -m riscv os.bin > build/os.asm
+endif

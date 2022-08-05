@@ -40,23 +40,25 @@ static const struct vm_area vm_areas[] = {
   // { RANGE(0x0000000000, 0x100000000), 1 },
   {RANGE((uintptr_t)0x10000000, (uintptr_t)0x10000000 + 0x1000), 1}, //UART
   {RANGE((uintptr_t)0x80000000, (uintptr_t)0x80000000 + 6 * 1024 * 1024), 1},
+#ifdef PLATFORM_QEMU
   {RANGE((uintptr_t)0x84000000, (uintptr_t)0x84000000 + 8 * 1024 * 1024), 1}
-  // {RANGE((uintptr_t)0x02000000, (uintptr_t)0x02000000 + 0x1000), 1},  // CLINT
-  // {RANGE((uintptr_t)0x0C200000, (uintptr_t)0x0C200000 + 0x1000), 1},  // PLIC
-  // {RANGE((uintptr_t)0x38000000, (uintptr_t)0x38001000), 1},           // UARTHS
-  // {RANGE((uintptr_t)0x38001000, (uintptr_t)0x38001000 + 0x1000), 1},  // GPIOHS
-  // {RANGE((uintptr_t)0x50000000, (uintptr_t)0x50000000 + 0x1000), 1},  // DMAC
-  // {RANGE((uintptr_t)0x50200000, (uintptr_t)0x50200000 + 0x1000), 1},  // GPIO
-  // {RANGE((uintptr_t)0x50240000, (uintptr_t)0x50240000 + 0x1000), 1},  // SPI-slave
-  // {RANGE((uintptr_t)0x502B0000, (uintptr_t)0x502B0000 + 0x1000), 1},  // FPIOA
-  // {RANGE((uintptr_t)0x502D0000, (uintptr_t)0x502D0000 + 0x1000), 1},  // TIMER0
-  // {RANGE((uintptr_t)0x502E0000, (uintptr_t)0x502E0000 + 0x1000), 1},  // TIMER1
-  // {RANGE((uintptr_t)0x502F0000, (uintptr_t)0x502F0000 + 0x1000), 1},  // TIMER2
-  // {RANGE((uintptr_t)0x50440000, (uintptr_t)0x50440000 + 0x1000), 1},  // SYSCTL
-  // {RANGE((uintptr_t)0x52000000, (uintptr_t)0x52000000 + 0x1000), 1},  // SPI0
-  // {RANGE((uintptr_t)0x53000000, (uintptr_t)0x53000000 + 0x1000), 1},  // SPI1
-  // {RANGE((uintptr_t)0x54000000, (uintptr_t)0x54000000 + 0x1000), 1},  // SPI2
-
+#else
+  {RANGE((uintptr_t)0x02000000, (uintptr_t)0x02000000 + 0x1000), 1},  // CLINT
+  {RANGE((uintptr_t)0x0C200000, (uintptr_t)0x0C200000 + 0x1000), 1},  // PLIC
+  {RANGE((uintptr_t)0x38000000, (uintptr_t)0x38001000), 1},           // UARTHS
+  {RANGE((uintptr_t)0x38001000, (uintptr_t)0x38001000 + 0x1000), 1},  // GPIOHS
+  {RANGE((uintptr_t)0x50000000, (uintptr_t)0x50000000 + 0x1000), 1},  // DMAC
+  {RANGE((uintptr_t)0x50200000, (uintptr_t)0x50200000 + 0x1000), 1},  // GPIO
+  {RANGE((uintptr_t)0x50240000, (uintptr_t)0x50240000 + 0x1000), 1},  // SPI-slave
+  {RANGE((uintptr_t)0x502B0000, (uintptr_t)0x502B0000 + 0x1000), 1},  // FPIOA
+  {RANGE((uintptr_t)0x502D0000, (uintptr_t)0x502D0000 + 0x1000), 1},  // TIMER0
+  {RANGE((uintptr_t)0x502E0000, (uintptr_t)0x502E0000 + 0x1000), 1},  // TIMER1
+  {RANGE((uintptr_t)0x502F0000, (uintptr_t)0x502F0000 + 0x1000), 1},  // TIMER2
+  {RANGE((uintptr_t)0x50440000, (uintptr_t)0x50440000 + 0x1000), 1},  // SYSCTL
+  {RANGE((uintptr_t)0x52000000, (uintptr_t)0x52000000 + 0x1000), 1},  // SPI0
+  {RANGE((uintptr_t)0x53000000, (uintptr_t)0x53000000 + 0x1000), 1},  // SPI1
+  {RANGE((uintptr_t)0x54000000, (uintptr_t)0x54000000 + 0x1000), 1},  // SPI2
+#endif
 };
 
 #define uvm_area (vm_areas[0].area)
