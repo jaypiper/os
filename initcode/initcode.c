@@ -32,61 +32,61 @@ f("statvfs") f("strverscmp") f("syscall_sign_extend") \
 f("uselocale_0") f("wcsncpy_read_overflow") f("wcsstr_false_negative")
 
 #define TESTS_BUSYBOX(f) \
-f("echo \"#### independent command test\"") \
-f("ash -c exit") \
-f("sh -c exit") \
-f("basename /aaa/bbb") \
-f("cal") \
-f("clear") \
-f("date ") \
-f("df ") \
-f("dirname /aaa/bbb") \
-f("dmesg ") \
-f("du") \
-f("expr 1 + 1") \
-f("false") \
-f("true") \
-f("which ls") \
-f("uname") \
-f("uptime") \
-f("printf \"abc\n\"") \
-f("ps") \
-f("pwd") \
-f("free") \
-f("hwclock") \
-f("kill 10") \
-f("ls") \
-f("sleep 1") \
-f("echo \"#### file opration test\"") \
-f("touch test.txt") \
-f("echo \"hello world\" > test.txt") \
-f("cat test.txt") \
-f("cut -c 3 test.txt") \
-f("od test.txt") \
-f("head test.txt") \
-f("tail test.txt ") \
-f("hexdump -C test.txt ") \
-f("md5sum test.txt") \
-f("echo \"ccccccc\" >> test.txt") \
-f("echo \"bbbbbbb\" >> test.txt") \
-f("echo \"aaaaaaa\" >> test.txt") \
-f("echo \"2222222\" >> test.txt") \
-f("echo \"1111111\" >> test.txt") \
-f("echo \"bbbbbbb\" >> test.txt") \
-f("sort test.txt | ./busybox uniq") \
-f("stat test.txt") \
-f("strings test.txt ") \
-f("wc test.txt") \
-f("[ -f test.txt ]") \
-f("more test.txt") \
-f("rm test.txt") \
-f("mkdir test_dir") \
-f("mv test_dir test") \
-f("rmdir test") \
-f("grep hello busybox_cmd.txt") \
-f("cp busybox_cmd.txt busybox_cmd.bak") \
-f("rm busybox_cmd.bak") \
-f("find -name \"busybox_cmd.txt\"") \
+f("echo", "\"#### independent command test\"", 0) \
+f("ash", "-c", "exit", 0) \
+f("sh", "-c", "exit", 0) \
+f("basename", "/aaa/bbb", 0) \
+f("cal", 0) \
+f("clear", 0) \
+f("date ", 0) \
+f("df ", 0) \
+f("dirname", "/aaa/bbb", 0) \
+f("dmesg ", 0) \
+f("du", 0) \
+f("expr", "1" "+" "1", 0) \
+f("false", 0) \
+f("true", 0) \
+f("which", "ls", 0) \
+f("uname", 0) \
+f("uptime", 0) \
+f("printf", "\"abc\n\"", 0) \
+f("ps", 0) \
+f("pwd", 0) \
+f("free", 0) \
+f("hwclock", 0) \
+f("kill", "10", 0) \
+f("ls", 0) \
+f("sleep", "1", 0) \
+f("echo", "\"#### file opration test\"", 0) \
+f("touch", "test.txt", 0) \
+f("echo", "\"hello world\"", ">", "test.txt", 0) \
+f("cat", "test.txt", 0) \
+f("cut", "-c", "3", "test.txt", 0) \
+f("od", "test.txt", 0) \
+f("head", "test.txt", 0) \
+f("tail", "test.txt ", 0) \
+f("hexdump", "-C", "test.txt ", 0) \
+f("md5sum", "test.txt", 0) \
+f("echo", "\"ccccccc\"", ">>", "test.txt", 0) \
+f("echo", "\"bbbbbbb\"", ">>", "test.txt", 0) \
+f("echo", "\"aaaaaaa\"", ">>", "test.txt", 0) \
+f("echo", "\"2222222\"", ">>", "test.txt", 0) \
+f("echo", "\"1111111\"", ">>", "test.txt", 0) \
+f("echo", "\"bbbbbbb\"", ">>", "test.txt", 0) \
+f("sort", "test.txt", "|", "./busybox uniq", 0) \
+f("stat", "test.txt", 0) \
+f("strings", "test.txt ", 0) \
+f("wc", "test.txt", 0) \
+f("[", "-f", "test.txt", "]", 0) \
+f("more", "test.txt", 0) \
+f("rm", "test.txt", 0) \
+f("mkdir", "test_dir", 0) \
+f("mv", "test_dir", "test", 0) \
+f("rmdir", "test", 0) \
+f("grep", "hello", "busybox_cmd.txt", 0) \
+f("cp", "busybox_cmd.txt", "busybox_cmd.bak", 0) \
+f("rm", "busybox_cmd.bak", 0) \
+f("find", "-name", "\"busybox_cmd.txt\"", 0) \
 
 
 char initcode_str[][32] = {
@@ -111,13 +111,13 @@ int initcode_syscall(int syscall, unsigned long long val1, unsigned long long va
 }
 
 #define OSCMP_TEST_STATIC(_) {initcode_str[1], initcode_str[2], initcode_str[3], _, 0},
-#define OSCMP_TEST_BUSYBOX(_) {initcode_str[5], _, 0},
+#define OSCMP_TEST_BUSYBOX(_, ...) {initcode_str[5], _, __VA_ARGS__},
 
 char* initcode_args[][5] = {
   TESTS_STATIC(OSCMP_TEST_STATIC)
 };
 
-char* busybox_cmd[][3] = {
+char* busybox_cmd[][7] = {
   TESTS_BUSYBOX(OSCMP_TEST_BUSYBOX)
 };
 
