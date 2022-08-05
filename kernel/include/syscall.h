@@ -4,6 +4,7 @@
 #define SYS_exit 93
 #define SYS_exit_group 94
 #define SYS_getpid 172
+#define SYS_getppid 173
 #define SYS_kill 129
 #define SYS_read 63
 #define SYS_write 64

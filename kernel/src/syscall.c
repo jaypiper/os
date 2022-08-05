@@ -257,6 +257,10 @@ int sys_getuid(Context* ctx){
   return 0;
 }
 
+int sys_getppid(Context* ctx){
+  return kmt->gettask()->ppid;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -289,6 +293,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_unlinkat] = sys_unlinkat,
 [SYS_getuid] = sys_getuid,
 [SYS_munmap] = sys_munmap,
+[SYS_getppid] = sys_getppid,
 // [SYS_faccessat] = sys_facessat,
 };
 
