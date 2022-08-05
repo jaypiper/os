@@ -117,6 +117,13 @@ int sys_mmap(Context* ctx){ // void *addr, size_t length, int prot, int flags, i
   return uproc->mmap((char*)addr, size, prot, flags, fd, offset);
 }
 
+int sys_munmap(Context* ctx){
+  uintptr_t addr = argraw(0, ctx, ARG_NUM);
+  uintptr_t len = argraw(1, ctx, ARG_NUM);
+
+  return 0;
+}
+
 int sys_openat(Context* ctx){ // int dirfd, const char *pathname, int flags
   int dirfd = argraw(0, ctx, ARG_NUM);
   uintptr_t pathname = argraw(1, ctx, ARG_BUF);
@@ -281,6 +288,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_utimenstat] = sys_utimenstat,
 [SYS_unlinkat] = sys_unlinkat,
 [SYS_getuid] = sys_getuid,
+[SYS_munmap] = sys_munmap,
 // [SYS_faccessat] = sys_facessat,
 };
 
