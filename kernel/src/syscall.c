@@ -246,6 +246,10 @@ int sys_unlinkat(Context* ctx){ // int dirfd, char* pathname, int flags
   vfs->unlinkat(dirfd, pathname, flags);
 }
 
+int sys_getuid(Context* ctx){
+  return 0;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -276,6 +280,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_mprotect] = sys_mprotect,
 [SYS_utimenstat] = sys_utimenstat,
 [SYS_unlinkat] = sys_unlinkat,
+[SYS_getuid] = sys_getuid,
 // [SYS_faccessat] = sys_facessat,
 };
 
