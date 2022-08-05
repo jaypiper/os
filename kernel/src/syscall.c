@@ -261,6 +261,14 @@ int sys_geteuid(Context* ctx){
   return 0;
 }
 
+int sys_getegid(Context* ctx){
+  return 0;
+}
+
+int sys_getgid(Context* ctx){
+  return 0;
+}
+
 int sys_getppid(Context* ctx){
   return kmt->gettask()->ppid;
 }
@@ -299,6 +307,8 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_munmap] = sys_munmap,
 [SYS_getppid] = sys_getppid,
 [SYS_geteuid] = sys_geteuid,
+[SYS_getgid] = sys_getgid,
+[SYS_getegid] = sys_getegid,
 // [SYS_faccessat] = sys_facessat,
 };
 

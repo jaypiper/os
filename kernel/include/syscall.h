@@ -29,6 +29,7 @@
 #define SYS_geteuid 175
 #define SYS_getgid 176
 #define SYS_getegid 177
+#define SYS_gettid 178
 #define SYS_mmap 222
 #define SYS_munmap 215
 #define SYS_mremap 216
@@ -56,7 +57,6 @@
 #define SYS_clone 220
 #define SYS_rt_sigtimedwait 137
 #define SYS_wait4 260
-#define SYS_gettid 178
 #define SYS_prlimit64 261
 #define SYS_exit_group 94
 #define SYS_utimenstat 88
