@@ -58,6 +58,7 @@
 #define SYS_prlimit64 261
 #define SYS_exit_group 94
 #define SYS_utimenstat 88
+#define SYS_unlinkat 35
 
 #define MAX_SYSCALL_IDX 0x400
 
