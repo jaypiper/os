@@ -41,7 +41,7 @@ static const struct vm_area vm_areas[] = {
   {RANGE((uintptr_t)0x10000000, (uintptr_t)0x10000000 + 0x1000), 1}, //UART
   {RANGE((uintptr_t)0x80000000, (uintptr_t)0x80000000 + 6 * 1024 * 1024), 1},
 #ifdef PLATFORM_QEMU
-  {RANGE((uintptr_t)0x84000000, (uintptr_t)0x84000000 + 8 * 1024 * 1024), 1}
+  {RANGE((uintptr_t)0x84000000, (uintptr_t)0x84000000 + 10 * 1024 * 1024), 1}
 #else
   {RANGE((uintptr_t)0x02000000, (uintptr_t)0x02000000 + 0x1000), 1},  // CLINT
   {RANGE((uintptr_t)0x0C200000, (uintptr_t)0x0C200000 + 0x1000), 1},  // PLIC
