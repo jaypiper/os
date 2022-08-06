@@ -14,7 +14,7 @@ static char strs[6][STR_LEN];
 enum{ARG_NUM = 1, ARG_BUF, ARG_PTR, ARG_ARGV};
 // TODO: add function for every arg type
 
-static inline void copy_from_user(Context* ctx, void* dst, uintptr_t user_addr, size_t count){
+void copy_from_user(Context* ctx, void* dst, uintptr_t user_addr, size_t count){
   size_t copied_size = 0;
   while(copied_size < count){
     uintptr_t start_size = user_addr + copied_size;

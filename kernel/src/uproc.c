@@ -59,11 +59,21 @@ Context* handle_pagefault(Event ev, Context* ctx){
   Assert(0, "pagefault: %s invalid addr 0x%lx pc=0x%lx\n", kmt->gettask()->name, ev.ref, ctx->epc);
 }
 
+Context* illegal_instr(Event ev, Context* ctx){
+  uint32_t insts = 0;
+  copy_from_user(ctx, &insts, ctx->epc, 4);
+  uintptr_t sstatus;
+  r_csr("sstatus", sstatus);
+  printf("illegal instr 0x%x at pc 0x%lx sstatus=0x%lx\n", insts, ctx->epc, sstatus);
+  return NULL;
+}
+
 
 Context* do_syscall(Event ev, Context* context);
 static void uproc_init(){
   os->on_irq(0, EVENT_SYSCALL, do_syscall);
   os->on_irq(0, EVENT_PAGEFAULT, handle_pagefault);
+  os->on_irq(0, EVENT_ILLEGAL_INSTR, illegal_instr);
 }
 
 static int uproc_mmap(void *addr, size_t len, int prot, int flags, int fd, size_t offset){

@@ -34,7 +34,7 @@ Context* __am_irq_handle(Context *c) {
         ev.event = EVENT_PAGEFAULT; break;
 
       case CAUSE_ILLEGAL_INSTRUCTION: MSG("illegal instruction");
-        ev.event = EVENT_ERROR; break;
+        ev.event = EVENT_ILLEGAL_INSTR; break;
 
       case CAUSE_BREAKPOINT: MSG("breakpoint");
         ev.event = EVENT_ERROR; break;
