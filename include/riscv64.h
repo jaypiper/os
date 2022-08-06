@@ -43,7 +43,7 @@ static inline void outl(uintptr_t addr, uint32_t data) { *(volatile uint32_t *)a
 #define SSTATUS_UPIE (1L << 4) // User Previous Interrupt Enable
 #define SSTATUS_SIE (1L << 1)  // Supervisor Interrupt Enable
 #define SSTATUS_UIE (1L << 0)  // User Interrupt Enable
-
+#define SSTATUS_FS 0x00006000U
 
 // Machine-mode Interrupt Enable
 #define MIE_MEIE (1L << 11) // external

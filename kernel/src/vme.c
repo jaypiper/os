@@ -244,7 +244,7 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
   r_csr("sstatus", ctx->status);
   ctx->status &= ~SSTATUS_SPP;
   ctx->status |= SSTATUS_SPIE;
-
+  ctx->status |= SSTATUS_FS;
   return ctx;
 }
 
