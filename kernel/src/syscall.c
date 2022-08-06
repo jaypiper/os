@@ -28,6 +28,19 @@ void copy_from_user(Context* ctx, void* dst, uintptr_t user_addr, size_t count){
   }
 }
 
+void copy_to_user(Context* ctx, void* src, uintptr_t user_addr, size_t count){
+  size_t copied_size = 0;
+  while(copied_size < count){
+    uintptr_t start_size = user_addr + copied_size;
+    uintptr_t pg_offset = start_size & (PGSIZE - 1);
+    uintptr_t pa = user_addr_translate(ctx->satp, start_size - pg_offset) + pg_offset;
+    size_t cpy_size = MIN(ROUNDUP(start_size + 1, PGSIZE) - start_size, count - copied_size);
+    memcpy((void*)pa, src + copied_size, cpy_size);
+    copied_size += cpy_size;
+
+  }
+}
+
 static inline uintptr_t argraw(int n, Context* ctx, int type){
   Assert(0 <= n && n <= 5, "argraw: invalid n %d\n", n);
   uintptr_t status;
@@ -275,13 +288,20 @@ int sys_getppid(Context* ctx){
 }
 
 int sys_uname(Context* ctx){ // struct utsname *buf
-  utsname* buf = (utsname*)argraw(1, ctx, ARG_NUM);
-  strcpy(buf->sysname, "piper");
-  strcpy(buf->nodename, "somename");
-  strcpy(buf->release, "v1.0.0");
-  strcpy(buf->version, "v1.0.0");
-  strcpy(buf->machine, "somemachine");
-  strcpy(buf->domainname, "somedomain");
+
+  uintptr_t buf = argraw(0, ctx, ARG_NUM);
+  char* sysname = "piper";
+  char* nodename = "somename";
+  char* release = "v1.0.0";
+  char* version = "v1.0.0";
+  char* machine = "somemachine";
+  char* domainname = "somedomain";
+  copy_to_user(ctx, sysname,    buf,          strlen(sysname));
+  copy_to_user(ctx, nodename,   buf + 65,     strlen(nodename));
+  copy_to_user(ctx, release,    buf + 65 * 2, strlen(release));
+  copy_to_user(ctx, version,    buf + 65 * 3, strlen(version));
+  copy_to_user(ctx, machine,    buf + 65 * 4, strlen(machine));
+  copy_to_user(ctx, domainname, buf + 65 * 5, strlen(domainname));
   return 0;
 }
 
