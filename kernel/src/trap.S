@@ -105,9 +105,9 @@ user_trap:
 	ld sp, KSP_OFFSET(a0)
 
 	# restore kernel pagetable
-	ld t0, KSATP_OFFSET(a0)
-	csrw satp, t0
-	sfence.vma zero, zero
+	# ld t0, KSATP_OFFSET(a0)
+	# csrw satp, t0
+	# sfence.vma zero, zero
 
 	# send interrupt & exception to kernel_trap
 	la t0, kernel_trap

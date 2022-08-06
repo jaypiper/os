@@ -1,5 +1,6 @@
 #include <common.h>
 #include <syscall.h>
+#include <sys_struct.h>
 #include <vfs.h>
 #include <kmt.h>
 
@@ -273,6 +274,17 @@ int sys_getppid(Context* ctx){
   return kmt->gettask()->ppid;
 }
 
+int sys_uname(Context* ctx){ // struct utsname *buf
+  utsname* buf = (utsname*)argraw(1, ctx, ARG_NUM);
+  strcpy(buf->sysname, "piper");
+  strcpy(buf->nodename, "somename");
+  strcpy(buf->release, "v1.0.0");
+  strcpy(buf->version, "v1.0.0");
+  strcpy(buf->machine, "somemachine");
+  strcpy(buf->domainname, "somedomain");
+  return 0;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -309,6 +321,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_geteuid] = sys_geteuid,
 [SYS_getgid] = sys_getgid,
 [SYS_getegid] = sys_getegid,
+[SYS_uname] = sys_uname,
 // [SYS_faccessat] = sys_facessat,
 };
 
