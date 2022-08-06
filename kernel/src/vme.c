@@ -193,10 +193,10 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
 
   uintptr_t *ptentry = ptwalk(as, (uintptr_t)va, PTE_R | PTE_W | PTE_U);
   if (prot == MMAP_NONE) {
-    panic_on(!(*ptentry & PTE_V), "unmapping a non-mapped page");
+    Assert(*ptentry & PTE_V, "unmapping a non-mapped page va(0x%lx) pa(0x%lx)", va, pa);
     *ptentry = 0;
   } else {
-    panic_on(*ptentry & PTE_V, "remapping a mapped page");
+    Assert(!(*ptentry & PTE_V), "remapping a mapped page va(0x%lx) pa(0x%lx)", va, pa);
     uintptr_t pte = ((uintptr_t)pa >> 2) | PTE_V | PTE_U | PTE_R | PTE_X | ((prot & MMAP_WRITE) ? PTE_W : 0);
     *ptentry = pte;
   }
