@@ -95,6 +95,10 @@ static int uproc_mmap(void *addr, size_t len, int prot, int flags, int fd, size_
   return -1;
 }
 
+static int uproc_munmap(void* addr, size_t len){
+  return 0;
+}
+
 static int uproc_fork(uintptr_t flags){
   task_t* cur_task = kmt->gettask();
   task_t* new_task = pmm->alloc(sizeof(task_t));
