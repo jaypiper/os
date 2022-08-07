@@ -317,6 +317,23 @@ int sys_ioctl(Context* ctx){
   return 0;
 }
 
+int sys_writev(Context* ctx){ // int fd, const struct iovec *iov, int iovcnt
+  uintptr_t fd = argraw(0, ctx, ARG_NUM);
+  uintptr_t iov_addr = argraw(1, ctx, ARG_NUM);
+  uintptr_t iovcnt = argraw(2, ctx, ARG_NUM);
+  iovec iov[iovcnt];
+  copy_from_user(ctx, iov, iov_addr, sizeof(iovec) * iovcnt);
+  int ret = 0;
+  for(int i = 0; i < iovcnt; i++){
+    char buf[iov[i].iov_len];
+    copy_from_user(ctx, buf, iov[i].iov_base, iov[i].iov_len);
+    vfs->write(fd, (void*)buf, iov[i].iov_len);
+    ret += iov[i].iov_len;
+  }
+
+  return ret;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -355,6 +372,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_getegid] = sys_getegid,
 [SYS_uname] = sys_uname,
 [SYS_ioctl] = sys_ioctl,
+[SYS_writev] = sys_writev,
 // [SYS_faccessat] = sys_facessat,
 };
 

@@ -17,4 +17,9 @@ typedef struct winsize{
     unsigned short int ws_ypixel;
 };
 
+typedef struct iovec {
+    void *iov_base;	/* Pointer to data.  */
+    uint64_t iov_len;	/* Length of data.  */
+}iovec;
+
 #endif
