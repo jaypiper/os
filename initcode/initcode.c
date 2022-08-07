@@ -1,6 +1,12 @@
 #include <syscall.h>
 /* The first program in user mode */
 
+int strlen(const char *s) {
+  int num = 0;
+  for(const char* _beg = s; _beg && *_beg != 0; _beg++) num ++;
+  return num;
+}
+
 #define TESTS_STATIC(f) \
 f("argv")    f("basename")    f("clocale_mbfuncs") f("crypt")     f("string_memcpy") \
 f("fnmatch") f("fwscanf")     f("iconv_open")      f("env")       f("inet_pton") \
@@ -30,6 +36,20 @@ f("rlimit_open_files") f("scanf_bytes_consumed") f("scanf_match_literal_eof") \
 f("scanf_nullbyte_char") f("setvbuf_unget") f("sigprocmask_internal") f("sscanf_eof") \
 f("statvfs") f("strverscmp") f("syscall_sign_extend") \
 f("uselocale_0") f("wcsncpy_read_overflow") f("wcsstr_false_negative")
+
+#define M_NARGS(...) M_NARGS_(__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0)
+#define M_NARGS_(_10, _9, _8, _7, _6, _5, _4, _3, _2, _1, N, ...) N
+
+// utility (concatenation)
+#define M_CONC(A, B) A##B
+
+#define M_GET_CONCAT(N, ...) M_CONC(M_GET_CONCAT_, N)(__VA_ARGS__)
+#define M_GET_CONCAT_0(_0) ""
+#define M_GET_CONCAT_1(_1, _0) _1
+#define M_GET_CONCAT_2(_1, _2, _0) M_GET_CONCAT_1(_1, _0) " " _2
+#define M_GET_CONCAT_3(_1, _2, _3, _0) M_GET_CONCAT_2( _1, _2, _0) " " _3
+#define M_GET_CONCAT_4(_1, _2, _3, _4, _0) M_GET_CONCAT_3(_1, _2, _3, _0) " " _4
+#define M_GET_CONCAT_5(_1, _2, _3, _4, _5, _0) M_GET_CONCAT_4(_1, _2, _3, _4, _0) " " _5
 
 #define TESTS_BUSYBOX(f) \
 f("echo", "\"#### independent command test\"", 0) \
@@ -112,6 +132,8 @@ int initcode_syscall(int syscall, unsigned long long val1, unsigned long long va
 
 #define OSCMP_TEST_STATIC(_) {initcode_str[1], initcode_str[2], initcode_str[3], _, 0},
 #define OSCMP_TEST_BUSYBOX(_, ...) {initcode_str[5], _, __VA_ARGS__},
+#define OSCMP_BUSYBOX_PASS(...) "testcase busybox " M_GET_CONCAT(M_NARGS(__VA_ARGS__), __VA_ARGS__) " pass\n",
+#define OSCMP_BUSYBOX_FAIL(...) "testcase busybox " M_GET_CONCAT(M_NARGS(__VA_ARGS__), __VA_ARGS__) " fail\n",
 
 char* initcode_args[][5] = {
   TESTS_STATIC(OSCMP_TEST_STATIC)
@@ -119,6 +141,14 @@ char* initcode_args[][5] = {
 
 char* busybox_cmd[][7] = {
   TESTS_BUSYBOX(OSCMP_TEST_BUSYBOX)
+};
+
+char* busybox_pass[] = {
+  TESTS_BUSYBOX(OSCMP_BUSYBOX_PASS)
+};
+
+char* busybox_fail[] = {
+  TESTS_BUSYBOX(OSCMP_BUSYBOX_FAIL)
 };
 
 void oscmp_test_static(int i){
@@ -136,7 +166,10 @@ void oscmp_test_busybox(int i){
   if(pid == 0){
     initcode_syscall(SYS_execve, initcode_str[5], busybox_cmd[i], 0);
   } else{
-    initcode_syscall(SYS_wait4, 0, 0, 0);
+    int ret = 0;
+    initcode_syscall(SYS_wait4, &ret, 0, 0);
+    if(!ret) initcode_syscall(SYS_write, 1, busybox_pass[i], strlen(busybox_pass[i]));
+    else initcode_syscall(SYS_write, 1, busybox_fail[i], strlen(busybox_fail[i]));
   }
 }
 
