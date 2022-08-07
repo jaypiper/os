@@ -45,10 +45,20 @@ static inline uintptr_t argraw(int n, Context* ctx, int type){
   Assert(0 <= n && n <= 5, "argraw: invalid n %d\n", n);
   uintptr_t status;
   r_csr("sstatus", status);
+  int count = BUF_LEN;
+  int offset = 0, copied_size = 0;
 
   if((status & SSTATUS_SPP) == 0){
     if(type == ARG_BUF){
-      copy_from_user(ctx, buf[n], ctx->gpr[NO_A0 + n], BUF_LEN);
+      while(count){
+        copied_size = MIN(count, PGSIZE - ctx->gpr[NO_A0 + n] & 0xfff);
+        copy_from_user(ctx, &buf[n][offset], ctx->gpr[NO_A0 + n], copied_size);
+        for(int i = 0; i < copied_size; i++){
+          if(buf[n][offset + i] == 0) break;
+        }
+        count -= copied_size;
+        offset += copied_size;
+      }
       return (uintptr_t)buf[n];
     } else if(type == ARG_PTR){
       uintptr_t pg_offset = ctx->gpr[NO_A0 + n] & (PGSIZE - 1);
