@@ -227,8 +227,8 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   ADD_AUX(args_ptr, AT_ENTRY, _Eheader.e_entry)
 
   // env & argv
-  args_ptr -= (argc + 1) * sizeof(uintptr_t);
-  memcpy((char*)args_ptr, saved_argv, (argc + 1) * sizeof(uintptr_t));
+  args_ptr -= (argc + 2) * sizeof(uintptr_t);
+  memcpy((char*)args_ptr, saved_argv, (argc + 2) * sizeof(uintptr_t));
   args_ptr -= sizeof(uintptr_t);
   *(uintptr_t*)args_ptr = argc;
 
