@@ -10,4 +10,11 @@ typedef struct utsname {
     char domainname[65];
 }utsname;
 
+typedef struct winsize{
+    unsigned short int ws_row;
+    unsigned short int ws_col;
+    unsigned short int ws_xpixel;
+    unsigned short int ws_ypixel;
+};
+
 #endif

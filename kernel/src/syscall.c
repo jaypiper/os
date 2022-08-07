@@ -305,6 +305,18 @@ int sys_uname(Context* ctx){ // struct utsname *buf
   return 0;
 }
 
+int sys_ioctl(Context* ctx){
+  uintptr_t fd = argraw(0, ctx, ARG_NUM);
+  uintptr_t request = argraw(1, ctx, ARG_NUM);
+  uintptr_t dst = argraw(2, ctx, ARG_NUM);
+  switch(request){
+    case 0x5413:
+      break;
+    default: Assert(0, "invalid request 0x%lx\n", request);
+  }
+  return 0;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -342,6 +354,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_getgid] = sys_getgid,
 [SYS_getegid] = sys_getegid,
 [SYS_uname] = sys_uname,
+[SYS_ioctl] = sys_ioctl,
 // [SYS_faccessat] = sys_facessat,
 };
 
