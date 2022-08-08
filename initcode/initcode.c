@@ -132,7 +132,7 @@ int initcode_syscall(int syscall, unsigned long long val1, unsigned long long va
 
 #define OSCMP_TEST_STATIC(_) {initcode_str[1], initcode_str[2], initcode_str[3], _, 0},
 #define OSCMP_TEST_BUSYBOX(_, ...) {initcode_str[5], _, __VA_ARGS__},
-#define OSCMP_BUSYBOX_PASS(...) "testcase busybox " M_GET_CONCAT(M_NARGS(__VA_ARGS__), __VA_ARGS__) " pass\n",
+#define OSCMP_BUSYBOX_PASS(...) "testcase busybox " M_GET_CONCAT(M_NARGS(__VA_ARGS__), __VA_ARGS__) " success\n",
 #define OSCMP_BUSYBOX_FAIL(...) "testcase busybox " M_GET_CONCAT(M_NARGS(__VA_ARGS__), __VA_ARGS__) " fail\n",
 
 char* initcode_args[][5] = {
