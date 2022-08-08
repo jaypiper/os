@@ -192,7 +192,9 @@ int sys_getcwd(Context* ctx){ // char *buf, size_t size
 int sys_facessat(Context* ctx){ // int dirfd, const char *pathname, int mode, int flags
   uintptr_t dirfd = argraw(0, ctx, ARG_NUM);
   uintptr_t pathname = argraw(1, ctx, ARG_BUF);
-  printf("facessat fd=%d pathname=%s\n", dirfd, pathname);
+#ifdef SYSCALL_DEBUG
+  printf("TODO: facessat fd=%d pathname=%s\n", dirfd, pathname);
+#endif
   return 0;
 }
 
@@ -202,17 +204,23 @@ int sys_set_tid_address(Context* ctx){ // int* tidptr
 }
 
 int sys_rt_sigprocmask(Context* ctx){ //int how, const kernel_sigset_t *set, kernel_sigset_t *oldset, size_t sigsetsize
+#ifdef SYSCALL_DEBUG
   printf("TODO: sys_rt_sigprocmask\n");
+#endif
   return 0;
 }
 
 int sys_rt_sigaction(Context* ctx){
+#ifdef SYSCALL_DEBUG
   printf("TODO: sys_rt_sigaction\n");
+#endif
   return 0;
 }
 
 int sys_rt_sigtimedwait(Context* ctx){
+#ifdef SYSCALL_DEBUG
   printf("TODO: sys_rt_sigtimedwait\n");
+#endif
   return 0;
 }
 
@@ -230,7 +238,6 @@ int sys_wait4(Context* ctx){ // pid_t pid, int *wstatus, int options, struct rus
   uintptr_t wstatus = argraw(1, ctx, ARG_PTR);
   uintptr_t options = argraw(2, ctx, ARG_NUM);
   uintptr_t rusage = argraw(3, ctx, ARG_NUM);
-  printf("TODO: wait4 pid=0x%lx wstatus=0x%lx options= 0x%lx rusage=0x%lx\n", pid, wstatus, options, rusage);
   task_t* cur_task = kmt->gettask();
   cur_task->states[cur_task->int_depth + 1] = TASK_WAIT;
   yield();
@@ -243,7 +250,9 @@ int sys_prlimit64(Context* ctx){ // pid_t pid, int resource, const struct rlimit
   uintptr_t resource = argraw(1, ctx, ARG_NUM);
   uintptr_t new_limit = argraw(2, ctx, ARG_NUM);
   uintptr_t old_limit = argraw(3, ctx, ARG_NUM);
+#ifdef SYSCALL_DEBUG
   printf("TODO: prlimit64 pid=0x%lx resource=0x%lx new_limit=0x%lx old_limit=0x%lx\n", pid, resource, new_limit, old_limit);
+#endif
   return 0;
 }
 

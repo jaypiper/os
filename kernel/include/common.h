@@ -15,6 +15,7 @@
 // #define KMT_DEBUG
 // #define VFS_DEBUG
 // #define UPROC_DEBUG
+// #define SYSCALL_DEBUG
 
 #define FS_FAT32
 #define PGSIZE    4096
