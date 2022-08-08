@@ -160,14 +160,13 @@ void oscmp_test_static(int i){
   }
 }
 
-
+int ret = 0;
 void oscmp_test_busybox(int i){
   int pid = initcode_syscall(SYS_clone, 17, 0, 0);
   if(pid == 0){
     initcode_syscall(SYS_execve, initcode_str[5], busybox_cmd[i], 0);
   } else{
-    int ret = 0;
-    initcode_syscall(SYS_wait4, &ret, 0, 0);
+    initcode_syscall(SYS_wait4, 0, &ret, 0);
     if(!ret) initcode_syscall(SYS_write, 1, busybox_pass[i], strlen(busybox_pass[i]));
     else initcode_syscall(SYS_write, 1, busybox_fail[i], strlen(busybox_fail[i]));
   }
