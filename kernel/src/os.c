@@ -97,6 +97,7 @@ static void os_run() {
 }
 
 Context* os_trap(Event ev, Context *context){
+  if(ev.event == EVENT_ERROR) disp_ctx(&ev, context);
   Assert(ev.event != EVENT_ERROR, "receive error event %s cause 0x%lx epc 0x%lx tval 0x%lx a0 0x%lx", ev.msg, context->cause, context->epc, ev.ref, context->gpr[10]);
   Context* ret = NULL;
   for(handler_list_t* h = handlers_sorted; h; h = h->next){
