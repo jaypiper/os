@@ -218,7 +218,7 @@ int bfs_read(ofile_t* ofile, int fd, void *buf, int count){
     while(count){
         uintptr_t pg_ptr = get_bfs_pg(pg_idx, bdirent);
         uintptr_t size = MIN(PGSIZE - pg_offset, count);
-        memcpy(buf, *(uintptr_t*)pg_ptr + pg_offset, size);
+        memcpy(buf, pg_ptr + pg_offset, size);
         pg_offset = 0;
         pg_idx ++;
         count -= size;
@@ -241,7 +241,7 @@ int bfs_write(ofile_t* ofile, int fd, void *buf, int count){
         if(offset > bdirent->size) new_bfs_pg(bdirent);
         uintptr_t pg_ptr = get_bfs_pg(pg_idx, bdirent);
         uintptr_t size = MIN(PGSIZE - pg_offset, count);
-        memcpy(*(uintptr_t*)pg_ptr + pg_offset, buf, size);
+        memcpy(pg_ptr + pg_offset, buf, size);
         pg_offset = 0;
         pg_idx ++;
         count -= size;
