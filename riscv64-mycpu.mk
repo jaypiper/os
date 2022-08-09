@@ -41,12 +41,12 @@ endif
 LDFLAGS   += -Wl,--gc-sections -Wl,-e_start
 CFLAGS += -DMAINARGS=\"$(mainargs)\" -DNCPU=1
 
-QEMU = ../../qemu/build/riscv64-softmmu/qemu-system-riscv64
+QEMU = /home/chenlu/program/qemu/build/riscv64-softmmu/qemu-system-riscv64
 QEMU-OPTS = -machine virt -kernel kernel-qemu
 QEMU-OPTS += -m 128M -nographic -smp 2 -bios sbi-qemu
-QEMU-OPTS += -drive file=sdcard.img,if=none,format=raw,id=x0
+QEMU-OPTS += -drive file=sdcard2.img,if=none,format=raw,id=x0
 QEMU-OPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
-QEMU-OPTS += -initrd initrd.img
+QEMU-OPTS += -initrd sdcard2.img
 
 build-arg: image
 	( echo -n $(mainargs); ) | dd if=/dev/stdin of=$(IMAGE) bs=512 count=2 seek=1 conv=notrunc status=none
