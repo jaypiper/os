@@ -7,6 +7,7 @@
 void fill_standard_fd(task_t* task);
 
 void disp_ctx(Event* ev, Context* ctx){
+  if(!ctx) return;
   uintptr_t status;
   r_csr("sstatus", status);
   printf("(%s) ref=0x%lx pc=0x%lx sstatus=0x%lx\n", kmt->gettask()->name, ev->ref, ctx->epc, status);
