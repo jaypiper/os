@@ -54,6 +54,23 @@ bdirent_t* bfs_empty(bdirent_t* bfs){
     return bdirent;
 }
 
+void insert_bfs_entry(bdirent_t* parent, char* name, char* content){
+    bdirent_t* child = bfs_empty(parent);
+    strcpy((char*)child->name, name);
+    child->type = BD_FILE;
+    child->size = 0;
+    child->offset = 0;
+    int size = strlen(content);
+    while(size){
+        uintptr_t pg_addr = new_bfs_pg(child);
+        int copy_size = MIN(PGSIZE, size);
+        memcpy(pg_addr, content, copy_size);
+        size -= copy_size;
+        content += copy_size;
+        child->size += copy_size;
+    }
+}
+
 void tmpfs_init(bdirent_t* root_bfs){
     bdirent_t* bdirent = bfs_empty(root_bfs);
     strcpy((char*)bdirent->name, "tmp");
@@ -63,6 +80,29 @@ void tmpfs_init(bdirent_t* root_bfs){
     bdirent->direct_addr[0] = pgalloc(PGSIZE);
 }
 
+void etc_init(bdirent_t* root_bfs){
+    bdirent_t* etc = bfs_empty(root_bfs);
+    strcpy((char*)etc->name, "etc");
+    etc->type = BD_DIR;
+    etc->size = 0;
+    etc->offset = 0;
+    etc->direct_addr[0] = pgalloc(PGSIZE);
+    // insert_bfs_entry(etc, "localtime", )
+}
+
+void proc_init(bdirent_t* root_bfs){
+    bdirent_t* proc = bfs_empty(root_bfs);
+    strcpy((char*)proc->name, "proc");
+    proc->type = BD_DIR;
+    proc->size = 0;
+    proc->offset = 0;
+    proc->direct_addr[0] = pgalloc(PGSIZE);
+    insert_bfs_entry(proc, "mounts", \
+        "proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0\n\
+        tmpfs /tmp tmpfs rw,nosuid,nodev,relatime,size=4096k,nr_inodes=10,mode=700");
+}
+
+
 void bfs_init(bdirent_t* root_bfs){
     strcpy(root_bfs->name, "/");
     root_bfs->type = BD_DIR;
@@ -70,6 +110,7 @@ void bfs_init(bdirent_t* root_bfs){
     root_bfs->offset = 0;
     root_bfs->direct_addr[0] = pgalloc(PGSIZE);
     tmpfs_init(root_bfs);
+    proc_init(root_bfs);
     spin_init(&bfs_lock, "bfs_lock");
 }
 
