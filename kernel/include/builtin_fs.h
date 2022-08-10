@@ -12,7 +12,6 @@ typedef struct builtin_dirent{
     uint8_t name[MAX_BUILTIN_NAME];
     uint8_t type;
     uint32_t size;
-    uint32_t offset;
     uintptr_t direct_addr[DIRECT_NUM];
     uintptr_t indirent_addr;
     uint8_t dummy[4];

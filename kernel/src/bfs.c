@@ -59,7 +59,6 @@ void insert_bfs_entry(bdirent_t* parent, char* name, char* content){
     strcpy((char*)child->name, name);
     child->type = BD_FILE;
     child->size = 0;
-    child->offset = 0;
     int size = strlen(content);
     while(size){
         uintptr_t pg_addr = new_bfs_pg(child);
@@ -76,7 +75,6 @@ void tmpfs_init(bdirent_t* root_bfs){
     strcpy((char*)bdirent->name, "tmp");
     bdirent->type = BD_DIR;
     bdirent->size = 0;
-    bdirent->offset = 0;
     bdirent->direct_addr[0] = pgalloc(PGSIZE);
 }
 
@@ -85,7 +83,6 @@ void etc_init(bdirent_t* root_bfs){
     strcpy((char*)etc->name, "etc");
     etc->type = BD_DIR;
     etc->size = 0;
-    etc->offset = 0;
     etc->direct_addr[0] = pgalloc(PGSIZE);
     // insert_bfs_entry(etc, "localtime", )
 }
@@ -95,7 +92,6 @@ void proc_init(bdirent_t* root_bfs){
     strcpy((char*)proc->name, "proc");
     proc->type = BD_DIR;
     proc->size = 0;
-    proc->offset = 0;
     proc->direct_addr[0] = pgalloc(PGSIZE);
     insert_bfs_entry(proc, "mounts", \
         "proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0\n\
@@ -107,7 +103,6 @@ void bfs_init(bdirent_t* root_bfs){
     strcpy(root_bfs->name, "/");
     root_bfs->type = BD_DIR;
     root_bfs->size = 0;
-    root_bfs->offset = 0;
     root_bfs->direct_addr[0] = pgalloc(PGSIZE);
     tmpfs_init(root_bfs);
     proc_init(root_bfs);
@@ -140,7 +135,6 @@ bdirent_t* create_in_bfs(bdirent_t* dir, char* filename, int flags){
     bdirent_t* bdirent = bfs_empty(dir);
     strcpy(bdirent->name, filename);
     bdirent->size = 0;
-    bdirent->offset = 0;
     if(flags & ATTR_DIRECTORY){
         bdirent->type = BD_DIR;
         bdirent->direct_addr[0] = pgalloc(PGSIZE);
@@ -212,7 +206,7 @@ int bfs_read(ofile_t* ofile, int fd, void *buf, int count){
     }
     uintptr_t pg_idx = ofile->offset / PGSIZE;
     bdirent_t* bdirent = ofile->bdirent;
-    count = MIN(count, bdirent->size - bdirent->offset);
+    count = MIN(count, bdirent->size - ofile->offset);
     uintptr_t pg_offset = ofile->offset % PGSIZE;
     uintptr_t readsize = count;
     while(count){
