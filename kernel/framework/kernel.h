@@ -2,7 +2,7 @@
 #define OS_KERNEL_H
 
 #include <am.h>
-
+#include <sys_struct.h>
 #define MODULE(mod) \
   typedef struct mod_##mod##_t mod_##mod##_t; \
   extern mod_##mod##_t *mod; \
@@ -75,6 +75,7 @@ MODULE(vfs) {
   int (*chdir)(const char *path);
   int (*dup)(int fd);
   int (*getcwd)(void* buf, int size);
+  int (*statfs)(char* path, statfs* buf);
 };
 
 MODULE(uproc) {

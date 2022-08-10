@@ -8,6 +8,7 @@
 #include <sysctl.h>
 #include <dev_sim.h>
 #include <builtin_fs.h>
+#include <sys_struct.h>
 #ifdef FS_FAT32
 
 
@@ -698,6 +699,29 @@ static int fat_fstat(int fd, kstat_t *buf){
 	return 0;
 }
 
+static int fat_statfs(char* path, statfs* buf){
+  if(strcmp(path, "/proc") == 0){
+    buf->f_type = PROC_SUPER_MAGIC;
+    buf->f_fsid[0] = 0;
+    buf->f_fsid[1] = 1;
+  } else if(strcmp(path, "tmp") == 0){
+    buf->f_type = TMPFS_MAGIC;
+    buf->f_fsid[0] = 0;
+    buf->f_fsid[1] = 2;
+  } else{
+    Assert(0, "invalid statfs %s\n", path);
+  }
+  buf->f_bsize = 512;
+  buf->f_blocks = 4;
+  buf->f_bfree = 4;
+  buf->f_bavail = 4;
+  buf->f_files = 4;
+  buf->f_namelen = 64;
+  buf->f_frsize = 32;
+  buf->f_flags = 0;
+  return 0;
+}
+
 static int fat_mkdirat(int dirfd, const char *pathname){
   kmt->sem_wait(&fs_lock);
   dirent_t* baseDir = pathname[0] == '/' ? &root : dirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[dirfd];
@@ -769,6 +793,7 @@ MODULE_DEF(vfs) = {
 	.chdir  = fat_chdir,
 	.dup    = fat_dup,
   .getcwd = fat_getcwd,
+  .statfs = fat_statfs,
 };
 
 

@@ -353,6 +353,14 @@ int sys_writev(Context* ctx){ // int fd, const struct iovec *iov, int iovcnt
   return ret;
 }
 
+int sys_statfs(Context* ctx){ // const char *path, struct statfs *buf
+  uintptr_t path = argraw(0, ctx, ARG_BUF);
+  uintptr_t buf = argraw(0, ctx, ARG_NUM);
+  statfs stat;
+  copy_to_user(ctx, &stat, buf, sizeof(statfs));
+  return vfs->statfs(path, &stat);
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -392,6 +400,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_uname] = sys_uname,
 [SYS_ioctl] = sys_ioctl,
 [SYS_writev] = sys_writev,
+[SYS_statfs] = sys_statfs,
 // [SYS_faccessat] = sys_facessat,
 };
 

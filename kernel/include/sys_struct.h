@@ -22,4 +22,19 @@ typedef struct iovec {
     uint64_t iov_len;	/* Length of data.  */
 }iovec;
 
+typedef struct statfs {
+    int64_t f_type;
+    int64_t f_bsize;
+    uint64_t f_blocks;
+    uint64_t f_bfree;
+    uint64_t f_bavail;
+    int64_t f_files;
+    int64_t f_ffree;
+    int f_fsid[2];
+    int64_t f_namelen;
+    int64_t f_frsize;
+    int64_t f_flags;
+    int64_t f_spare[4];
+}statfs;
+
 #endif

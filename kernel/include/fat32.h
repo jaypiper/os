@@ -36,6 +36,8 @@
 
 #define AT_REMOVEDIR 0x200
 
+#define PROC_SUPER_MAGIC      0x9fa0
+#define TMPFS_MAGIC           0x01021994
 
 // Boot Sector
 typedef struct BS_Structure{
