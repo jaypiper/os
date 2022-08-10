@@ -362,6 +362,17 @@ int sys_statfs(Context* ctx){ // const char *path, struct statfs *buf
   return 0;
 }
 
+int sys_syslog(Context* ctx){ // int type, char *bufp, int len
+  uintptr_t type = argraw(0, ctx, ARG_NUM);
+  uintptr_t bufp = argraw(1, ctx, ARG_NUM);
+  uintptr_t len = argraw(2, ctx, ARG_NUM);
+  switch(type){
+    case SYSLOG_ACTION_READ_ALL: return 0;
+    case SYSLOG_ACTION_SIZE_BUFFER: return 64;
+    default: Assert(0, "invalid type %d\n", type);
+  }
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -402,6 +413,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_ioctl] = sys_ioctl,
 [SYS_writev] = sys_writev,
 [SYS_statfs] = sys_statfs,
+[SYS_syslog] = sys_syslog,
 // [SYS_faccessat] = sys_facessat,
 };
 

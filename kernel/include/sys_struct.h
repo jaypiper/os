@@ -37,4 +37,7 @@ typedef struct statfs {
     int64_t f_spare[4];
 }statfs;
 
+#define SYSLOG_ACTION_READ_ALL 3
+#define SYSLOG_ACTION_SIZE_BUFFER 10
+
 #endif
