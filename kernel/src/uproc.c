@@ -78,6 +78,11 @@ static void uproc_init(){
 }
 
 static int uproc_mmap(void *addr, size_t len, int prot, int flags, int fd, size_t offset){
+  task_t* cur_task = kmt->gettask();
+  if(addr == 0){
+    cur_task->mmap_end -= ROUNDUP(len, PGSIZE);
+    addr = cur_task->mmap_end;
+  }
   task_t* task = kmt->gettask();
   for(int i = 0; i < MAX_MMAP_NUM; i++){
     if(!task->mmaps[i]){
@@ -89,7 +94,7 @@ static int uproc_mmap(void *addr, size_t len, int prot, int flags, int fd, size_
       tmp_mm->prot = prot;
       tmp_mm->flags = flags;
       tmp_mm->offset = offset;
-      return 0;
+      return addr;
     }
   }
   printf("mmaps full\n");
@@ -134,6 +139,7 @@ static int uproc_fork(uintptr_t flags){
   new_task->cwd = dup_dirent(cur_task->cwd);
   new_task->cwd_type = cur_task->cwd_type;
   new_task->max_brk = cur_task->max_brk;
+  new_task->mmap_end = cur_task->mmap_end;
   // copy pagetable
   AddrSpace* as = pmm->alloc(sizeof(AddrSpace));
   protect(as);
@@ -197,6 +203,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
   }
 // #endif
   TOP_CONTEXT(task) = ucontext(as, (Area){.start = (void*)STACK_START(task->kstack), .end = (void*)STACK_END(task->kstack)}, (void*)_Eheader.e_entry);
+  task->mmap_end = ROUNDDOWN((TOP_CONTEXT(task)->gpr[2] - STACK_SIZE), PGSIZE);
   task->blocked = 0;
   task->as = as;
   Assert(strlen(path) < MAX_TASKNAME_LEN, "path %s is too long", path);

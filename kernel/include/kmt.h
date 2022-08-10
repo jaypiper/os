@@ -28,6 +28,7 @@ typedef struct task{
   void* kstack;
   void* max_brk;
   void* brk;
+  void* mmap_end;
   ofile_t* ofiles[MAX_OPEN_FILE];
   mm_area_t* mmaps[MAX_MMAP_NUM];
   dirent_t* cwd;
