@@ -66,6 +66,7 @@ Context* illegal_instr(Event ev, Context* ctx){
   uintptr_t sstatus;
   r_csr("sstatus", sstatus);
   printf("illegal instr 0x%x at pc 0x%lx sstatus=0x%lx\n", insts, ctx->epc, sstatus);
+  disp_ctx(&ev, ctx);
   return NULL;
 }
 
