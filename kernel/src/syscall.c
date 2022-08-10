@@ -355,10 +355,11 @@ int sys_writev(Context* ctx){ // int fd, const struct iovec *iov, int iovcnt
 
 int sys_statfs(Context* ctx){ // const char *path, struct statfs *buf
   uintptr_t path = argraw(0, ctx, ARG_BUF);
-  uintptr_t buf = argraw(0, ctx, ARG_NUM);
+  uintptr_t buf = argraw(1, ctx, ARG_NUM);
   statfs stat;
+  vfs->statfs(path, &stat);
   copy_to_user(ctx, &stat, buf, sizeof(statfs));
-  return vfs->statfs(path, &stat);
+  return 0;
 }
 
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
