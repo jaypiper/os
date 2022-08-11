@@ -373,6 +373,17 @@ int sys_syslog(Context* ctx){ // int type, char *bufp, int len
   }
 }
 
+int sys_fstatat(Context* ctx){ // int dirfd, const char *pathname, struct stat *statbuf, int flags
+  uintptr_t dirfd = argraw(0, ctx, ARG_NUM);
+  uintptr_t pathname = argraw(1, ctx, ARG_BUF);
+  uintptr_t statbuf = argraw(2, ctx, ARG_NUM);
+  uintptr_t flags = argraw(3, ctx, ARG_NUM);
+  stat stat;
+  int ret = vfs->fstatat(dirfd, pathname, &stat, flags);
+  if(ret == 0) copy_to_user(ctx, &stat, statbuf, sizeof(statfs));
+  return ret;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -414,6 +425,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_writev] = sys_writev,
 [SYS_statfs] = sys_statfs,
 [SYS_syslog] = sys_syslog,
+[SYS_fstatat] = sys_fstatat,
 // [SYS_faccessat] = sys_facessat,
 };
 

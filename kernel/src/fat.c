@@ -686,16 +686,37 @@ static int fat_unlinkat(int dirfd, const char *pathname, int flags){
 	return 0;
 }
 
-static int fat_fstat(int fd, kstat_t *buf){
+static int fat_fstat(int fd, stat *buf){
   dirent_t* dirent = kmt->gettask()->ofiles[fd]->dirent;
   buf->st_dev = 0;
   buf->st_ino = dirent->FstClus;
   buf->st_mode = S_IFREG;
   buf->st_nlink = 1;
   buf->st_size = dirent->FileSz;
-  buf->st_atime_sec = 0;
-  buf->st_mtime_sec = 0;
-  buf->st_ctime_sec = 0;
+  buf->st_atim_sec = 0;
+  buf->st_atim_nsec = 0;
+  buf->st_mtim_sec = 0;
+  buf->st_mtim_nsec = 0;
+  buf->st_ctim_sec = 0;
+  buf->st_ctim_nsec = 0;
+	return 0;
+}
+
+static int fat_fstatat(int fd, char* pathname, stat *statbuf, int flags){
+  int filefd = fat_openat(fd, pathname, O_RDWR);
+  if(!IS_VALID_FD(fd)) return -1;
+  dirent_t* dirent = kmt->gettask()->ofiles[filefd]->dirent;
+  statbuf->st_dev = 0;
+  statbuf->st_ino = dirent->FstClus;
+  statbuf->st_mode = S_IFREG;
+  statbuf->st_nlink = 1;
+  statbuf->st_size = dirent->FileSz;
+  statbuf->st_atim_sec = 0;
+  statbuf->st_atim_nsec = 0;
+  statbuf->st_mtim_sec = 0;
+  statbuf->st_mtim_nsec = 0;
+  statbuf->st_ctim_sec = 0;
+  statbuf->st_ctim_nsec = 0;
 	return 0;
 }
 
@@ -794,6 +815,7 @@ MODULE_DEF(vfs) = {
 	.dup    = fat_dup,
   .getcwd = fat_getcwd,
   .statfs = fat_statfs,
+  .fstatat = fat_fstatat,
 };
 
 
