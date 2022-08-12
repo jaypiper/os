@@ -384,6 +384,10 @@ int sys_fstatat(Context* ctx){ // int dirfd, const char *pathname, struct stat *
   return ret;
 }
 
+int sys_faccessat(Context* ctx){ // int dirfd, const char *pathname, int mode, int flags
+  return 0;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -426,6 +430,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_statfs] = sys_statfs,
 [SYS_syslog] = sys_syslog,
 [SYS_fstatat] = sys_fstatat,
+[SYS_faccessat] = sys_faccessat,
 // [SYS_faccessat] = sys_facessat,
 };
 
