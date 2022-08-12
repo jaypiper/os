@@ -63,6 +63,8 @@
 #define SYS_unlinkat 35
 #define SYS_statfs 43
 #define SYS_syslog 116
+#define SYS_sysinfo 179
+#define SYS_fcntl 25
 
 #define MAX_SYSCALL_IDX 0x400
 

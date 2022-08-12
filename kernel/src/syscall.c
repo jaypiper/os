@@ -388,6 +388,22 @@ int sys_faccessat(Context* ctx){ // int dirfd, const char *pathname, int mode, i
   return 0;
 }
 
+int sys_sysinfo(Context* ctx){ // struct sysinfo *info
+  return 0;
+}
+
+int sys_fcntl(Context* ctx){ // int fd, int cmd
+  int fd = argraw(0, ctx, ARG_NUM);
+  int cmd = argraw(1, ctx, ARG_NUM);
+  uintptr_t arg = argraw(2, ctx, ARG_NUM);
+  switch(cmd){
+    case F_GETFD: return 0;
+    case F_SETFD: return 0; // TODO: CLOEXEC
+    case F_GETFL: return kmt->gettask()->ofiles[fd]->flag;
+    default: Assert(0, "invalid fcntl cmd=0x%lx", cmd);
+  }
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -431,6 +447,8 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_syslog] = sys_syslog,
 [SYS_fstatat] = sys_fstatat,
 [SYS_faccessat] = sys_faccessat,
+[SYS_sysinfo] = sys_sysinfo,
+[SYS_fcntl] = sys_fcntl,
 // [SYS_faccessat] = sys_facessat,
 };
 
