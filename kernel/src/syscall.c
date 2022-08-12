@@ -443,7 +443,7 @@ Context* do_syscall(Event ev, Context* context){
     void disp_ctx(Event* ev, Context* ctx);
     disp_ctx(&ev, context);
   }
-  Assert(sys_handler, "invalid syscall 0x%x at pc 0x%lx\n", syscall_no, context->epc);
+  Assert(sys_handler, "invalid syscall %d at pc 0x%lx\n", syscall_no, context->epc);
   int ret = sys_handler(context);
   TOP_CONTEXT(kmt->gettask())->gpr[NO_A0] = ret;
   return NULL;
