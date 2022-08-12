@@ -704,7 +704,7 @@ static int fat_fstat(int fd, stat *buf){
 
 static int fat_fstatat(int fd, char* pathname, stat *statbuf, int flags){
   int filefd = fat_openat(fd, pathname, O_RDWR);
-  if(!IS_VALID_FD(fd)) return -1;
+  if(!IS_VALID_FD(filefd)) return -1;
   dirent_t* dirent = kmt->gettask()->ofiles[filefd]->dirent;
   statbuf->st_dev = 0;
   statbuf->st_ino = dirent->FstClus;
