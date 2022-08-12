@@ -53,7 +53,7 @@ typedef struct kstat {
   unsigned unused[2];
 }kstat_t;
 
-#define S_IFREG 0x0100000
+#define S_IFREG 0100000
 
 struct ufs_dirent {
   uint32_t inode;
