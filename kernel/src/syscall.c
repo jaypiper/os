@@ -404,6 +404,16 @@ int sys_fcntl(Context* ctx){ // int fd, int cmd
   }
 }
 
+int sys_readlinkat(Context* ctx){ // int dirfd, const char *pathname, char *buf, size_t bufsiz
+  uintptr_t dirfd = argraw(0, ctx, ARG_NUM);
+  uintptr_t pathname = argraw(1, ctx, ARG_BUF);
+  uintptr_t buf = argraw(2, ctx, ARG_NUM);
+  uintptr_t bufsz = argraw(3, ctx, ARG_NUM);
+  int copy_size = MIN(bufsz, strlen(buf));
+  copy_to_user(ctx, pathname, buf, copy_size);
+  return copy_size;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -449,6 +459,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_faccessat] = sys_faccessat,
 [SYS_sysinfo] = sys_sysinfo,
 [SYS_fcntl] = sys_fcntl,
+[SYS_readlinkat] = sys_readlinkat,
 // [SYS_faccessat] = sys_facessat,
 };
 
