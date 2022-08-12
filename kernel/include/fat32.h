@@ -145,5 +145,7 @@ dirent_t* dup_dirent(dirent_t * dirent);
 ofile_t* filedup(ofile_t* ofile);
 void fileclose(ofile_t* ofile);
 
+#define CWD_FAT 1
+#define CWD_BFS 2
 
 #endif

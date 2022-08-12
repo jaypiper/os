@@ -532,7 +532,7 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
     tmp_ofile->offset = (flags & O_APPEND) ? bfile->size : 0;
     tmp_ofile->count = 1;
     tmp_ofile->bdirent = bfile;
-    tmp_ofile->type = 0;
+    tmp_ofile->type = CWD_BFS;
     tmp_ofile->flag = flags;
     kmt->sem_init(&tmp_ofile->lock, pathname, 1);
 
@@ -561,7 +561,7 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
 	tmp_ofile->offset = (flags & O_APPEND) ? file->FileSz : 0;
 	tmp_ofile->count = 1;
 	tmp_ofile->dirent = file;
-	tmp_ofile->type = 0;
+	tmp_ofile->type = CWD_FAT;
 	tmp_ofile->flag = flags;
 	kmt->sem_init(&tmp_ofile->lock, pathname, 1);
 
