@@ -87,6 +87,15 @@ void etc_init(bdirent_t* root_bfs){
     // insert_bfs_entry(etc, "localtime", )
 }
 
+void sbin_init(bdirent_t* root_bfs){
+    bdirent_t* sbin = bfs_empty(root_bfs);
+    strcpy((char*)sbin->name, "sbin");
+    sbin->type = BD_DIR;
+    sbin->size = 0;
+    sbin->direct_addr[0] = pgalloc(PGSIZE);
+    insert_bfs_entry(sbin, "ls", "");
+}
+
 void proc_init(bdirent_t* root_bfs){
     bdirent_t* proc = bfs_empty(root_bfs);
     strcpy((char*)proc->name, "proc");
@@ -106,6 +115,7 @@ void bfs_init(bdirent_t* root_bfs){
     root_bfs->direct_addr[0] = pgalloc(PGSIZE);
     tmpfs_init(root_bfs);
     proc_init(root_bfs);
+    sbin_init(root_bfs);
     spin_init(&bfs_lock, "bfs_lock");
 }
 
