@@ -183,9 +183,12 @@ int sys_getpid(Context* ctx){
 }
 
 int sys_getcwd(Context* ctx){ // char *buf, size_t size
-  uintptr_t buf = argraw(0, ctx, ARG_PTR);
+  uintptr_t buf = argraw(0, ctx, ARG_NUM);
   uintptr_t size = argraw(1, ctx, ARG_NUM);
-  return vfs->getcwd(buf, size);
+  char path[64];
+  vfs->getcwd(path, size);
+  copy_to_user(ctx, path, buf, strlen(path));
+  return buf;
 }
 
 /*  check user's permissions of a file relative to a directory file descriptor*/
