@@ -77,6 +77,7 @@ MODULE(vfs) {
   int (*getcwd)(void* buf, int size);
   int (*statfs)(char* path, statfs* buf);
   int (*fstatat)(int fd, char* pathname, stat *statbuf, int flags);
+  int (*getdent)(int fd, void* buf, size_t count);
 };
 
 MODULE(uproc) {

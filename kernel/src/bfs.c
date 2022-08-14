@@ -257,3 +257,31 @@ int bfs_write(ofile_t* ofile, int fd, void *buf, int count){
     ofile->offset += writesize;
     return writesize;
 }
+
+int bfs_getdent(bdirent_t* dir, void* buf, size_t count, int offset){
+    int pg_num = offset / PGSIZE;
+    int pg_offset = (offset % PGSIZE) / sizeof(bdirent_t);
+    int ret = 0;
+    bdirent_t* bdirent = get_bfs_pg(pg_num, dir);
+    int num = dir->size / sizeof(bdirent_t);
+    while(pg_offset < num && count >= sizeof(linux_dirent)){
+        bdirent_t* select = bdirent + pg_offset;
+        linux_dirent* ld = buf;
+        ld->d_ino = 0;
+        ld->d_off = ret;
+        ld->d_reclen = sizeof(linux_dirent);
+        ld->d_type = select->type == BD_DIR ? DT_DIR : DT_REG;
+        strcpy(ld->d_name, select->name);
+        buf += sizeof(linux_dirent);
+        count -= sizeof(linux_dirent);
+        ret += sizeof(linux_dirent);
+        pg_offset ++;
+        if(pg_offset == MAX_BNETRY_PER_PAGE){
+            pg_offset = 0;
+            pg_num += 1;
+            bdirent = get_bfs_pg(pg_num, dir);
+            num -= PGSIZE / sizeof(bdirent_t);
+        }
+    }
+    return ret;
+}

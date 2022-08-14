@@ -800,6 +800,69 @@ int fat_getcwd(void* buf, int size){
   return buf;
 }
 
+static int fat_getdent(dirent_t* dir, void* buf, size_t count, int offset){
+  uint32_t clus = dir->FstClus, clusOffset = 0;
+  fat32_dirent_t fentry;
+
+  dirent_t* dirent = alloc_dirent();
+
+  int pre_is_ld = 0;
+  int entry_num = 0;
+  int ret = 0;
+
+  while(clus < FAT32_EOF && count >= sizeof(linux_dirent)){
+    sd_read(get_clus_start(clus) + clusOffset, &fentry, 32);  // TODO: check offset
+    if(fentry.ld.Ord == ENTRY_EMPTY || fentry.ld.Ord == ENTRY_EMPTY_LAST){
+
+    } else if(fentry.ld.attr == ATTR_LONG_NAME){
+      int ord = fentry.ld.Ord & ~LAST_LONG_ENTRY;
+
+      if(fentry.ld.Ord & LAST_LONG_ENTRY){
+        pre_is_ld = 1;
+        entry_num = fentry.ld.Ord & ~LAST_LONG_ENTRY;
+      }
+      get_dirent_name(dirent->name + (ord-1) * LONG_NAME_LENGTH, &fentry);
+
+    } else{
+      if(!pre_is_ld){
+        get_dirent_name(dirent->name, &fentry);
+      }
+      get_dirent_info(dirent, &fentry);
+      dirent->parent = dir;
+      linux_dirent* ld = buf;
+      ld->d_ino = 0;
+      ld->d_off = ret;
+      ld->d_reclen = sizeof(linux_dirent);
+      ld->d_type = dirent->attr & ATTR_DIRECTORY ? DT_DIR : DT_REG;
+      strcpy(ld->d_name, dirent->name);
+      buf += sizeof(linux_dirent);
+      count -= sizeof(linux_dirent);
+      ret += sizeof(linux_dirent);;
+      pre_is_ld = 0;
+    }
+    dirent->offset += 32;
+    dirent->clus_in_parent = clus;
+    clusOffset += 32;
+    if(clusOffset >= fat32_bs.BytePerClus){
+      clusOffset -= fat32_bs.BytePerClus;
+      clus = next_clus(clus);
+    }
+  }
+  return ret;
+}
+
+static int getdent(int fd, void* buf, size_t count){ //in bfs?
+  ofile_t* ofile = kmt->gettask()->ofiles[fd];
+  int ret;
+  if(ofile->type == CWD_FAT){
+    ret = fat_getdent(ofile->dirent, buf, count, ofile->offset);
+  } else{
+    ret = bfs_getdent(ofile->dirent, buf, count, ofile->offset);
+  }
+  ofile->offset += ret;
+  return ret;
+}
+
 MODULE_DEF(vfs) = {
 	.init   = fat_init,
 	.write  = fat_write,
@@ -816,6 +879,7 @@ MODULE_DEF(vfs) = {
   .getcwd = fat_getcwd,
   .statfs = fat_statfs,
   .fstatat = fat_fstatat,
+  .getdent = getdent,
 };
 
 

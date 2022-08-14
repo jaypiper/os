@@ -414,6 +414,17 @@ int sys_readlinkat(Context* ctx){ // int dirfd, const char *pathname, char *buf,
   return copy_size;
 }
 
+int sys_getdents(Context* ctx){ // unsigned int fd, struct linux_dirent *dirp,  unsigned int count
+  int fd = argraw(0, ctx, ARG_NUM);
+  uintptr_t dirp = argraw(1, ctx, ARG_NUM);
+  int count = argraw(2, ctx, ARG_NUM);
+  void* buf = pmm->alloc(count);
+  int ret = vfs->getdent(fd, buf, count);
+  copy_to_user(ctx, buf, dirp, ret);
+  pmm->free(buf);
+  return ret;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -460,6 +471,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_sysinfo] = sys_sysinfo,
 [SYS_fcntl] = sys_fcntl,
 [SYS_readlinkat] = sys_readlinkat,
+[SYS_getdents] = sys_getdents,
 // [SYS_faccessat] = sys_facessat,
 };
 
