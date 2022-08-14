@@ -52,24 +52,25 @@ f("uselocale_0") f("wcsncpy_read_overflow") f("wcsstr_false_negative")
 #define M_GET_CONCAT_5(_1, _2, _3, _4, _5, _0) M_GET_CONCAT_4(_1, _2, _3, _4, _0) " " _5
 
 #define TESTS_BUSYBOX(f) \
-f("echo \"#### independent command test\"", "echo", "#### independent command test", 0) \
+/* f("--install", "--install", 0) \
+*/f("echo \"#### independent command test\"", "echo", "#### independent command test", 0) \
 f("basename /aaa/bbb", "basename", "/aaa/bbb", 0) \
 f("cal", "cal", 0) \
 f("clear" , "clear", 0) \
-f("date," , "date ", 0) \
+f("date" , "date", 0) \
+f("df" , "df", 0) \
+f("dirname /aaa/bbb", "dirname", "/aaa/bbb", 0) \
+f("dmesg" , "dmesg", 0) \
 f("ash -c exit", "ash", "-c", "exit", 0) \
 f("sh -c exit", "sh", "-c", "exit", 0) \
-f("df" , "df ", 0) \
-f("dirname /aaa/bbb", "dirname", "/aaa/bbb", 0) \
-f("dmesg" , "dmesg ", 0) \
 f("du", "du", 0) \
 f("expr 1 + 1", "expr", "1" "+" "1", 0) \
 f("false", "false", 0) \
 f("true", "true", 0) \
-f("which ls", "which", "ls", 0) \
-f("uname", "uname", 0) \
+/*f("which ls", "which", "ls", 0) \
+*/f("uname", "uname", 0) \
 f("uptime", "uptime", 0) \
-f("printf" "abc\n", "printf", "\"abc\n\"", 0) \
+f("printf \"abc\\n\"", "printf", "abc\n", 0) \
 f("ps", "ps", 0) \
 f("pwd", "pwd", 0) \
 f("free", "free", 0) \
