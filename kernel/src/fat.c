@@ -831,7 +831,7 @@ static int fat_getdent(dirent_t* dir, void* buf, size_t count, int offset){
       dirent->parent = dir;
       linux_dirent* ld = buf;
       ld->d_ino = 0;
-      ld->d_off = ret;
+      ld->d_off = offset + ret;
       ld->d_reclen = sizeof(linux_dirent);
       ld->d_type = dirent->attr & ATTR_DIRECTORY ? DT_DIR : DT_REG;
       strcpy(ld->d_name, dirent->name);
