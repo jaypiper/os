@@ -119,7 +119,8 @@ uintptr_t user_addr_translate(uintptr_t satp, uintptr_t user_addr){
   uintptr_t pte = *ptwalk(&as, user_addr, 0);
   if(!(pte & PTE_V)){
     Event ev = {.ref = user_addr};
-    handle_pagefault(&ev, NULL);
+    Context ctx = {.epc = 0xdead};
+    handle_pagefault(&ev, &ctx);
     pte = *ptwalk(&as, user_addr, 0);
   }
   return baseof(pte);
