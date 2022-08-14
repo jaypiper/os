@@ -135,7 +135,8 @@ bdirent_t* search_in_bfs(bdirent_t* dir, char* name){
         if(pg_offset == MAX_BNETRY_PER_PAGE){
             pg_offset = 0;
             pg_num += 1;
-            bdirent = ((uintptr_t*)get_bfs_pg(pg_num, dir))[0];
+            bdirent = get_bfs_pg(pg_num, dir);
+            num -= PGSIZE / sizeof(bdirent_t);
         }
     }
     return ret;
