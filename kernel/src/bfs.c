@@ -105,6 +105,12 @@ void proc_init(bdirent_t* root_bfs){
     insert_bfs_entry(proc, "mounts", \
         "proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0\n\
         tmpfs /tmp tmpfs rw,nosuid,nodev,relatime,size=4096k,nr_inodes=10,mode=700");
+    insert_bfs_entry(proc, "meminfo", \
+        "MemTotal:       65707208 kB\n\
+Buffers:         4607488 kB\n\
+Cached:         46155300 kB\n\
+MemFree:          898856 kB\n\
+SwapCached:       154888 kB");
 }
 
 
