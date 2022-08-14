@@ -428,6 +428,12 @@ int sys_getdents(Context* ctx){ // unsigned int fd, struct linux_dirent *dirp,  
   return ret;
 }
 
+int sys_kill(Context* ctx){
+  int pid = argraw(0, ctx, ARG_NUM);
+  Assert(task_by_pid(pid) == NULL, "pid %d is not empty", pid);
+  return 0;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -475,6 +481,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_fcntl] = sys_fcntl,
 [SYS_readlinkat] = sys_readlinkat,
 [SYS_getdents] = sys_getdents,
+[SYS_kill] = sys_kill,
 // [SYS_faccessat] = sys_facessat,
 };
 
