@@ -434,6 +434,14 @@ int sys_kill(Context* ctx){
   return 0;
 }
 
+int sys_nanosleep(Context* ctx){
+  return 0;
+}
+
+int sys_set_robust_list(Context* ctx){
+  return 0;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -482,6 +490,8 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_readlinkat] = sys_readlinkat,
 [SYS_getdents] = sys_getdents,
 [SYS_kill] = sys_kill,
+[SYS_nanosleep] = sys_nanosleep,
+[SYS_set_robust_list] = sys_set_robust_list,
 // [SYS_faccessat] = sys_facessat,
 };
 

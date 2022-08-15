@@ -5,7 +5,6 @@
 #define SYS_exit_group 94
 #define SYS_getpid 172
 #define SYS_getppid 173
-#define SYS_geteuid 175
 #define SYS_kill 129
 #define SYS_read 63
 #define SYS_write 64
@@ -65,6 +64,7 @@
 #define SYS_syslog 116
 #define SYS_sysinfo 179
 #define SYS_fcntl 25
+#define SYS_nanosleep 101
 
 #define MAX_SYSCALL_IDX 0x400
 
