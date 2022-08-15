@@ -74,8 +74,8 @@ f("printf \"abc\\n\"", "printf", "abc\n", 0) \
 f("ps", "ps", 0) \
 f("pwd", "pwd", 0) \
 f("free", "free", 0) \
-f("hwclock", "hwclock", 0) \
-f("kill 10", "kill", "10", 0) \
+/*f("hwclock", "hwclock", 0) \
+*/f("kill 10", "kill", "10", 0) \
 f("ls", "ls", 0) \
 f("sleep 1", "sleep", "1", 0) \
 f("echo \"#### file opration test\"", "echo", "#### file opration test", 0) \
