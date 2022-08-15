@@ -31,7 +31,7 @@ static dirent_t root;
 static bdirent_t bfs;
 static uint8_t fat_buf[512];
 
-static sem_t fs_lock;
+static spinlock_t fs_lock;
 
 static ofile_t* stdin_info;
 static ofile_t* stdout_info;
@@ -98,7 +98,7 @@ static void fat_init(){
   root.parent = &root;
   strcpy(root.name, "/");
   init_stdfd();
-  kmt->sem_init(&fs_lock, "fs lock", 1);
+  kmt->spin_init(&fs_lock, "fs lock");
   return;
 }
 
@@ -510,7 +510,7 @@ static dirent_t* fat_create(dirent_t* baseDir, char* path, int flags){
 
 static int fat_openat(int dirfd, const char *pathname, int flags){
   Assert(strlen(pathname) < FAT32_MAX_PATH_LENGTH, "pathname %s is too long\n", pathname);
-  kmt->sem_wait(&fs_lock);
+  kmt->spin_lock(&fs_lock);
   dirent_t* baseDir = pathname[0] == '/' ? &root : dirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[dirfd];
   if(pathname[0] == '/') pathname ++;
 	char string_buf[FAT32_MAX_PATH_LENGTH];
@@ -535,8 +535,7 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
     tmp_ofile->type = CWD_BFS;
     tmp_ofile->flag = flags;
     kmt->sem_init(&tmp_ofile->lock, pathname, 1);
-
-    kmt->sem_signal(&fs_lock);
+    kmt->spin_unlock(&fs_lock);
     return fill_task_ofile(tmp_ofile);
   }
 
@@ -549,7 +548,7 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
     file = fat_search(baseDir, string_buf);
   }
   if(!file){
-    kmt->sem_signal(&fs_lock);
+    kmt->spin_unlock(&fs_lock);
     printf("open: no such file or directory %s\n", pathname);
     return -1;
   }
@@ -564,13 +563,12 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
 	tmp_ofile->type = CWD_FAT;
 	tmp_ofile->flag = flags;
 	kmt->sem_init(&tmp_ofile->lock, pathname, 1);
-
-	kmt->sem_signal(&fs_lock);
+	kmt->spin_unlock(&fs_lock);
 	return fill_task_ofile(tmp_ofile);
 }
 
 static int file_read(ofile_t* ofile, int fd, void *buf, int count){
-  kmt->sem_wait(&fs_lock);
+  kmt->spin_lock(&fs_lock);
   uint32_t clus_depth = ofile->offset / fat32_bs.BytePerClus;
   uint32_t clus_offset = ofile->offset % fat32_bs.BytePerClus;
   dirent_t* file = ofile->dirent;
@@ -580,7 +578,7 @@ static int file_read(ofile_t* ofile, int fd, void *buf, int count){
   while(clus_depth-- && clus < FAT32_EOF) clus = next_clus(clus);
 
   if(clus >= FAT32_EOF || read_size <= 0) {
-    kmt->sem_signal(&fs_lock);
+    kmt->spin_unlock(&fs_lock);
     return 0;
   }
 
@@ -596,7 +594,7 @@ static int file_read(ofile_t* ofile, int fd, void *buf, int count){
     }
   }
   ofile->offset += read_size;
-  kmt->sem_signal(&fs_lock);
+  kmt->spin_unlock(&fs_lock);
   return ret;
 }
 
@@ -612,7 +610,7 @@ static int file_lseek(ofile_t* ofile, int fd, int offset, int whence){
 
 
 static int file_write(ofile_t* ofile, int fd, void *buf, int count){
-  kmt->sem_wait(&fs_lock);
+  kmt->spin_lock(&fs_lock);
   if(ofile->offset > ofile->dirent->FileSz){
     TODO();
   }
@@ -653,8 +651,7 @@ static int file_write(ofile_t* ofile, int fd, void *buf, int count){
   uint32_t dirent_addr = get_clus_start(ofile->dirent->clus_in_parent) + ofile->dirent->offset % fat32_bs.BytePerClus;
 
   sd_write(dirent_addr + STRUCT_OFFSET(fat32_dirent_t, sd.FileSz), &(ofile->dirent->FileSz), 32);
-
-  kmt->sem_signal(&fs_lock);
+  kmt->spin_unlock(&fs_lock);
   return count;
 }
 
@@ -678,7 +675,11 @@ static int fat_unlinkat(int dirfd, const char *pathname, int flags){
   char string_buf[FAT32_MAX_PATH_LENGTH];
 	/* check bfs */
   strcpy(string_buf, pathname);
-  if((baseDir == &root) && (bfs_unlink(&bfs, string_buf, flags & AT_REMOVEDIR) == 0)) return 0;
+  kmt->spin_lock(&fs_lock);
+  if((baseDir == &root) && (bfs_unlink(&bfs, string_buf, flags & AT_REMOVEDIR) == 0)) {
+    kmt->spin_unlock(&fs_lock);
+    return 0;
+  }
 
   strcpy(string_buf, pathname);
   /* TODO: fat_unlink */
@@ -744,21 +745,23 @@ static int fat_statfs(char* path, statfs* buf){
 }
 
 static int fat_mkdirat(int dirfd, const char *pathname){
-  kmt->sem_wait(&fs_lock);
+  kmt->spin_lock(&fs_lock);
   dirent_t* baseDir = pathname[0] == '/' ? &root : dirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[dirfd];
   dirent_t* file = fat_create(baseDir, pathname, ATTR_DIRECTORY);
-
-  kmt->sem_signal(&fs_lock);
+  kmt->spin_unlock(&fs_lock);
 	return file ? 0: -1;
 }
 
 static int fat_chdir(const char *path){
-  kmt->sem_wait(&fs_lock);
+  kmt->spin_lock(&fs_lock);
   dirent_t* baseDir = path[0] == '/' ? &root : kmt->gettask()->cwd;
 	dirent_t* file = fat_search(baseDir, path);
-  if(!file) return -1;
+  if(!file) {
+    kmt->spin_unlock(&fs_lock);
+    return -1;
+  }
   kmt->gettask()->cwd = file;
-  kmt->sem_signal(&fs_lock);
+  kmt->spin_unlock(&fs_lock);
 	return 0;
 }
 
@@ -854,11 +857,13 @@ static int fat_getdent(dirent_t* dir, void* buf, size_t count, int offset){
 static int getdent(int fd, void* buf, size_t count){ //in bfs?
   ofile_t* ofile = kmt->gettask()->ofiles[fd];
   int ret;
+  spin_lock(&fs_lock);
   if(ofile->type == CWD_FAT){
     ret = fat_getdent(ofile->dirent, buf, count, ofile->offset);
   } else{
     ret = bfs_getdent(ofile->dirent, buf, count, ofile->offset);
   }
+  spin_unlock(&fs_lock);
   ofile->offset += ret;
   return ret;
 }
