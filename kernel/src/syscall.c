@@ -366,6 +366,22 @@ int sys_writev(Context* ctx){ // int fd, const struct iovec *iov, int iovcnt
   return ret;
 }
 
+int sys_readv(Context* ctx){ // int fd, const struct iovec *iov, int iovcnt
+  uintptr_t fd = argraw(0, ctx, ARG_NUM);
+  uintptr_t iov_addr = argraw(1, ctx, ARG_NUM);
+  uintptr_t iovcnt = argraw(2, ctx, ARG_NUM);
+  iovec iov[iovcnt];
+  copy_from_user(ctx, iov, iov_addr, sizeof(iovec) * iovcnt);
+  int ret = 0;
+  for(int i = 0; i < iovcnt; i++){
+    char buf[iov[i].iov_len];
+    int count = MIN(vfs->read(fd, (void*)buf, iov[i].iov_len), iov[i].iov_len);
+    copy_to_user(ctx, buf, iov[i].iov_base, count);
+    ret += count;
+  }
+  return ret;
+}
+
 int sys_statfs(Context* ctx){ // const char *path, struct statfs *buf
   uintptr_t path = argraw(0, ctx, ARG_BUF);
   uintptr_t buf = argraw(1, ctx, ARG_NUM);
@@ -470,6 +486,21 @@ int sys_sendfile(Context* ctx){ // int out_fd, int in_fd, off_t *offset, size_t 
   return ret;
 }
 
+int sys_dup3(Context* ctx){ // int oldfd, int newfd, int flags
+  int oldfd = argraw(0, ctx, ARG_NUM);
+  int newfd = argraw(1, ctx, ARG_NUM);
+  int flags = argraw(2, ctx, ARG_NUM);
+  if(oldfd == newfd) return newfd;
+  task_t* task = kmt->gettask();
+  pushcli();
+  if(task->ofiles[newfd]){
+    fileclose(task->ofiles[newfd]);
+  }
+  task->ofiles[newfd] = filedup(task->ofiles[oldfd]);
+  popcli();
+  return newfd;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -521,6 +552,8 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_nanosleep] = sys_nanosleep,
 [SYS_set_robust_list] = sys_set_robust_list,
 [SYS_sendfile] = sys_sendfile,
+[SYS_readv] = sys_readv,
+[SYS_dup3] = sys_dup3,
 // [SYS_faccessat] = sys_facessat,
 };
 

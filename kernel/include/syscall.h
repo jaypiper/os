@@ -68,6 +68,8 @@
 #define SYS_fcntl 25
 #define SYS_nanosleep 101
 #define SYS_sendfile 71
+#define SYS_readv 65
+#define SYS_dup3 24
 
 #define MAX_SYSCALL_IDX 0x400
 
