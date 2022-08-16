@@ -65,9 +65,9 @@ void init_stdfd(){
 }
 
 void fill_standard_fd(task_t* task){
-	task->ofiles[0] = stdin_info;
-	task->ofiles[1] = stdout_info;
-	task->ofiles[2] = stderr_info;
+	task->ofiles[0] = filedup(stdin_info);
+	task->ofiles[1] = filedup(stdout_info);
+	task->ofiles[2] = filedup(stderr_info);
 }
 
 static void fat_init(){
