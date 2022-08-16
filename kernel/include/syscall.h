@@ -1,6 +1,8 @@
 #ifndef OS_SYSCALL_H
 #define OS_SYSCALL_H
 
+#include <errno.h>
+
 #define SYS_exit 93
 #define SYS_exit_group 94
 #define SYS_getpid 172

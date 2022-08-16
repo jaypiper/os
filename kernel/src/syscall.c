@@ -279,7 +279,17 @@ int sys_mprotect(Context* ctx){
 }
 
 int sys_utimenstat(Context* ctx){
-  return 0;
+  int dirfd = argraw(0, ctx, ARG_NUM);
+  char* pathname = argraw(1, ctx, ARG_BUF);
+  int fd = vfs->openat(dirfd, pathname, 0);
+  if(fd > 0){
+    vfs->close(fd);
+    return 0;
+  } else{
+    return -ENOENT;
+  }
+
+  return -1;
 }
 
 int sys_unlinkat(Context* ctx){ // int dirfd, char* pathname, int flags
