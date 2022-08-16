@@ -9,6 +9,7 @@
 #include <dev_sim.h>
 #include <builtin_fs.h>
 #include <sys_struct.h>
+#include <syscall.h>
 #ifdef FS_FAT32
 
 
@@ -705,7 +706,7 @@ static int fat_fstat(int fd, stat *buf){
 
 static int fat_fstatat(int fd, char* pathname, stat *statbuf, int flags){
   int filefd = fat_openat(fd, pathname, O_RDWR);
-  if(!IS_VALID_FD(filefd)) return -1;
+  if(!IS_VALID_FD(filefd)) return -ENOENT;
   dirent_t* dirent = kmt->gettask()->ofiles[filefd]->dirent;
   statbuf->st_dev = 0;
   statbuf->st_ino = dirent->FstClus;
