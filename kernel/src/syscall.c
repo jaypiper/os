@@ -452,6 +452,24 @@ int sys_set_robust_list(Context* ctx){
   return 0;
 }
 
+int sys_sendfile(Context* ctx){ // int out_fd, int in_fd, off_t *offset, size_t count
+  int outfd = argraw(0, ctx, ARG_NUM);
+  int infd = argraw(1, ctx, ARG_NUM);
+  uintptr_t offset = argraw(2, ctx, ARG_NUM);
+  uintptr_t count = argraw(3, ctx, ARG_NUM);
+  Assert(offset == 0, "sendfile offset 0x%lx is not NULL", offset);
+  int ret = 0;
+  char buf[32];
+  while(count){
+    int copy_size = MIN(count, 32);
+    int tmp = vfs->read(infd, buf, copy_size);
+    if(!tmp) return
+    ret += tmp;
+    vfs->write(outfd, buf, tmp);
+  }
+  return ret;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -502,6 +520,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_kill] = sys_kill,
 [SYS_nanosleep] = sys_nanosleep,
 [SYS_set_robust_list] = sys_set_robust_list,
+[SYS_sendfile] = sys_sendfile,
 // [SYS_faccessat] = sys_facessat,
 };
 

@@ -67,6 +67,7 @@
 #define SYS_sysinfo 179
 #define SYS_fcntl 25
 #define SYS_nanosleep 101
+#define SYS_sendfile 71
 
 #define MAX_SYSCALL_IDX 0x400
 
