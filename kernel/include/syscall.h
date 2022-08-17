@@ -70,6 +70,7 @@
 #define SYS_sendfile 71
 #define SYS_readv 65
 #define SYS_dup3 24
+#define SYS_renameat2 276
 
 #define MAX_SYSCALL_IDX 0x400
 

@@ -88,6 +88,7 @@ typedef struct dirent{
   struct dirent* parent;
   uint32_t offset;      // sd offset in parent
   uint32_t clus_in_parent;
+  uint64_t ent_num;
 }dirent_t;
 
 typedef struct fat32_sdirent{

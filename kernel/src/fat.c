@@ -293,6 +293,7 @@ static dirent_t* search_in_dir(dirent_t* dir, char* name){
 
   int pre_is_ld = 0;
   int entry_num = 0;
+  int offset = 0;
 
   while(clus < FAT32_EOF){
     sd_read(get_clus_start(clus) + clusOffset, &fentry, 32);  // TODO: check offset
@@ -300,7 +301,11 @@ static dirent_t* search_in_dir(dirent_t* dir, char* name){
 
     } else if(fentry.ld.attr == ATTR_LONG_NAME){
       int ord = fentry.ld.Ord & ~LAST_LONG_ENTRY;
-
+      if(pre_is_ld == 0){
+        dirent->offset = offset;
+        dirent->clus_in_parent = clus;
+        dirent->ent_num = fentry.ld.Ord & ~LAST_LONG_ENTRY;
+      }
       if(fentry.ld.Ord & LAST_LONG_ENTRY){
         pre_is_ld = 1;
         entry_num = fentry.ld.Ord & ~LAST_LONG_ENTRY;
@@ -316,8 +321,7 @@ static dirent_t* search_in_dir(dirent_t* dir, char* name){
       if(strcmp(dirent->name, name) == 0) return dirent;
       pre_is_ld = 0;
     }
-    dirent->offset += 32;
-    dirent->clus_in_parent = clus;
+    offset += 32;
     clusOffset += 32;
     if(clusOffset >= fat32_bs.BytePerClus){
       clusOffset -= fat32_bs.BytePerClus;
@@ -459,10 +463,34 @@ static uint32_t search_empty_dirent(dirent_t *dirent, uint32_t num){
   Assert(0, "no empty %d dirent", num);
 }
 
+static void fat_rmhead(dirent_t* dirent){
+  dirent_t* parent = dirent->parent;
+  int offset = dirent->offset % fat32_bs.BytePerClus;
+  int clus = dirent->clus_in_parent;
+  fat32_dirent_t fentry;
+  fentry.ld.Ord = ENTRY_EMPTY;
+  for(int i = 0; i <= dirent->ent_num; i++){
+    sd_write(get_clus_start(clus) + offset, &fentry, 1);
+    offset += 32;
+    if(offset >= fat32_bs.BytePerClus){
+      offset -= fat32_bs.BytePerClus;
+      clus = next_clus(clus);
+    }
+  }
+}
 
-static dirent_t* create_in_dir(dirent_t* baseDir, char* name, int attr){
+static void fat_rmclus(dirent_t* dirent){
+  int clus = dirent->FstClus;
+  while(clus < FAT32_EOF){
+    int next = next_clus(clus);
+    free_clus(clus);
+    clus = next;
+  }
+}
+
+static dirent_t* create_in_dir(dirent_t* baseDir, char* name, int attr, int fstclus){
   dirent_t* dirent = alloc_dirent();
-  dirent->FstClus = alloc_clus();
+  dirent->FstClus = fstclus > 0 ? fstclus : alloc_clus();
   dirent->parent = baseDir;
   dirent->FileSz = 0;
   dirent->attr = attr;
@@ -495,7 +523,7 @@ static dirent_t* fat_search(dirent_t* baseDir, char* path){
   return baseDir;
 }
 
-static dirent_t* fat_create(dirent_t* baseDir, char* path, int flags){
+static dirent_t* fat_create(dirent_t* baseDir, char* path, int flags, int fstclus){
 
   int name_idx = split_base_name(path);
   char* filename = path;
@@ -506,7 +534,7 @@ static dirent_t* fat_create(dirent_t* baseDir, char* path, int flags){
   if(!baseDir) return NULL;
   dirent_t* dirent = search_in_dir(baseDir,filename);
   if(dirent) return dirent;
-  return create_in_dir(baseDir, filename, flags);
+  return create_in_dir(baseDir, filename, flags, fstclus);
 }
 
 static int fat_openat(int dirfd, const char *pathname, int flags){
@@ -523,7 +551,7 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
 /* check bfs */
   bdirent_t* bfile = NULL;
   if(baseDir == &root){
-    bfile = (flags & O_CREAT) ? bfs_create(&bfs, string_buf, 0) : bfs_search(&bfs, string_buf);
+    bfile = (flags & O_CREAT) ? bfs_create(&bfs, string_buf, 0, 0) : bfs_search(&bfs, string_buf);
   }
   if(bfile){
     ofile_t* tmp_ofile = pmm->alloc(sizeof(ofile_t));
@@ -544,7 +572,7 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
 /* read file from disk */
   dirent_t* file;
   if(flags & O_CREAT){
-    file = fat_create(baseDir, string_buf, 0);
+    file = fat_create(baseDir, string_buf, 0, -1);
   } else{
     file = fat_search(baseDir, string_buf);
   }
@@ -683,8 +711,12 @@ static int fat_unlinkat(int dirfd, const char *pathname, int flags){
   }
 
   strcpy(string_buf, pathname);
-  /* TODO: fat_unlink */
-  TODO();
+  dirent_t* dirent = fat_search(baseDir, string_buf);
+  if(dirent){
+    fat_rmhead(dirent);
+    fat_rmclus(dirent);
+  }
+  kmt->spin_unlock(&fs_lock);
 	return 0;
 }
 
@@ -748,9 +780,17 @@ static int fat_statfs(char* path, statfs* buf){
 static int fat_mkdirat(int dirfd, const char *pathname){
   kmt->spin_lock(&fs_lock);
   dirent_t* baseDir = pathname[0] == '/' ? &root : dirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[dirfd];
-  dirent_t* file = fat_create(baseDir, pathname, ATTR_DIRECTORY);
+  if(pathname[0] == '/') pathname ++;
+  bdirent_t* bfile = NULL;
+  dirent_t* file = NULL;
+  if(baseDir == &root) {
+    bfile = bfs_create(&bfs, pathname, ATTR_DIRECTORY, 0);
+  }
+  if(!bfile){
+    file = fat_create(baseDir, pathname, ATTR_DIRECTORY, -1);
+  }
   kmt->spin_unlock(&fs_lock);
-	return file ? 0: -1;
+	return (file || bfile) ? 0: -1;
 }
 
 static int fat_chdir(const char *path){
@@ -764,6 +804,43 @@ static int fat_chdir(const char *path){
   kmt->gettask()->cwd = file;
   kmt->spin_unlock(&fs_lock);
 	return 0;
+}
+
+static int fat_renameat2(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, unsigned int flags){
+  kmt->spin_lock(&fs_lock);
+  char string_buf[FAT32_MAX_PATH_LENGTH];
+  dirent_t* oldbasedir = oldpath[0] == '/' ? &root : olddirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[olddirfd];
+  if(oldpath[0] == '/') oldpath ++;
+  strcpy(string_buf, oldpath);
+  bdirent_t* b_oldfile = NULL;
+  if(oldbasedir == &root) b_oldfile = bfs_search(&bfs, string_buf);
+  dirent_t* oldfile = NULL;
+  if(!b_oldfile){
+    strcpy(string_buf, oldpath);
+    oldfile = fat_search(oldbasedir, string_buf);
+  }
+  if(!oldfile && !b_oldfile){
+    printf("renameat2: %s not exists\n", oldfile);
+    return -1;
+  }
+  strcpy(string_buf, newpath);
+  kmt->spin_unlock(&fs_lock);
+  fat_unlinkat(newdirfd, string_buf, 0);
+  kmt->spin_lock(&fs_lock);
+  dirent_t* newbasedir = newpath[0] == '/' ? &root : newdirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[newdirfd];
+  if(newpath[0] == '/') newpath ++;
+  strcpy(string_buf, newpath);
+  if(b_oldfile && newbasedir == &root && !bfs_create(&bfs, string_buf, b_oldfile->type == BD_DIR ? ATTR_DIRECTORY : 0, b_oldfile)){
+    fat_create(newbasedir, string_buf, oldfile->attr, oldfile->FstClus);
+  }
+  if(b_oldfile){
+    bfs_rmhead(b_oldfile);
+  } else{
+    fat_rmhead(oldfile);
+  }
+
+  kmt->spin_unlock(&fs_lock);
+  return 0;
 }
 
 static int fat_dup(int fd){
@@ -886,6 +963,7 @@ MODULE_DEF(vfs) = {
   .statfs = fat_statfs,
   .fstatat = fat_fstatat,
   .getdent = getdent,
+  .renameat2 = fat_renameat2,
 };
 
 

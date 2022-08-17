@@ -148,15 +148,19 @@ bdirent_t* search_in_bfs(bdirent_t* dir, char* name){
     return ret;
 }
 
-bdirent_t* create_in_bfs(bdirent_t* dir, char* filename, int flags){
+bdirent_t* create_in_bfs(bdirent_t* dir, char* filename, int flags, bdirent_t* file){
     bdirent_t* bdirent = bfs_empty(dir);
     strcpy(bdirent->name, filename);
-    bdirent->size = 0;
-    if(flags & ATTR_DIRECTORY){
-        bdirent->type = BD_DIR;
-        bdirent->direct_addr[0] = pgalloc(PGSIZE);
-    } else {
-        bdirent->type = BD_FILE;
+    if(file){
+        memcpy(bdirent, file, sizeof(bdirent_t));
+    } else{
+        bdirent->size = 0;
+        if(flags & ATTR_DIRECTORY){
+            bdirent->type = BD_DIR;
+            bdirent->direct_addr[0] = pgalloc(PGSIZE);
+        } else {
+            bdirent->type = BD_FILE;
+        }
     }
     return bdirent;
 }
@@ -176,7 +180,7 @@ bdirent_t* bfs_search(bdirent_t* dir, char* path){
     return dir;
 }
 
-bdirent_t* bfs_create(bdirent_t* dir, char* path, int flags){
+bdirent_t* bfs_create(bdirent_t* dir, char* path, int flags, bdirent_t* file){
     int name_idx = split_base_name(path);
     char* filename = path;
     if(name_idx != -1){
@@ -186,7 +190,7 @@ bdirent_t* bfs_create(bdirent_t* dir, char* path, int flags){
     if(!dir) return NULL;
     bdirent_t* bdirent = search_in_bfs(dir,filename);
     if(bdirent) return bdirent;
-    return create_in_bfs(dir, filename, flags);
+    return create_in_bfs(dir, filename, flags, file);
 }
 
 int bfs_unlink(bdirent_t* dir, char* path, int is_dir){ // not in bfs(-1) in bfs(0)
@@ -290,4 +294,8 @@ int bfs_getdent(bdirent_t* dir, void* buf, size_t count, int offset){
         }
     }
     return ret;
+}
+
+int bfs_rmhead(bdirent_t* bdirent){
+
 }

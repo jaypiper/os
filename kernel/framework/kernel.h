@@ -78,6 +78,7 @@ MODULE(vfs) {
   int (*statfs)(char* path, statfs* buf);
   int (*fstatat)(int fd, char* pathname, stat *statbuf, int flags);
   int (*getdent)(int fd, void* buf, size_t count);
+  int (*renameat2)(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, unsigned int flags);
 };
 
 MODULE(uproc) {

@@ -501,6 +501,15 @@ int sys_dup3(Context* ctx){ // int oldfd, int newfd, int flags
   return newfd;
 }
 
+int sys_renameat2(Context* ctx){ // int olddirfd, const char *oldpath, int newdirfd, const char *newpath, unsigned int flags
+  int olddirfd = argraw(0, ctx, ARG_NUM);
+  uintptr_t oldpath = argraw(1, ctx, ARG_BUF);
+  int newdirfd = argraw(2, ctx, ARG_NUM);
+  uintptr_t newpath = argraw(3, ctx, ARG_BUF);
+  uintptr_t flags = argraw(4, ctx, ARG_NUM);
+  return vfs->renameat2(olddirfd, oldpath, newdirfd, newpath, flags);
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -554,6 +563,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_sendfile] = sys_sendfile,
 [SYS_readv] = sys_readv,
 [SYS_dup3] = sys_dup3,
+[SYS_renameat2] = sys_renameat2,
 // [SYS_faccessat] = sys_facessat,
 };
 
