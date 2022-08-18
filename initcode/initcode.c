@@ -88,11 +88,11 @@ f("head test.txt", "head", "test.txt", 0) \
 f("tail test.txt" , "tail", "test.txt", 0) \
 f("hexdump -C test.txt" , "hexdump", "-C", "test.txt", 0) \
 f("md5sum test.txt", "md5sum", "test.txt", 0) \
-f("echo \"ccccccc\" >> test.txt", "echo", "aaaaaaa", ">>", "test.txt", 0) \
+f("echo \"ccccccc\" >> test.txt", "echo", "ccccccc", ">>", "test.txt", 0) \
 f("echo \"2222222\" >> test.txt", "echo", "2222222", ">>", "test.txt", 0) \
-f("echo \"1111111\" >> test.txt", "echo", "ccccccc", ">>", "test.txt", 0) \
+f("echo \"1111111\" >> test.txt", "echo", "1111111", ">>", "test.txt", 0) \
 f("echo \"bbbbbbb\" >> test.txt", "echo", "bbbbbbb", ">>", "test.txt", 0) \
-f("echo \"aaaaaaa\" >> test.txt", "echo", "1111111", ">>", "test.txt", 0) \
+f("echo \"aaaaaaa\" >> test.txt", "echo", "aaaaaaa", ">>", "test.txt", 0) \
 f("echo \"bbbbbbb\" >> test.txt", "echo", "bbbbbbb", ">>", "test.txt", 0) \
 f("sort test.txt | ./busybox uniq", "sort", "test.txt", "|", "./busybox uniq", 0) \
 f("stat test.txt", "stat", "test.txt", 0) \
