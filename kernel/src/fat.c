@@ -320,6 +320,7 @@ static dirent_t* search_in_dir(dirent_t* dir, char* name){
       dirent->parent = dir;
       if(strcmp(dirent->name, name) == 0) return dirent;
       pre_is_ld = 0;
+      memset(dirent->name, 0, sizeof(dirent->name));
     }
     offset += 32;
     clusOffset += 32;
