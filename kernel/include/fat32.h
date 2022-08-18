@@ -22,7 +22,7 @@
 #define ENTRY_EMPTY 0xe5
 #define AT_FDCWD (-100)
 
-#define FAT32_MAX_PATH_LENGTH 256
+#define FAT32_MAX_PATH_LENGTH 64
 #define MAX_OPEN_FILE 32
 #define IS_VALID_FD(fd) ((fd >= 0) && (fd < MAX_OPEN_FILE))
 
