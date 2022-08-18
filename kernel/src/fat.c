@@ -622,7 +622,7 @@ static int file_read(ofile_t* ofile, int fd, void *buf, int count){
       clus_offset = 0;
     }
   }
-  ofile->offset += read_size;
+  ofile->offset += ret;
   kmt->spin_unlock(&fs_lock);
   return ret;
 }
