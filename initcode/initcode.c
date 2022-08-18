@@ -109,6 +109,49 @@ f("cp busybox_cmd.txt busybox_cmd.bak", "cp", "busybox_cmd.txt", "busybox_cmd.ba
 f("rm busybox_cmd.bak", "rm", "busybox_cmd.bak", 0) \
 f("find -name \"busybox_cmd.txt\"", "find", "-name", "busybox_cmd.txt", 0) \
 
+#define TESTS_LUA(f) \
+f("date.lua", 0) \
+f("file_io.lua", 0) \
+f("max_min.lua", 0) \
+f("random.lua", 0) \
+f("remove.lua", 0) \
+f("round_num.lua", 0) \
+f("sin30.lua", 0) \
+f("sort.lua", 0) \
+f("strings.lua", 0)
+
+#define TEST_LMBENCH(f) \
+f("./busybox", "echo", "latency", "measurements") \
+f("./lmbench_all", "lat_syscall", "-P", "1", "null") \
+f("./lmbench_all", "lat_syscall", "-P", "1", "read") \
+f("./lmbench_all", "lat_syscall", "-P", "1", "write") \
+f("./busybox", "mkdir", "-p", "/var/tmp") \
+f("./busybox", "touch", "/var/tmp/lmbench") \
+f("./lmbench_all", "lat_syscall", "-P", "1", "stat", "/var/tmp/lmbench") \
+f("./lmbench_all", "lat_syscall", "-P", "1", "fstat", "/var/tmp/lmbench") \
+f("./lmbench_all", "lat_syscall", "-P", "1", "open", "/var/tmp/lmbench") \
+f("./lmbench_all", "lat_select", "-n", "100", "-P", "1", "file") \
+f("./lmbench_all", "lat_sig", "-P", "1", "install") \
+f("./lmbench_all", "lat_sig", "-P", "1", "catch") \
+f("./lmbench_all lat_sig -P 1 prot lat_sig") \
+f("./lmbench_all", "lat_pipe", "-P", "1") \
+f("./lmbench_all", "lat_proc", "-P", "1", "fork") \
+f("./lmbench_all", "lat_proc", "-P", "1", "exec") \
+f("./busybox", "cp", "hello", "/tmp") \
+f("./lmbench_all", "lat_proc", "-P", "1", "shell") \
+f("./lmbench_all", "lmdd", "label=\"File /var/tmp/XXX write bandwidth:\"", "of=/var/tmp/XXX move=1m", "fsync=1", "print=3") \
+f("./lmbench_all",  "lat_pagefault",  "-P", "1", "/var/tmp/XXX") \
+f("./lmbench_all",  "lat_mmap",  "-P", "1", "512k", "/var/tmp/XXX") \
+f("./busybox",  "echo", "file system latency") \
+f("./lmbench_all", "lat_fs", "/var/tmp") \
+f("./busybox",  "echo", "Bandwidth measurements") \
+f("./lmbench_all",  "bw_pipe",  "-P", "1") \
+f("./lmbench_all",  "bw_file_rd",  "-P", "1", "512k", "io_only", "/var/tmp/XXX") \
+f("./lmbench_all",  "bw_file_rd",  "-P", "1", "512k", "open2close", "/var/tmp/XXX") \
+f("./lmbench_all",  "bw_mmap_rd",  "-P", "1", "512k", "mmap_only", "/var/tmp/XXX") \
+f("./lmbench_all",  "bw_mmap_rd",  "-P", "1", "512k", "open2close", "/var/tmp/XXX") \
+f("./busybox",  "echo",  "context switch overhead") \
+f("./lmbench_all",  "lat_ctx",  "-P", "1", "-s", "32", "2", "4", "8", "16", "24", "32", "64", "96") \
 
 char initcode_str[][32] = {
   "in initcode\n",
@@ -116,7 +159,8 @@ char initcode_str[][32] = {
   "-w",
   "entry-static.exe",
   "./hello",
-  "./busybox"
+  "./busybox",
+  "./lua"
 };
 
 
@@ -135,6 +179,10 @@ int initcode_syscall(int syscall, unsigned long long val1, unsigned long long va
 #define OSCMP_TEST_BUSYBOX(_, ...) {initcode_str[5], __VA_ARGS__},
 #define OSCMP_BUSYBOX_PASS(_, ...) "testcase busybox " _ " success\n",
 #define OSCMP_BUSYBOX_FAIL(_, ...) "testcase busybox " _ " fail\n",
+#define OSCMP_TEST_LUA(...) {initcode_str[6], __VA_ARGS__},
+#define OSCMP_LUA_PASS(_, ...) "testcase lua " _ " success\n",
+#define OSCMP_LUA_FAIL(_, ...) "testcase lua " _ " fail\n",
+#define OSCMP_TEST_LMBENCH(...) {__VA_ARGS__},
 
 char* initcode_args[][5] = {
   TESTS_STATIC(OSCMP_TEST_STATIC)
@@ -150,6 +198,22 @@ char* busybox_pass[] = {
 
 char* busybox_fail[] = {
   TESTS_BUSYBOX(OSCMP_BUSYBOX_FAIL)
+};
+
+char* lua_cmd[][4] = {
+  TESTS_LUA(OSCMP_TEST_LUA)
+};
+
+char* lua_pass[] = {
+  TESTS_LUA(OSCMP_LUA_PASS)
+};
+
+char* lua_fail[] = {
+  TESTS_LUA(OSCMP_LUA_FAIL)
+};
+
+char* lmbench_cmd[][15] = {
+  TEST_LMBENCH(OSCMP_TEST_LMBENCH)
 };
 
 void oscmp_test_static(int i){
@@ -173,6 +237,26 @@ void oscmp_test_busybox(int i){
   }
 }
 
+void oscmp_test_lua(i){
+  int pid = initcode_syscall(SYS_clone, 17, 0, 0);
+  if(pid == 0){
+    initcode_syscall(SYS_execve, initcode_str[6], lua_cmd[i], 0);
+  } else{
+    initcode_syscall(SYS_wait4, 0, &ret, 0);
+    if(!ret) initcode_syscall(SYS_write, 1, lua_pass[i], strlen(lua_pass[i]));
+    else initcode_syscall(SYS_write, 1, lua_fail[i], strlen(lua_fail[i]));
+  }
+}
+
+void oscmp_test_lmbench(i){
+  int pid = initcode_syscall(SYS_clone, 17, 0, 0);
+  if(pid == 0){
+    initcode_syscall(SYS_execve, lmbench_cmd[i][0], lmbench_cmd[i], 0);
+  } else{
+    initcode_syscall(SYS_wait4, 0, &ret, 0);
+  }
+}
+
 void __attribute__((section("initcode_entry"))) initcode_test(){
   initcode_syscall(SYS_write, 1, initcode_str[0], 12);
   // Testing libc-test
@@ -182,6 +266,14 @@ void __attribute__((section("initcode_entry"))) initcode_test(){
   // busybox
   for(int i = 0; i < sizeof(busybox_cmd) / sizeof(busybox_cmd[0]); i++){
     oscmp_test_busybox(i);
+  }
+  // lua
+  for(int i = 0; i < sizeof(lua_cmd) / sizeof(lua_cmd[0]); i++){
+    oscmp_test_lua(i);
+  }
+  //lmbench
+  for(int i = 0; i < sizeof(lmbench_cmd) / sizeof(lmbench_cmd[0]); i++){
+    oscmp_test_lmbench(i);
   }
   // initcode_syscall(SYS_write, 1, "\ngoodbye\n", 8);
   while(1);
