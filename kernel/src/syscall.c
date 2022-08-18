@@ -144,7 +144,15 @@ int sys_mmap(Context* ctx){ // void *addr, size_t length, int prot, int flags, i
 int sys_munmap(Context* ctx){
   uintptr_t addr = argraw(0, ctx, ARG_NUM);
   uintptr_t len = argraw(1, ctx, ARG_NUM);
-
+  task_t* task = kmt->gettask();
+  for(int i = 0; i < MAX_MMAP_NUM; i++){
+    mm_area_t* mm_area = task->mmaps[i];
+    if(mm_area && mm_area->start == addr && (mm_area->end - mm_area->start) == len){
+      pmm->free(mm_area);
+      task->mmaps[i] = NULL;
+      break;
+    }
+  }
   return 0;
 }
 

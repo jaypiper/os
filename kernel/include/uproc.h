@@ -3,7 +3,7 @@
 
 #include <clone.h>
 
-#define MAX_MMAP_NUM 16
+#define MAX_MMAP_NUM 64
 
 typedef struct mm_area {
   uintptr_t start, end;
