@@ -111,8 +111,8 @@ f("find -name \"busybox_cmd.txt\"", "find", "-name", "busybox_cmd.txt", 0) \
 
 #define TESTS_LUA(f) \
 f("date.lua", 0) \
-f("file_io.lua", 0) \
-f("max_min.lua", 0) \
+/*f("file_io.lua", 0) \
+*/f("max_min.lua", 0) \
 f("random.lua", 0) \
 f("remove.lua", 0) \
 f("round_num.lua", 0) \
