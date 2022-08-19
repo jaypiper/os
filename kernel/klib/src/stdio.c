@@ -23,7 +23,7 @@ static char* _fill(char* out, char ch, int len){
 int printf(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  char buf[2048];
+  char buf[256];
   // memset(buf, 0, sizeof(buf));
   vsprintf(buf, fmt, args);
   putstr(buf);
