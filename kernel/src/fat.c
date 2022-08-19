@@ -539,6 +539,26 @@ static dirent_t* fat_create(dirent_t* baseDir, char* path, int flags, int fstclu
 }
 
 static int fat_openat(int dirfd, const char *pathname, int flags){
+  int is_zero = strcmp(pathname, "/dev/zero") == 0;
+  int is_null = strcmp(pathname, "/dev/null") == 0;
+  if(is_zero || is_null){
+    ofile_t* tmp_ofile = pmm->alloc(sizeof(ofile_t));
+    if(is_zero){
+      tmp_ofile->write = invalid_write;
+      tmp_ofile->read = zero_read;
+    } else if(is_null){
+      tmp_ofile->write = null_write;
+      tmp_ofile->read = null_read;
+    }
+    tmp_ofile->lseek = zero_lseek;
+    tmp_ofile->offset = 0;
+    tmp_ofile->count = 1;
+    tmp_ofile->type = CWD_BFS;
+    tmp_ofile->flag = flags;
+    kmt->sem_init(&tmp_ofile->lock, pathname, 1);
+    return fill_task_ofile(tmp_ofile);
+  }
+
   Assert(strlen(pathname) < FAT32_MAX_PATH_LENGTH, "pathname %s is too long\n", pathname);
   kmt->spin_lock(&fs_lock);
   dirent_t* baseDir = pathname[0] == '/' ? &root : dirfd == AT_FDCWD ? kmt->gettask()->cwd : kmt->gettask()->ofiles[dirfd];
