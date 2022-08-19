@@ -279,6 +279,7 @@ static int uproc_brk(void* addr){
   }
   while(cur_task->max_brk < addr){
     void* pa = pgalloc(PGSIZE);
+    memset(pa, 0, PGSIZE);
     map(cur_task->as, cur_task->max_brk, pa, PROT_READ|PROT_WRITE);
     cur_task->max_brk += PGSIZE;
   }
