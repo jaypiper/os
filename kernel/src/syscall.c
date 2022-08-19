@@ -197,6 +197,7 @@ int sys_getcwd(Context* ctx){ // char *buf, size_t size
   uintptr_t buf = argraw(0, ctx, ARG_NUM);
   uintptr_t size = argraw(1, ctx, ARG_NUM);
   char path[64];
+  memset(path, 0, sizeof(path));
   vfs->getcwd(path, size);
   copy_to_user(ctx, path, buf, strlen(path));
   return buf;
@@ -449,7 +450,7 @@ int sys_readlinkat(Context* ctx){ // int dirfd, const char *pathname, char *buf,
   uintptr_t pathname = argraw(1, ctx, ARG_BUF);
   uintptr_t buf = argraw(2, ctx, ARG_NUM);
   uintptr_t bufsz = argraw(3, ctx, ARG_NUM);
-  int copy_size = MIN(bufsz, strlen(buf));
+  int copy_size = MIN(bufsz, strlen((void*)buf));
   copy_to_user(ctx, pathname, buf, copy_size);
   return copy_size;
 }
