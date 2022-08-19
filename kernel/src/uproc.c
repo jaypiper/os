@@ -229,14 +229,21 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
     }
   }
   Assert(argc < 10, "argc %d > 10\n", argc);
+  args_ptr -= 8;
+  *(uint64_t*)args_ptr = 0x12345678;
+  args_ptr -= 8;
+  *(uint64_t*)args_ptr = 0x87654321;
+  uintptr_t random_ptr = as->area.end - (STACK_END(task->stack) - (uintptr_t)args_ptr);
   // aux
   auxv_t aux;
+  ADD_AUX(args_ptr, AT_NULL, 0);
   ADD_AUX(args_ptr, AT_PHDR, first_program_seg + _Eheader.e_phoff)
   ADD_AUX(args_ptr, AT_PHENT, _Eheader.e_phentsize)
   ADD_AUX(args_ptr, AT_PHNUM, _Eheader.e_phnum)
   ADD_AUX(args_ptr, AT_PAGESZ, PGSIZE)
   ADD_AUX(args_ptr, AT_BASE, 0)
   ADD_AUX(args_ptr, AT_ENTRY, _Eheader.e_entry)
+  ADD_AUX(args_ptr, AT_RANDOM, random_ptr);
 
   // env & argv
   args_ptr -= (argc + 2) * sizeof(uintptr_t);
