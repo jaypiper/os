@@ -450,7 +450,7 @@ int sys_readlinkat(Context* ctx){ // int dirfd, const char *pathname, char *buf,
   uintptr_t pathname = argraw(1, ctx, ARG_BUF);
   uintptr_t buf = argraw(2, ctx, ARG_NUM);
   uintptr_t bufsz = argraw(3, ctx, ARG_NUM);
-  int copy_size = MIN(bufsz, strlen((void*)buf));
+  int copy_size = MIN(bufsz, strlen((void*)pathname));
   copy_to_user(ctx, pathname, buf, copy_size);
   return copy_size;
 }
