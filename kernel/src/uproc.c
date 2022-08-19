@@ -138,8 +138,8 @@ static int uproc_fork(uintptr_t flags){
     new_task->pid = get_empty_pid();
     new_task->tgid = new_task->pid;
   }
-  new_task->kstack = pmm->alloc(STACK_SIZE);
-  memcpy(new_task->kstack, cur_task->kstack, STACK_SIZE);
+  new_task->kstack = pmm->alloc(KSTACK_SIZE);
+  memcpy(new_task->kstack, cur_task->kstack, KSTACK_SIZE);
   new_task->cwd = dup_dirent(cur_task->cwd);
   new_task->cwd_type = cur_task->cwd_type;
   new_task->max_brk = cur_task->max_brk;
@@ -206,7 +206,7 @@ static int uproc_execve(const char *path, char *argv[], char *envp[]){
     }
   }
 // #endif
-  TOP_CONTEXT(task) = ucontext(as, (Area){.start = (void*)STACK_START(task->kstack), .end = (void*)STACK_END(task->kstack)}, (void*)_Eheader.e_entry);
+  TOP_CONTEXT(task) = ucontext(as, (Area){.start = (void*)STACK_START(task->kstack), .end = (void*)KSTACK_END(task->kstack)}, (void*)_Eheader.e_entry);
   task->mmap_end = ROUNDDOWN((TOP_CONTEXT(task)->gpr[2] - STACK_SIZE), PGSIZE);
   task->blocked = 0;
   task->as = as;
@@ -330,13 +330,13 @@ void start_initcode(void* args){
     map(as, (void*)i, pa, PROT_READ|PROT_WRITE);
   }
   cur_task->stack = pmm->alloc(STACK_SIZE);
-  cur_task->kstack = pmm->alloc(STACK_SIZE);
+  cur_task->kstack = pmm->alloc(KSTACK_SIZE);
   for(int i = 0; i < STACK_SIZE / PGSIZE; i++){
     map(as, as->area.end - STACK_SIZE + i * PGSIZE, cur_task->stack + i * PGSIZE, PROT_READ|PROT_WRITE);
   }
 
   cur_task->contexts[0] = pmm->alloc(sizeof(Context));
-  cur_task->contexts[0]->kernel_sp = cur_task->kstack + STACK_SIZE - sizeof(Context);
+  cur_task->contexts[0]->kernel_sp = cur_task->kstack + KSTACK_SIZE - sizeof(Context);
   cur_task->contexts[0]->kernel_trap = user_trap;
   r_csr("satp", cur_task->contexts[0]->kernel_satp);
 

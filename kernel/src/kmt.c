@@ -145,7 +145,7 @@ int kmt_create(task_t *task, const char *name, void (*entry)(void *arg), void *a
   task->kstack = task->stack;
   task->max_brk = NULL;
   task->mmap_end = NULL;
-  task->contexts[0] = kcontext((Area){.start = (void*)STACK_START(task->stack), .end = (void*)STACK_END(task->stack)}, entry, arg);
+  task->contexts[0] = kcontext((Area){.start = (void*)STACK_START(task->stack), .end = (void*)KSTACK_END(task->stack)}, entry, arg);
   task->int_depth = 1;
   task->wait_next = NULL;
   task->blocked = 0;
