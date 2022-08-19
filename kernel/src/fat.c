@@ -685,6 +685,34 @@ static int file_write(ofile_t* ofile, int fd, void *buf, int count){
   return count;
 }
 
+static int buf_read(ofile_t* ofile, int fd, void *buf, int count){
+  pipe_t* pipe = ofile->pipe;
+  int rdsize = MIN(count, pipe->buf_size);
+  int tmp = rdsize;
+  while(tmp){
+    int size = MIN(tmp, PGSIZE - pipe->r_ptr);
+    memcpy(buf, pipe->buf + pipe->r_ptr, size);
+    pipe->r_ptr = (pipe->r_ptr + size) % PGSIZE;
+    tmp -= size;
+    buf += size;
+  }
+  return rdsize;
+}
+
+static int buf_write(ofile_t* ofile, int fd, void *buf, int count){
+  pipe_t* pipe = ofile->pipe;
+  int writesize = MIN(count, PGSIZE - pipe->buf_size);
+  int tmp = writesize;
+  while(tmp){
+    int size = MIN(tmp, PGSIZE - pipe->w_ptr);
+    memcpy(pipe->buf + pipe->w_ptr, buf, size);
+    tmp -= size;
+    pipe->w_ptr = (pipe->w_ptr + size) % PGSIZE;
+    buf += size;
+  }
+  return writesize;
+}
+
 static int fat_lseek(int fd, int offset, int whence){
   task_t* cur_task = kmt->gettask();
 	if(!IS_VALID_FD(fd) || !cur_task->ofiles[fd]){
@@ -844,6 +872,38 @@ static int fat_renameat2(int olddirfd, const char *oldpath, int newdirfd, const 
   return 0;
 }
 
+static int fat_pipe2(int* fd, int flags){
+  ofile_t* tmp_ofile = pmm->alloc(sizeof(ofile_t));
+  tmp_ofile->write = invalid_write;
+  tmp_ofile->read = buf_read;
+  tmp_ofile->lseek = invalid_lseek;
+  tmp_ofile->offset = 0;
+  tmp_ofile->count = 1;
+  tmp_ofile->pipe = pmm->alloc(sizeof(pipe_t));
+  pipe_t* pipe = tmp_ofile->pipe;
+  pipe->buf = pgalloc(PGSIZE);
+  pipe->r_ptr = pipe->w_ptr = pipe->buf_size = 0;
+  tmp_ofile->type = CWD_PIPEOUT;
+  tmp_ofile->flag = flags;
+  kmt->sem_init(&tmp_ofile->lock, "pipein", 1);
+
+  *fd = fill_task_ofile(tmp_ofile);
+  fd ++;
+  tmp_ofile = pmm->alloc(sizeof(ofile_t));
+  tmp_ofile->write = buf_write;
+  tmp_ofile->read = invalid_read;
+  tmp_ofile->lseek = invalid_lseek;
+  tmp_ofile->offset = 0;
+  tmp_ofile->count = 1;
+  tmp_ofile->pipe = pipe;
+  tmp_ofile->type = CWD_PIPEOUT;
+  tmp_ofile->flag = flags;
+  kmt->sem_init(&tmp_ofile->lock, "pipeout", 1);
+
+  *fd = fill_task_ofile(tmp_ofile);
+  return 0;
+}
+
 static int fat_dup(int fd){
 	TODO();
 	return -1;
@@ -965,6 +1025,7 @@ MODULE_DEF(vfs) = {
   .fstatat = fat_fstatat,
   .getdent = getdent,
   .renameat2 = fat_renameat2,
+  .pipe2 = fat_pipe2,
 };
 
 

@@ -71,6 +71,11 @@
 #define SYS_readv 65
 #define SYS_dup3 24
 #define SYS_renameat2 276
+#define SYS_tgkill 131
+#define SYS_pipe2 59
+#define SYS_pselect6 72
+#define SYS_setitimer 103
+#define SYS_umask 166
 
 #define MAX_SYSCALL_IDX 0x400
 

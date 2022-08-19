@@ -522,6 +522,37 @@ int sys_renameat2(Context* ctx){ // int olddirfd, const char *oldpath, int newdi
   return vfs->renameat2(olddirfd, oldpath, newdirfd, newpath, flags);
 }
 
+int sys_getrusage(Context* ctx){ // int who, struct rusage *usage
+  uintptr_t usage = argraw(1, ctx, ARG_NUM);
+  rusage_t rusage = {
+    .ru_utime_sec = 1, .ru_utime_usec = 1,
+    .ru_stime_sec = 1, .ru_stime_usec = 1,
+  };
+  copy_to_user(ctx, &rusage, usage, sizeof(rusage_t));
+  return 0;
+}
+
+int sys_pipe2(Context* ctx){ // int pipefd[2], int flag
+  uintptr_t pipe_addr = argraw(0, ctx, ARG_NUM);
+  uintptr_t flags = argraw(1, ctx, ARG_NUM);
+  int pipefd[2];
+  int ret = vfs->pipe2(pipefd, flags);
+  copy_to_user(ctx, pipefd, pipe_addr, sizeof(int) * 2);
+  return ret;
+}
+
+int sys_pselect6(Context* ctx){
+  return 0;
+}
+
+int sys_setitimer(Context* ctx){
+  return 0;
+}
+
+int sys_umask(Context* ctx){
+  return 0;
+}
+
 static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_chdir]     = sys_chdir,
 [SYS_close]     = sys_close,
@@ -576,6 +607,11 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 [SYS_readv] = sys_readv,
 [SYS_dup3] = sys_dup3,
 [SYS_renameat2] = sys_renameat2,
+[SYS_getrusage] = sys_getrusage,
+[SYS_pipe2] = sys_pipe2,
+[SYS_pselect6] = sys_pselect6,
+[SYS_setitimer] = sys_setitimer,
+[SYS_umask] = sys_umask,
 // [SYS_faccessat] = sys_facessat,
 };
 

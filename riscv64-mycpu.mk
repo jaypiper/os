@@ -73,7 +73,8 @@ ifeq ($(PLATFORM), qemu)
 	cp bootloader/rustsbi-qemu sbi-qemu
 	cp build/kernel-riscv64-mycpu.elf kernel-qemu
 else
-	$(OBJCOPY) $(RUSTSBI) --strip-all -O binary os.bin
+	$(CC) -v
+	$(OBJCOPY) -S $(RUSTSBI) --strip-all -O binary os.bin
 	dd if=$(IMAGE).bin of=os.bin bs=$(RUSTSBI_SIZE) seek=1
 	mkdir -p build
 	$(OBJDUMP) -D -b binary -m riscv os.bin > build/os.asm

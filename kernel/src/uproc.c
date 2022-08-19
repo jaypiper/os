@@ -3,6 +3,7 @@
 #include <uproc.h>
 #include <elf.h>
 #include <user.h>
+#include <syscall.h>
 
 void fill_standard_fd(task_t* task);
 
@@ -57,7 +58,9 @@ Context* handle_pagefault(Event ev, Context* ctx){
     }
   }
   disp_ctx(&ev, ctx);
-  Assert(0, "pagefault: %s invalid addr 0x%lx pc=0x%lx\n", kmt->gettask()->name, ev.ref, ctx->epc);
+  uint64_t inst = 0;
+  copy_from_user(ctx, &inst, ctx->epc, 8);
+  Assert(0, "pagefault: %s invalid addr 0x%lx pc=0x%lx inst=0x%lx\n", kmt->gettask()->name, ev.ref, ctx->epc, inst);
 }
 
 Context* illegal_instr(Event ev, Context* ctx){

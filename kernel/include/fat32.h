@@ -126,6 +126,13 @@ typedef struct fat32_dirent{
 
 typedef struct builtin_dirent bdirent_t;
 
+typedef struct pipe_t{
+  void* buf;
+  int w_ptr;
+  int buf_size;
+  int r_ptr;
+}pipe_t;
+
 typedef struct ofile_info{
     int (*write)(struct ofile_info* ofile, int fd, void *buf, int count);
     int (*read)(struct ofile_info* ofile, int fd, void *buf, int count);
@@ -134,6 +141,7 @@ typedef struct ofile_info{
     union{
       dirent_t* dirent;
       bdirent_t* bdirent;
+      pipe_t* pipe;
     };
     int type;       // ufs, proc, dev
     int flag;
@@ -148,5 +156,7 @@ void fileclose(ofile_t* ofile);
 
 #define CWD_FAT 1
 #define CWD_BFS 2
+#define CWD_PIPEOUT 3
+#define CWD_PIPEIN 4
 
 #endif

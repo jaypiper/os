@@ -71,6 +71,32 @@ typedef struct linux_dirent {
 	char d_name[64];
 }linux_dirent;
 
+typedef struct timeval_t{
+    long tv_sec;		/* Seconds.  */
+    long tv_usec;	/* Microseconds.  */
+}timeval_t;
+
+typedef struct rusage {
+    long ru_utime_sec; /* user CPU time used */
+    long ru_utime_usec;
+    long ru_stime_sec; /* system CPU time used */
+    long ru_stime_usec;
+    long   ru_maxrss;        /* maximum resident set size */
+    long   ru_ixrss;         /* integral shared memory size */
+    long   ru_idrss;         /* integral unshared data size */
+    long   ru_isrss;         /* integral unshared stack size */
+    long   ru_minflt;        /* page reclaims (soft page faults) */
+    long   ru_majflt;        /* page faults (hard page faults) */
+    long   ru_nswap;         /* swaps */
+    long   ru_inblock;       /* block input operations */
+    long   ru_oublock;       /* block output operations */
+    long   ru_msgsnd;        /* IPC messages sent */
+    long   ru_msgrcv;        /* IPC messages received */
+    long   ru_nsignals;      /* signals received */
+    long   ru_nvcsw;         /* voluntary context switches */
+    long   ru_nivcsw;        /* involuntary context switches */
+}rusage_t;
+
 // d_type
 #define DT_UNKNOWN 0
 #define DT_FIFO 1
