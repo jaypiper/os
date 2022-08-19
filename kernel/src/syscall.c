@@ -334,9 +334,9 @@ int sys_getppid(Context* ctx){
 int sys_uname(Context* ctx){ // struct utsname *buf
 
   uintptr_t buf = argraw(0, ctx, ARG_NUM);
-  char* sysname = "piper";
+  char* sysname = "Linux";
   char* nodename = "somename";
-  char* release = "v1.0.0";
+  char* release = "4.15.0";
   char* version = "v1.0.0";
   char* machine = "somemachine";
   char* domainname = "somedomain";
