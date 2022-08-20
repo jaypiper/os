@@ -483,7 +483,9 @@ int sys_getdents(Context* ctx){ // unsigned int fd, struct linux_dirent *dirp,  
 
 int sys_kill(Context* ctx){
   int pid = argraw(0, ctx, ARG_NUM);
-  Assert(task_by_pid(pid) == NULL, "pid %d is not empty", pid);
+  task_t* task = task_by_pid(pid);
+  // if(task) task->blocked = 1; //->teardown(task); // TODO
+  // Assert(task_by_pid(pid) == NULL, "pid %d is not empty", pid);
   return 0;
 }
 
