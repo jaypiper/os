@@ -60,7 +60,9 @@ Context* handle_pagefault(Event ev, Context* ctx){
   disp_ctx(&ev, ctx);
   uint64_t inst = 0;
   copy_from_user(ctx, &inst, ctx->epc, 8);
-  Assert(0, "pagefault: %s invalid addr 0x%lx pc=0x%lx inst=0x%lx\n", kmt->gettask()->name, ev.ref, ctx->epc, inst);
+  uint64_t ra_inst = 0;
+  if(ctx->gpr[1] != 0) copy_from_user(ctx, &ra_inst, ctx->gpr[1], 8);
+  Assert(0, "pagefault: %s invalid addr 0x%lx pc=0x%lx inst=0x%lx rainst=0x%lx\n", kmt->gettask()->name, ev.ref, ctx->epc, inst, ra_inst);
 }
 
 Context* illegal_instr(Event ev, Context* ctx){
