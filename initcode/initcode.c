@@ -88,12 +88,12 @@ f("head test.txt", "head", "test.txt", 0) \
 f("tail test.txt" , "tail", "test.txt", 0) \
 f("hexdump -C test.txt" , "hexdump", "-C", "test.txt", 0) \
 f("md5sum test.txt", "md5sum", "test.txt", 0) \
-f("echo \"ccccccc\" >> test.txt", "echo", "ccccccc", ">>", "test.txt", 0) \
-f("echo \"2222222\" >> test.txt", "echo", "2222222", ">>", "test.txt", 0) \
-f("echo \"1111111\" >> test.txt", "echo", "1111111", ">>", "test.txt", 0) \
-f("echo \"bbbbbbb\" >> test.txt", "echo", "bbbbbbb", ">>", "test.txt", 0) \
-f("echo \"aaaaaaa\" >> test.txt", "echo", "aaaaaaa", ">>", "test.txt", 0) \
-f("echo \"bbbbbbb\" >> test.txt", "echo", "bbbbbbb", ">>", "test.txt", 0) \
+f("echo \"ccccccc\" >> test.txt", "echo", "ccccccc", 0, ">>", "test.txt", 0) \
+f("echo \"2222222\" >> test.txt", "echo", "2222222", 0, ">>", "test.txt", 0) \
+f("echo \"1111111\" >> test.txt", "echo", "1111111", 0, ">>", "test.txt", 0) \
+f("echo \"bbbbbbb\" >> test.txt", "echo", "bbbbbbb", 0, ">>", "test.txt", 0) \
+f("echo \"aaaaaaa\" >> test.txt", "echo", "aaaaaaa", 0, ">>", "test.txt", 0) \
+f("echo \"bbbbbbb\" >> test.txt", "echo", "bbbbbbb", 0, ">>", "test.txt", 0) \
 f("sort test.txt | ./busybox uniq", "sort", "test.txt", "|", "./busybox uniq", 0) \
 f("stat test.txt", "stat", "test.txt", 0) \
 f("strings test.txt" , "strings", "test.txt", 0) \
@@ -229,6 +229,10 @@ int ret = 0;
 void oscmp_test_busybox(int i){
   int pid = initcode_syscall(SYS_clone, 17, 0, 0);
   if(pid == 0){
+    if(strcmp(busybox_cmd[i][4], ">>") == 0){
+      int fd = initcode_syscall(SYS_openat, -100, busybox_cmd[i][5], 0);
+      initcode_syscall(SYS_dup3, fd, 1, 0);
+    }
     initcode_syscall(SYS_execve, initcode_str[5], busybox_cmd[i], 0);
   } else{
     initcode_syscall(SYS_wait4, 0, &ret, 0);
