@@ -108,8 +108,11 @@ int sys_exit(Context* ctx){ // int status
 
 int sys_fstat(Context* ctx){ // int fd, struct stat *statbuf
   int fd = argraw(0, ctx, ARG_NUM);
-  uintptr_t statbuf = argraw(1, ctx, ARG_PTR);
-  return vfs->fstat(fd, (void*)statbuf);
+  uintptr_t stataddr = argraw(1, ctx, ARG_NUM);
+  stat buf;
+  int ret = vfs->fstat(fd, &buf);
+  copy_to_user(ctx, &buf, stataddr, sizeof(stat));
+  return ret;
 }
 
 int sys_link(Context* ctx){ // const char *oldpath, const char *newpath
