@@ -37,7 +37,7 @@ static Context* kmt_context_save(Event ev, Context * ctx){
   Assert(ctx, "saved NULL context in event %d", ev.event);
   if(ev.event == EVENT_IRQ_TIMER) set_timer();
   if(!CURRENT_TASK) set_current_task(CURRENT_IDLE);
-
+  else printf("%d save %s 0x%lx state=0x%d pid=%d blocked=%d tp=0x%lx\n", ev.event, kmt->gettask()->name, ctx->epc, RUN_STATE(CURRENT_TASK), CURRENT_TASK->pid, CURRENT_TASK->blocked, ctx->gpr[4]);
   Assert(TASK_STATE_VALID(RUN_STATE(CURRENT_TASK)), "in context save, task %s state %d invalid", CURRENT_TASK->name, RUN_STATE(CURRENT_TASK));
   Assert(CURRENT_TASK->int_depth >= 0 && CURRENT_TASK->int_depth < MAX_INT_DEPTH - 1, "context save: invalid depth %d", CURRENT_TASK->int_depth);
   CURRENT_TASK->contexts[CURRENT_TASK->int_depth] = ctx;
@@ -90,6 +90,7 @@ static Context* kmt_schedule(Event ev, Context * ctx){
   // Assert(CHECK_TASK(select), "task %s canary check fail", select->name);
 
   select->int_depth --;
+  printf("(%s, 0x%lx tp=0x%lx) -> (%s, 0x%lx tp=0x%lx)\n", cur_task->name, ctx->epc, ctx->gpr[4], select->name, select->contexts[select->int_depth]->epc, ctx->gpr[4]);
   return select->contexts[select->int_depth];
 }
 

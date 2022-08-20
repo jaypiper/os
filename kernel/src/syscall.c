@@ -633,6 +633,7 @@ static int (*syscalls[MAX_SYSCALL_IDX])() = {
 Context* do_syscall(Event ev, Context* context){
   iset(true);
   int syscall_no = context->gpr[17];
+  printf("sysno %d 0x%lx\n", syscall_no, context->epc);
   Assert(syscall_no < MAX_SYSCALL_IDX, "invalid syscall 0x%x at pc 0x%lx\n", syscall_no, context->epc);
   int (*sys_handler)() = syscalls[syscall_no];
   if(!sys_handler){
@@ -641,6 +642,7 @@ Context* do_syscall(Event ev, Context* context){
   }
   Assert(sys_handler, "invalid syscall %d at pc 0x%lx\n", syscall_no, context->epc);
   int ret = sys_handler(context);
+  printf("sysno %d return 0x%lx\n", syscall_no, ret);
   TOP_CONTEXT(kmt->gettask())->gpr[NO_A0] = ret;
   return NULL;
 }
