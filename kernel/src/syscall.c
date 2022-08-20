@@ -505,7 +505,7 @@ int sys_sendfile(Context* ctx){ // int out_fd, int in_fd, off_t *offset, size_t 
   while(count){
     int copy_size = MIN(count, 32);
     int tmp = vfs->read(infd, buf, copy_size);
-    if(!tmp) return
+    if(!tmp) break;
     ret += tmp;
     vfs->write(outfd, buf, tmp);
   }
