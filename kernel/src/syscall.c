@@ -188,9 +188,10 @@ int sys_write(Context* ctx){ // int fd, const void *buf, size_t count
   int fd = argraw(0, ctx, ARG_NUM);
   uintptr_t addr = argraw(1, ctx, ARG_NUM);
   uintptr_t count = argraw(2, ctx, ARG_NUM);
-  char buf[count + 1];
+  char* buf = pmm->alloc(count + 1);
   copy_from_user(ctx, buf, addr, count);
   int ret = vfs->write(fd, (void*)buf, count);
+  pmm->free(buf);
   return ret;
 }
 
