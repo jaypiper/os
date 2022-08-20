@@ -168,9 +168,20 @@ int sys_openat(Context* ctx){ // int dirfd, const char *pathname, int flags
 
 int sys_read(Context* ctx){ // int fd, void *buf, size_t count
   int fd = argraw(0, ctx, ARG_NUM);
-  uintptr_t buf = argraw(1, ctx, ARG_PTR);
+  uintptr_t addr = argraw(1, ctx, ARG_NUM);
   uintptr_t count = argraw(2, ctx, ARG_NUM);
-  return vfs->read(fd, (void*)buf, count);
+  void* buf = pmm->alloc(PGSIZE);
+  int ret = 0;
+  while(count){
+    int size = vfs->read(fd, buf, count);
+    if(size == 0) break;
+    copy_to_user(ctx, buf, addr, size);
+    addr += size;
+    count -= size;
+    ret += size;
+  }
+  pmm->free(buf);
+  return ret;
 }
 
 int sys_write(Context* ctx){ // int fd, const void *buf, size_t count
