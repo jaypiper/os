@@ -600,7 +600,7 @@ static int fat_openat(int dirfd, const char *pathname, int flags){
   if(!file){
     kmt->spin_unlock(&fs_lock);
     printf("open: no such file or directory %s\n", pathname);
-    return -1;
+    return -ENOENT;
   }
 
 	ofile_t* tmp_ofile = pmm->alloc(sizeof(ofile_t));
